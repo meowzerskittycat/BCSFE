@@ -260,4 +260,6 @@ class CSV:
             if sub_length == 0:
                 self.lines.append(Row.from_list([]))
             else:
-                self.lines.append(Row.from_list([core.Data("")] * sub_length))
+                self.lines.append(
+                    Row.from_list([core.Data("") for _ in range(sub_length)])
+                )
