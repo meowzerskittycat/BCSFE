@@ -243,6 +243,8 @@ class EventSubChapterStars:
                 # chapter.read_stages(data, total_stages, is_int)
 
     def write_stages(self, data: core.Data, is_int: bool):
+        if not self.chapters:
+            return
         for i in range(len(self.chapters[0].stages)):
             for chapter in self.chapters:
                 chapter.stages[i].write(data, is_int)

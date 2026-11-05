@@ -2816,7 +2816,7 @@ class SaveFile:
         save_file.challenge = core.ChallengeChapters.deserialize(
             data.get("challenge", {})
         )
-        save_file.event_update_flags = data.get("event_update_flags", [])
+        save_file.event_update_flags = data.get("event_update_flags", False)
         save_file.cotc_1_complete = data.get("cotc_1_complete", False)
         save_file.map_resets = core.MapResets.deserialize(data.get("map_resets", {}))
         save_file.uncanny = core.UncannyChapters.deserialize(data.get("uncanny", {}))

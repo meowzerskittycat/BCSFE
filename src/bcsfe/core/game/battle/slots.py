@@ -72,7 +72,7 @@ class EquipSlots:
         slots = EquipSlots(
             [EquipSlot.deserialize(slot) for slot in data.get("slots", [])]
         )
-        slots.name = data.get("name")
+        slots.name = data.get("name", "")
         return slots
 
     def __repr__(self):
