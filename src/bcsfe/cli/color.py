@@ -6,7 +6,7 @@ import enum
 import os
 
 if os.name == "nt":
-    os.system("color")
+    os.system("color")  # noqa: S605 - constant, enables ANSI colours on Windows
 
 
 class ColorHex(enum.Enum):

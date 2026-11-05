@@ -14,7 +14,7 @@ class AccountHeaders:
     @staticmethod
     def get_headers_static(iq: str, data: str):
         return {
-            "accept-enconding": "gzip",
+            "accept-encoding": "gzip",
             "connection": "keep-alive",
             "content-type": "application/json",
             "nyanko-signature": core.NyankoSignature(iq, data).generate_signature(),

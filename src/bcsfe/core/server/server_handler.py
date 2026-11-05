@@ -370,7 +370,7 @@ class ServerHandler:
                     url,
                     response,
                     headers,
-                    form.get_all_type("text-plain"),
+                    form.get_all_type("text/plain"),
                 ),
             )
 

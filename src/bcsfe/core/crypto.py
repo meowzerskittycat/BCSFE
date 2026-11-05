@@ -2,7 +2,7 @@ from __future__ import annotations
 import enum
 import hashlib
 import hmac
-import random
+import secrets
 from bcsfe import core
 
 
@@ -57,7 +57,7 @@ class Hash:
 
 
 class Random:
-    """A class to get random data"""
+    """Random data for nonces and signatures (uses the `secrets` CSPRNG)."""
 
     @staticmethod
     def get_bytes(length: int) -> bytes:
@@ -69,7 +69,7 @@ class Random:
         Returns:
             bytes: The random bytes.
         """
-        return bytes(random.getrandbits(8) for _ in range(length))
+        return secrets.token_bytes(length)
 
     @staticmethod
     def get_alpha_string(length: int) -> str:
@@ -82,7 +82,7 @@ class Random:
             str: The random string.
         """
         characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        return "".join(random.choice(characters) for _ in range(length))
+        return "".join(secrets.choice(characters) for _ in range(length))
 
     @staticmethod
     def get_hex_string(length: int) -> str:
@@ -95,7 +95,7 @@ class Random:
             str: The random string.
         """
         characters = "0123456789abcdef"
-        return "".join(random.choice(characters) for _ in range(length))
+        return "".join(secrets.choice(characters) for _ in range(length))
 
     @staticmethod
     def get_digits_string(length: int) -> str:
@@ -108,7 +108,7 @@ class Random:
             str: The random string.
         """
         characters = "0123456789"
-        return "".join(random.choice(characters) for _ in range(length))
+        return "".join(secrets.choice(characters) for _ in range(length))
 
 
 class Hmac:

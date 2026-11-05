@@ -62,23 +62,19 @@ class Updater:
         return releases.get(self.get_latest_version(prereleases))
 
     def update(self, target_version: str) -> bool:
-        binary = sys.orig_argv[0]
-        python_aliases = [binary, "py", "python", "python3"]
-        for python_alias in python_aliases:
-            cmd = f"{python_alias} -m pip install --upgrade {__app_name__}=={target_version}"
-            result = core.Path().run(cmd)
-            if result.exit_code == 0:
-                break
-        else:
-            pip_aliases = ["pip", "pip3"]
-            for pip_alias in pip_aliases:
-                cmd = f"{pip_alias} install --upgrade {__app_name__}=={target_version}"
-                result = core.Path().run(cmd)
-                if result.exit_code == 0:
-                    break
-            else:
-                return False
-        return True
+        package = f"{__app_name__}=={target_version}"
+        candidates = [
+            [python, "-m", "pip", "install", "--upgrade", package]
+            for python in [sys.executable, "py", "python", "python3"]
+            if python
+        ]
+        candidates += [
+            [pip, "install", "--upgrade", package] for pip in ["pip", "pip3"]
+        ]
+        for cmd in candidates:
+            if core.Command(cmd).run().exit_code == 0:
+                return True
+        return False
 
     def has_enabled_pre_release(self) -> bool:
         return core.core_data.config.get_bool(core.ConfigKey.UPDATE_TO_BETA)

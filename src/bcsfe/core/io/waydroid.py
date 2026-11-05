@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import shlex
+
 from bcsfe import core
 from bcsfe.cli import color
 from bcsfe.core import io
@@ -21,15 +23,14 @@ class WayDroidHandler(io.root_handler.RootHandler):
 
     @staticmethod
     def get_waydroid_ip() -> str | None:
-        cmd = "waydroid status"
-        res = io.command.Command(cmd).run()
+        res = io.command.Command(["waydroid", "status"]).run()
         if not res.success:
             return None
 
         ip_address = None
         for line in res.result.splitlines():
-            key, value = line.split(":", 1)
-            if key == "IP address":
+            key, _, value = line.partition(":")
+            if key.strip() == "IP address":
                 ip_address = value
                 break
 
@@ -55,25 +56,25 @@ class WayDroidHandler(io.root_handler.RootHandler):
 
     @staticmethod
     def check_waydroid_installed():
-        result = io.command.Command("waydroid -V").run()
+        result = io.command.Command(["waydroid", "-V"]).run()
         if not result.success:
             raise WayDroidNotInstalledError(result)
 
     def run_shell_cmd(self, command: str) -> core.CommandResult:
-        cmd = "waydroid shell"
+        cmd = ["waydroid", "shell"]
         use_pkexec = core.core_data.config.get_bool(core.ConfigKey.USE_PKEXEC_WAYDROID)
         if use_pkexec:
-            cmd = "pkexec " + cmd
-        return io.command.Command(cmd).run(f"{command}")
+            cmd = ["pkexec", *cmd]
+        return io.command.Command(cmd).run(command)
 
     def pull_file(
         self, device_path: core.Path, local_path: core.Path
     ) -> core.CommandResult:
         # copy file to sdcard
 
-        result = self.run_shell_cmd(
-            f"cp {device_path.to_str_forwards()} /sdcard/{device_path.basename()} && chmod o+rw /sdcard/{device_path.basename()}"
-        )
+        src = shlex.quote(device_path.to_str_forwards())
+        tmp = shlex.quote(f"/sdcard/{device_path.basename()}")
+        result = self.run_shell_cmd(f"cp {src} {tmp} && chmod o+rw {tmp}")
 
         if not result.success:
             return result
@@ -88,7 +89,9 @@ class WayDroidHandler(io.root_handler.RootHandler):
 
         # delete /sdcard file again
         #
-        return self.adb_handler.run_shell(f"rm /sdcard/{device_path.basename()}")
+        return self.adb_handler.run_shell(
+            f"rm {shlex.quote(f'/sdcard/{device_path.basename()}')}"
+        )
 
     def push_file(
         self, local_path: core.Path, device_path: core.Path
@@ -107,16 +110,16 @@ class WayDroidHandler(io.root_handler.RootHandler):
         if not result.success:
             return result
 
-        result = self.run_shell_cmd(
-            f"cp '/sdcard/{device_path.basename()}' '{original_device_path.to_str_forwards()}' && chmod o+rw '{original_device_path.to_str_forwards()}'"
-        )
+        tmp = shlex.quote(f"/sdcard/{device_path.basename()}")
+        dst = shlex.quote(original_device_path.to_str_forwards())
+        result = self.run_shell_cmd(f"cp {tmp} {dst} && chmod o+rw {dst}")
 
         if not result.success:
             return result
 
         # remove temp file
         #
-        return self.adb_handler.run_shell(f"rm '/sdcard/{device_path.basename()}'")
+        return self.adb_handler.run_shell(f"rm {tmp}")
 
     def get_battlecats_packages(self) -> list[str]:
         cmd = "find /data/data/ -name SAVE_DATA -mindepth 3 -maxdepth 3"

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import shlex
 from bcsfe import core
 from bcsfe.core import io
 from bcsfe.cli import dialog_creator, color
@@ -53,7 +54,7 @@ class AdbHandler(io.root_handler.RootHandler):
         return self.adb_path.run("kill-server")
 
     def root(self) -> core.CommandResult:
-        return self.adb_path.run(f"-s {self.get_device()} root")
+        return self.adb_path.run("-s", self.get_device(), "root")
 
     def get_connected_devices(self) -> list[str]:
         devices = self.adb_path.run("devices").result.split("\n")
@@ -74,25 +75,30 @@ class AdbHandler(io.root_handler.RootHandler):
         return self.run_shell("getprop ro.product.model").result.strip()
 
     def run_shell(self, command: str) -> core.CommandResult:
-        return self.adb_path.run(f'-s {self.get_device()} shell "{command}"')
+        """Run `command` in the device's shell (a shell string, quote paths)."""
+        return self.adb_path.run("-s", self.get_device(), "shell", command)
 
     def run_root_shell(self, command: str) -> core.CommandResult:
-        return self.run_shell(f"su -c '{command}'")
+        return self.run_shell(f"su -c {shlex.quote(command)}")
 
     def adb_pull_file(
         self, device_path: core.Path, local_path: core.Path
     ) -> core.CommandResult:
         return self.adb_path.run(
-            f'-s {self.get_device()} pull "{device_path.to_str_forwards()}" "{local_path}"',
+            "-s",
+            self.get_device(),
+            "pull",
+            device_path.to_str_forwards(),
+            str(local_path),
         )
 
     def pull_file(
         self, device_path: core.Path, local_path: core.Path
     ) -> core.CommandResult:
         if not self.adb_root_success():
-            result = self.run_root_shell(
-                f"cp {device_path.to_str_forwards()} /sdcard/{device_path.basename()} && chmod o+rw /sdcard/{device_path.basename()}"
-            )
+            src = shlex.quote(device_path.to_str_forwards())
+            tmp = shlex.quote(f"/sdcard/{device_path.basename()}")
+            result = self.run_root_shell(f"cp {src} {tmp} && chmod o+rw {tmp}")
             if result.exit_code != 0:
                 return result
             device_path = core.Path("/sdcard/").add(device_path.basename())
@@ -102,7 +108,9 @@ class AdbHandler(io.root_handler.RootHandler):
         if not result.success:
             return result
         if not self.adb_root_success():
-            result2 = self.run_shell(f"rm /sdcard/{device_path.basename()}")
+            result2 = self.run_shell(
+                f"rm {shlex.quote(f'/sdcard/{device_path.basename()}')}"
+            )
             if result2.exit_code != 0:
                 return result2
         return result
@@ -111,7 +119,11 @@ class AdbHandler(io.root_handler.RootHandler):
         self, local_path: core.Path, device_path: core.Path
     ) -> core.CommandResult:
         return self.adb_path.run(
-            f'-s {self.get_device()} push "{local_path}" "{device_path.to_str_forwards()}"'
+            "-s",
+            self.get_device(),
+            "push",
+            str(local_path),
+            device_path.to_str_forwards(),
         )
 
     def push_file(
@@ -125,10 +137,10 @@ class AdbHandler(io.root_handler.RootHandler):
         if not result.success:
             return result
         if not self.adb_root_success():
-            result2 = self.run_root_shell(
-                f"cp '/sdcard/{device_path.basename()}' '{orignal_device_path.to_str_forwards()}' && chmod o+rw '{orignal_device_path.to_str_forwards()}'"
-            )
-            result3 = self.run_shell(f"rm '/sdcard/{device_path.basename()}'")
+            tmp = shlex.quote(f"/sdcard/{device_path.basename()}")
+            dst = shlex.quote(orignal_device_path.to_str_forwards())
+            result2 = self.run_root_shell(f"cp {tmp} {dst} && chmod o+rw {dst}")
+            result3 = self.run_shell(f"rm {tmp}")
             if result2.exit_code != 0:
                 return result2
             if result3.exit_code != 0:
@@ -137,7 +149,7 @@ class AdbHandler(io.root_handler.RootHandler):
         return result
 
     def stat_file(self, device_path: core.Path) -> core.CommandResult:
-        return self.run_shell(f"stat {device_path.to_str_forwards()}")
+        return self.run_shell(f"stat {shlex.quote(device_path.to_str_forwards())}")
 
     def does_file_exist(self, device_path: core.Path) -> bool:
         return self.stat_file(device_path).success
@@ -163,10 +175,12 @@ class AdbHandler(io.root_handler.RootHandler):
         return self.push_file(local_path, self.get_battlecats_save_path())
 
     def close_game(self) -> core.CommandResult:
-        return self.run_shell(f"am force-stop {self.get_package_name()}")
+        return self.run_shell(f"am force-stop {shlex.quote(self.get_package_name())}")
 
     def run_game(self) -> core.CommandResult:
-        return self.run_shell(f"monkey --pct-syskeys 0 -p {self.get_package_name()} 1")
+        return self.run_shell(
+            f"monkey --pct-syskeys 0 -p {shlex.quote(self.get_package_name())} 1"
+        )
 
     def select_device(self) -> bool:
         devices = self.get_connected_devices()
