@@ -44,3 +44,10 @@ def test_negative_length_raises() -> None:
     data.set_pos(4)
     with pytest.raises(core.EndOfDataError):
         data.read_to_end(remaining_data=8)
+
+
+def test_timestamp_helpers_round_trip() -> None:
+    from bcsfe.core.io.save import from_timestamp, to_timestamp
+
+    for ts in [0.0, 86400.0, 1_700_000_000.0]:
+        assert to_timestamp(from_timestamp(ts)) == ts
