@@ -642,7 +642,7 @@ def edit_ints_raw(
     entries = multi_select_indexes_key(
         [
             core.localize("value", name=name, value=value)
-            for name, value in zip(item_names, current_values)
+            for name, value in zip(item_names, current_values, strict=False)
         ],
         "input_many",
         min=1,

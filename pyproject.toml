@@ -8,18 +8,25 @@ authors = [{ name = "fieryhenry" }]
 description = "A save file editor for The Battle Cats"
 license = "GPL-3.0-or-later"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: End Users/Desktop",
   "Topic :: Utilities",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Operating System :: OS Independent",
 ]
-dependencies = ["pyjwt", "requests", "pyyaml", "argparse"]
+dependencies = ["pyjwt", "requests", "pyyaml"]
+
 dynamic = ["version"]
 keywords = ["battle cats", "save editor", "hacking"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6", "pyright>=1.1.380"]
 
 [project.urls]
 Homepage = "https://codeberg.org/fieryhenry/BCSFE-Python"
@@ -35,6 +42,27 @@ package-dir = { "" = "src" }
 
 [tool.pyright]
 typeCheckingMode = "strict"
+include = ["src"]
+pythonVersion = "3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "B", "UP", "S602", "S604", "S605"]
+ignore = [
+  "E402", # core/__init__.py and friends order imports to break import cycles
+  "E731",
+  "E741",
+  "B008",
+  "B023", # menu lambdas are invoked synchronously inside the loop iteration
+]
 
 [project.scripts]
 bcsfe = "bcsfe:run"

@@ -114,7 +114,9 @@ class EventTickets:
             ),
         )
 
-        for (event_item, gset, gatya_item), value in zip(event_ticket_items, values):
+        for (_event_item, _gset, gatya_item), value in zip(
+            event_ticket_items, values, strict=False
+        ):
             event_tickets.edit_ticket(gatya_item.id, value)
 
     def get_ticket(self, item_id: int) -> int | None:

@@ -57,10 +57,7 @@ class PurchaseSet:
             purchase.write(stream)
 
     def serialize(self) -> dict[str, Any]:
-        return {
-            key: purchase.serialize()
-            for key, purchase in self.purchases.items()
-        }
+        return {key: purchase.serialize() for key, purchase in self.purchases.items()}
 
     @staticmethod
     def deserialize(data: dict[str, Any]) -> PurchaseSet:
@@ -103,18 +100,12 @@ class Purchases:
             purchase.write(stream)
 
     def serialize(self) -> dict[int, Any]:
-        return {
-            key: purchase.serialize()
-            for key, purchase in self.purchases.items()
-        }
+        return {key: purchase.serialize() for key, purchase in self.purchases.items()}
 
     @staticmethod
     def deserialize(data: dict[int, Any]) -> Purchases:
         return Purchases(
-            {
-                key: PurchaseSet.deserialize(purchase)
-                for key, purchase in data.items()
-            },
+            {key: PurchaseSet.deserialize(purchase) for key, purchase in data.items()},
         )
 
     def __repr__(self) -> str:
@@ -178,9 +169,7 @@ class ItemPack:
         item_pack = ItemPack(Purchases.deserialize(data.get("purchases", {})))
         item_pack.displayed_packs = data.get("displayed_packs", {})
         item_pack.three_days_started = data.get("three_days_started", False)
-        item_pack.three_days_end_timestamp = data.get(
-            "three_days_end_timestamp", 0.0
-        )
+        item_pack.three_days_end_timestamp = data.get("three_days_end_timestamp", 0.0)
         return item_pack
 
     def __repr__(self) -> str:

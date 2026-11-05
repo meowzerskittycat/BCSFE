@@ -656,14 +656,12 @@ class EventChapters:
         if gv < 20:
             return
         if gv < 33:
-            total_map_types = 3  # type: ignore
-            total_subchapters = 150  # type: ignore
+            pass  # type: ignore
         elif gv < 41:
-            total_map_types = 4  # type: ignore
-            total_subchapters = 150  # type: ignore
+            pass  # type: ignore
         else:
-            total_map_types = data.read_int()  # type: ignore
-            total_subchapters = data.read_int()  # type: ignore
+            data.read_int()  # type: ignore
+            data.read_int()  # type: ignore
 
         for chapter in self.chapters:
             chapter.read_legend_restrictions(data)

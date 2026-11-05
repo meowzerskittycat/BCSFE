@@ -5,7 +5,6 @@ import shutil
 
 from bcsfe import core, __app_name__
 import re
-import sys  # type: ignore maybe fix issue with windows not creating dirs, idk someone said this on stackoverflow
 
 
 class Path:
@@ -236,7 +235,7 @@ class Path:
     def is_file(self) -> bool:
         return os.path.isfile(self.path)
 
-    def get_dirs(self) -> list["Path"]:
+    def get_dirs(self) -> list[Path]:
         return [file for file in self.get_paths_dir() if file.is_directory()]
 
     def glob(self, pattern: str, recursive: bool = False) -> list[Path]:

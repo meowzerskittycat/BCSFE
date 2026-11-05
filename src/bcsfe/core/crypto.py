@@ -124,9 +124,7 @@ class Hmac:
             alg = hashlib.sha256
         else:
             raise ValueError("Invalid hash algorithm")
-        hmac_data = hmac.new(
-            key.get_bytes(), data.get_bytes(), digestmod=alg
-        ).digest()
+        hmac_data = hmac.new(key.get_bytes(), data.get_bytes(), digestmod=alg).digest()
         return core.Data(hmac_data)
 
 

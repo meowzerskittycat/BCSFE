@@ -17,5 +17,5 @@ __all__ = [
     "game_data_getter",
     "request",
     "updater",
-    "event_data"
+    "event_data",
 ]

@@ -238,10 +238,7 @@ class ClearedStageSlots:
     @staticmethod
     def deserialize(data: dict[str, Any]) -> ClearedStageSlots:
         return ClearedStageSlots(
-            [
-                StageLineups.deserialize(lineup)
-                for lineup in data.get("lineups", [])
-            ],
+            [StageLineups.deserialize(lineup) for lineup in data.get("lineups", [])],
         )
 
     def __repr__(self):

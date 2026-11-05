@@ -1,7 +1,7 @@
 from __future__ import annotations
 from bcsfe import core
 from bcsfe.cli import color, dialog_creator
-from typing import Optional, Union
+from typing import Union
 
 ChaptersType = Union[
     "core.EventChapters",
@@ -560,7 +560,7 @@ def edit_chapters(
 ) -> dict[int, bool] | None:
     while True:
         choice = dialog_creator.single_select_key(
-            dialog_creator.Actions[Optional[bool]]
+            dialog_creator.Actions[bool | None]
             .new()
             .add_new_key(
                 "edit_progress_clear",

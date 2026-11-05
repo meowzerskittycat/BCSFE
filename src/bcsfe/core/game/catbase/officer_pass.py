@@ -52,9 +52,7 @@ class OfficerPass:
         officer_pass = OfficerPass(
             data.get("play_time", 0),
         )
-        officer_pass.gold_pass = core.NyankoClub.deserialize(
-            data.get("gold_pass", {})
-        )
+        officer_pass.gold_pass = core.NyankoClub.deserialize(data.get("gold_pass", {}))
         officer_pass.cat_id = data.get("cat_id", 0)
         officer_pass.cat_form = data.get("cat_form", 0)
         return officer_pass

@@ -1,6 +1,7 @@
 from __future__ import annotations
 import enum
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 from bcsfe import core
 from bcsfe.cli import dialog_creator, color
 
@@ -145,12 +146,16 @@ class Gatya:
 
     def edit_normal_gatya_seed(self):
         self.normal_seed = dialog_creator.edit_int_key(
-            "normal_gatya_seed", self.normal_seed, dialog_creator.MaxValue.u32().hide_max()
+            "normal_gatya_seed",
+            self.normal_seed,
+            dialog_creator.MaxValue.u32().hide_max(),
         )
 
     def edit_event_gatya_seed(self):
         self.event_seed = dialog_creator.edit_int_key(
-            "event_gatya_seed", self.event_seed, dialog_creator.MaxValue.u32().hide_max()
+            "event_gatya_seed",
+            self.event_seed,
+            dialog_creator.MaxValue.u32().hide_max(),
         )
 
     def read_gatya_data_set(self, save_file: core.SaveFile) -> GatyaDataSet:
@@ -330,10 +335,9 @@ class GatyaInfos:
             self.get_all(True, max_threads=64)
         names: dict[int, str] = {}
         for info in self.infos:
-            names[
-                info.gatya_id
-            ] = info.get_name() or core.core_data.local_manager.get_key(
-                "unknown_banner"
+            names[info.gatya_id] = (
+                info.get_name()
+                or core.core_data.local_manager.get_key("unknown_banner")
             )
 
         return names

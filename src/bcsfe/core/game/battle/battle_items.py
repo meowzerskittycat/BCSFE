@@ -252,7 +252,7 @@ class BattleItems:
         options = dialog_creator.multi_select_indexes_key(
             [
                 core.localize("endless_item_item", item=item, int=val, escape=False)
-                for item, val in zip(item_names, current_values)
+                for item, val in zip(item_names, current_values, strict=False)
             ],
             "select_option",
         )

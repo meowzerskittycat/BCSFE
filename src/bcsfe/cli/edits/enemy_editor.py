@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import Optional
 from bcsfe import core
 from bcsfe.cli import color, dialog_creator
 from bcsfe.cli.edits.cat_editor import SelectMode
@@ -40,7 +39,7 @@ class EnemyEditor:
         self.print_selected_enemies(current_enemies)
 
         new_enemies = dialog_creator.single_select_key(
-            dialog_creator.Actions[Optional[list[core.Enemy]]]
+            dialog_creator.Actions[list[core.Enemy] | None]
             .new()
             .add_new_key("select_enemies_valid", lambda _: self.get_all_valid_enemies())
             .add_new_key("select_enemies_all", lambda _: self.get_all_enemies())

@@ -88,7 +88,7 @@ class Updater:
         v1_p = v1.split(".")
         v2_p = v2.split(".")
 
-        for p1, p2 in zip(v1_p, v2_p):
+        for p1, p2 in zip(v1_p, v2_p, strict=False):
             if p1.isdigit():
                 p1 = int(p1)
             else:
