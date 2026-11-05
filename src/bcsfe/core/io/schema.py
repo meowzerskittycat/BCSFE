@@ -37,10 +37,10 @@ S = TypeVar("S", bound="Struct")
 class Codec(Generic[T]):
     """How one value is laid out in the binary data and in JSON."""
 
-    def read(self, data: Data) -> T:
+    def read(self, data: Data, gv: Any = None) -> T:
         raise NotImplementedError
 
-    def write(self, data: Data, value: T) -> None:
+    def write(self, data: Data, value: T, gv: Any = None) -> None:
         raise NotImplementedError
 
     def default(self) -> T:
@@ -59,14 +59,17 @@ class Number(Codec[int]):
         self.size = struct.calcsize(fmt)
         self.name = name
 
-    def read(self, data: Data) -> int:
+    def read(self, data: Data, gv: Any = None) -> int:
         return struct.unpack(data.endiness + self.fmt, data.read_bytes(self.size))[0]
 
-    def write(self, data: Data, value: int) -> None:
+    def write(self, data: Data, value: int, gv: Any = None) -> None:
         data.write_bytes(struct.pack(data.endiness + self.fmt, int(value)))
 
     def default(self) -> int:
         return 0
+
+    def from_json(self, value: Any) -> int:
+        return int(value)
 
     def __repr__(self) -> str:
         return self.name
@@ -78,14 +81,17 @@ class Float(Codec[float]):
         self.size = struct.calcsize(fmt)
         self.name = name
 
-    def read(self, data: Data) -> float:
+    def read(self, data: Data, gv: Any = None) -> float:
         return struct.unpack(data.endiness + self.fmt, data.read_bytes(self.size))[0]
 
-    def write(self, data: Data, value: float) -> None:
+    def write(self, data: Data, value: float, gv: Any = None) -> None:
         data.write_bytes(struct.pack(data.endiness + self.fmt, float(value)))
 
     def default(self) -> float:
         return 0.0
+
+    def from_json(self, value: Any) -> float:
+        return float(value)
 
     def __repr__(self) -> str:
         return self.name
@@ -94,10 +100,10 @@ class Float(Codec[float]):
 class BoolCodec(Codec[bool]):
     """One byte, 0 or 1."""
 
-    def read(self, data: Data) -> bool:
+    def read(self, data: Data, gv: Any = None) -> bool:
         return data.read_bool()
 
-    def write(self, data: Data, value: bool) -> None:
+    def write(self, data: Data, value: bool, gv: Any = None) -> None:
         data.write_bool(bool(value))
 
     def default(self) -> bool:
@@ -110,10 +116,10 @@ class BoolCodec(Codec[bool]):
 class VarIntCodec(Codec[int]):
     """Big-endian base-128 integer (at most 4 bytes), as used by the game."""
 
-    def read(self, data: Data) -> int:
+    def read(self, data: Data, gv: Any = None) -> int:
         return data.read_variable_length_int()
 
-    def write(self, data: Data, value: int) -> None:
+    def write(self, data: Data, value: int, gv: Any = None) -> None:
         data.write_variable_length_int(value)
 
     def default(self) -> int:
@@ -126,10 +132,10 @@ class VarIntCodec(Codec[int]):
 class StringCodec(Codec[str]):
     """UTF-8 string prefixed with its byte length as an int32."""
 
-    def read(self, data: Data) -> str:
+    def read(self, data: Data, gv: Any = None) -> str:
         return data.read_string()
 
-    def write(self, data: Data, value: str) -> None:
+    def write(self, data: Data, value: str, gv: Any = None) -> None:
         data.write_string(value)
 
     def default(self) -> str:
@@ -165,15 +171,17 @@ class Array(Codec[list[T]]):
         self.item = item
         self.length = length
 
-    def read(self, data: Data) -> list[T]:
-        count = self.length if isinstance(self.length, int) else self.length.read(data)
-        return [self.item.read(data) for _ in range(count)]
+    def read(self, data: Data, gv: Any = None) -> list[T]:
+        count = (
+            self.length if isinstance(self.length, int) else self.length.read(data, gv)
+        )
+        return [self.item.read(data, gv) for _ in range(count)]
 
-    def write(self, data: Data, value: list[T]) -> None:
+    def write(self, data: Data, value: list[T], gv: Any = None) -> None:
         if not isinstance(self.length, int):
-            self.length.write(data, len(value))
+            self.length.write(data, len(value), gv)
         for v in value:
-            self.item.write(data, v)
+            self.item.write(data, v, gv)
 
     def default(self) -> list[T]:
         if isinstance(self.length, int):
@@ -193,8 +201,8 @@ class Array(Codec[list[T]]):
 class Map(Codec[dict[K, V]]):
     """A count (stored with `length`) followed by that many key/value pairs.
 
-    JSON keeps keys as they come (JSON object keys become strings); the
-    number codecs convert them back with int() when writing.
+    JSON object keys are always strings, so keys are converted back with
+    the key codec when loading JSON.
     """
 
     def __init__(self, key: Codec[K], value: Codec[V], length: Codec[int] = I32):
@@ -202,19 +210,19 @@ class Map(Codec[dict[K, V]]):
         self.value = value
         self.length = length
 
-    def read(self, data: Data) -> dict[K, V]:
-        count = self.length.read(data)
+    def read(self, data: Data, gv: Any = None) -> dict[K, V]:
+        count = self.length.read(data, gv)
         out: dict[K, V] = {}
         for _ in range(count):
-            k = self.key.read(data)
-            out[k] = self.value.read(data)
+            k = self.key.read(data, gv)
+            out[k] = self.value.read(data, gv)
         return out
 
-    def write(self, data: Data, value: dict[K, V]) -> None:
-        self.length.write(data, len(value))
+    def write(self, data: Data, value: dict[K, V], gv: Any = None) -> None:
+        self.length.write(data, len(value), gv)
         for k, v in value.items():
-            self.key.write(data, k)
-            self.value.write(data, v)
+            self.key.write(data, k, gv)
+            self.value.write(data, v, gv)
 
     def default(self) -> dict[K, V]:
         return {}
@@ -223,7 +231,9 @@ class Map(Codec[dict[K, V]]):
         return {k: self.value.to_json(v) for k, v in value.items()}
 
     def from_json(self, value: Any) -> dict[K, V]:
-        return {k: self.value.from_json(v) for k, v in value.items()}
+        return {
+            self.key.from_json(k): self.value.from_json(v) for k, v in value.items()
+        }
 
     def __repr__(self) -> str:
         return f"Map({self.key!r}, {self.value!r}, {self.length!r})"
@@ -235,11 +245,11 @@ class Nested(Codec[S]):
     def __init__(self, struct_type: type[S]):
         self.struct_type = struct_type
 
-    def read(self, data: Data) -> S:
-        return self.struct_type.read(data)
+    def read(self, data: Data, gv: Any = None) -> S:
+        return self.struct_type.read(data, gv)
 
-    def write(self, data: Data, value: S) -> None:
-        value.write(data)
+    def write(self, data: Data, value: S, gv: Any = None) -> None:
+        value.write(data, gv)
 
     def default(self) -> S:
         return self.struct_type.init()
@@ -255,36 +265,76 @@ class Nested(Codec[S]):
 
 
 _CODEC = "bcsfe_codec"
+_SINCE = "bcsfe_since"
+_BEFORE = "bcsfe_before"
 
 
-def field(codec: Codec[T], default: Callable[[], T] | None = None) -> Any:
-    """Declare a binary field. `default` builds the value for new saves and
-    for JSON that lacks the key; it defaults to the codec's default."""
+def field(
+    codec: Codec[T],
+    default: Callable[[], T] | None = None,
+    *,
+    since: int | None = None,
+    before: int | None = None,
+) -> Any:
+    """Declare a binary field.
+
+    `default` builds the value for new saves, for JSON that lacks the key and
+    for game versions where the field isn't stored; it defaults to the
+    codec's default. With `since` / `before` the field is only read and
+    written when ``since <= game version < before``.
+    """
     factory: Callable[[], Any] = default if default is not None else codec.default
-    return dataclasses.field(default_factory=factory, metadata={_CODEC: codec})
+    return dataclasses.field(
+        default_factory=factory,
+        metadata={_CODEC: codec, _SINCE: since, _BEFORE: before},
+    )
+
+
+class _Field:
+    __slots__ = ("name", "codec", "since", "before", "factory")
+
+    def __init__(self, f: dataclasses.Field[Any]):
+        self.name = f.name
+        self.codec: Codec[Any] = f.metadata[_CODEC]
+        self.since: int | None = f.metadata.get(_SINCE)
+        self.before: int | None = f.metadata.get(_BEFORE)
+        self.factory: Callable[[], Any] = f.default_factory  # type: ignore[assignment]
+
+    def present(self, gv: Any, owner: str) -> bool:
+        if self.since is None and self.before is None:
+            return True
+        if gv is None:
+            raise TypeError(f"{owner}.{self.name} depends on the game version")
+        if self.since is not None and gv < self.since:
+            return False
+        return not (self.before is not None and gv >= self.before)
 
 
 class Struct:
     """Base class for sections whose layout is a fixed sequence of fields.
 
     Subclasses must be dataclasses whose fields are all declared with
-    :func:`field`.
+    :func:`field`. Set ``__transparent__ = True`` on a single-field struct
+    to make its JSON form just that field's value (e.g. a bare int) rather
+    than an object.
     """
 
-    __layout__: ClassVar[list[tuple[str, Codec[Any]]] | None] = None
+    __layout__: ClassVar[list[_Field] | None] = None
+    __transparent__: ClassVar[bool] = False
 
     @classmethod
-    def layout(cls) -> list[tuple[str, Codec[Any]]]:
-        cached: list[tuple[str, Codec[Any]]] | None = cls.__dict__.get("__layout__")
+    def layout(cls) -> list[_Field]:
+        cached: list[_Field] | None = cls.__dict__.get("__layout__")
         if cached is None:
-            layout: list[tuple[str, Codec[Any]]] = []
+            layout: list[_Field] = []
             for f in dataclasses.fields(cls):  # type: ignore[arg-type]
-                codec: Codec[Any] | None = f.metadata.get(_CODEC)
-                if codec is None:
+                if f.metadata.get(_CODEC) is None:
                     raise TypeError(
                         f"{cls.__name__}.{f.name} is not declared with field()"
                     )
-                layout.append((f.name, codec))
+                layout.append(_Field(f))
+            if cls.__transparent__ and len(layout) != 1:
+                raise TypeError(f"transparent {cls.__name__} must have one field")
             cls.__layout__ = cached = layout
         return cached
 
@@ -293,22 +343,33 @@ class Struct:
         return cls()
 
     @classmethod
-    def read(cls: type[S], data: Data) -> S:
-        return cls(**{name: codec.read(data) for name, codec in cls.layout()})
+    def read(cls: type[S], data: Data, gv: Any = None) -> S:
+        values: dict[str, Any] = {}
+        for f in cls.layout():
+            if f.present(gv, cls.__name__):
+                values[f.name] = f.codec.read(data, gv)
+        return cls(**values)
 
-    def write(self, data: Data) -> None:
-        for name, codec in self.layout():
-            codec.write(data, getattr(self, name))
+    def write(self, data: Data, gv: Any = None) -> None:
+        for f in self.layout():
+            if f.present(gv, type(self).__name__):
+                f.codec.write(data, getattr(self, f.name), gv)
 
-    def serialize(self) -> dict[str, Any]:
-        return {
-            name: codec.to_json(getattr(self, name)) for name, codec in self.layout()
-        }
+    def serialize(self) -> Any:
+        layout = self.layout()
+        if self.__transparent__:
+            f = layout[0]
+            return f.codec.to_json(getattr(self, f.name))
+        return {f.name: f.codec.to_json(getattr(self, f.name)) for f in layout}
 
     @classmethod
-    def deserialize(cls: type[S], data: dict[str, Any]) -> S:
+    def deserialize(cls: type[S], data: Any) -> S:
+        layout = cls.layout()
+        if cls.__transparent__:
+            f = layout[0]
+            return cls(**{f.name: f.codec.from_json(data)})
         values: dict[str, Any] = {}
-        for f in dataclasses.fields(cls):  # type: ignore[arg-type]
+        for f in layout:
             if f.name in data:
-                values[f.name] = f.metadata[_CODEC].from_json(data[f.name])
+                values[f.name] = f.codec.from_json(data[f.name])
         return cls(**values)

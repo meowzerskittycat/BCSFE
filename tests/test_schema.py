@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from typing import ClassVar
+
+import pytest
 
 from bcsfe import core
 from bcsfe.core.io.schema import (
@@ -64,3 +68,48 @@ def test_json_round_trip() -> None:
     value = Outer(1, [1, 2, 3], [4, 5], {1: 2}, "x", Inner(3, False))
     assert Outer.deserialize(value.serialize()) == value
     assert value.serialize()["inner"] == {"a": 3, "flag": False}
+
+
+@dataclass
+class Versioned(Struct):
+    always: int = field(I8)
+    new: int = field(I8, default=lambda: 7, since=100)
+    old: int = field(I8, before=100)
+
+
+def test_version_gated_fields() -> None:
+    data = core.Data()
+    Versioned(1, 2, 3).write(data, 100)
+    assert data.to_bytes() == b"\x01\x02"
+    data.reset_pos()
+    assert Versioned.read(data, 100) == Versioned(1, 2, 0)
+
+    data = core.Data()
+    Versioned(1, 2, 3).write(data, 99)
+    assert data.to_bytes() == b"\x01\x03"
+    data.reset_pos()
+    assert Versioned.read(data, 99) == Versioned(1, 7, 3)
+
+
+def test_version_gated_fields_need_a_version() -> None:
+    with pytest.raises(TypeError):
+        Versioned().write(core.Data())
+
+
+@dataclass
+class Amount(Struct):
+    __transparent__: ClassVar[bool] = True
+    amount: int = field(I32)
+
+
+@dataclass
+class Holder(Struct):
+    amounts: dict[int, Amount] = field(Map(I32, Nested(Amount)))
+
+
+def test_transparent_struct_json_is_its_value() -> None:
+    value = Holder({3: Amount(5)})
+    assert value.serialize() == {"amounts": {3: 5}}
+    # through real JSON, where keys become strings
+    again = Holder.deserialize(json.loads(json.dumps(value.serialize())))
+    assert again == value
