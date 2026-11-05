@@ -471,7 +471,10 @@ when adding a new game version), never to make a failing test pass.
 
 To test against real saves, copy them into `tests/saves/`. That folder is
 gitignored: real saves contain your account's inquiry code and tokens, so
-never commit them.
+never commit them as they are. To add one as a permanent fixture, run
+`python tests/tools/sanitize_save.py path/to/save`, which replaces those
+details with placeholders and writes it to `tests/fixtures/real/`. The game
+progress stays in the file, so only do this for saves you're happy to share.
 
 New save sections can be declared once with `bcsfe.core.io.schema`
 (see `core/game/catbase/medals.py`), instead of writing separate

@@ -9,8 +9,12 @@ from bcsfe import __app_name__, copy_to_data_dir, core
 
 TESTS_DIR = Path(__file__).parent
 SYNTHETIC_DIR = TESTS_DIR / "fixtures" / "synthetic"
-# Real saves are never committed (they contain account credentials). Drop
-# copies of your own saves in here to test against them locally.
+# Saves from real accounts with the account details (inquiry code, password
+# refresh token, transfer codes) replaced by placeholders.
+REAL_FIXTURE_DIR = TESTS_DIR / "fixtures" / "real"
+# Raw saves are never committed (they contain account credentials). Drop
+# copies of your own saves in here to test against them locally, or run
+# tests/tools/sanitize_save.py on one to turn it into a committed fixture.
 REAL_SAVES_DIR = TESTS_DIR / "saves"
 
 
@@ -27,6 +31,10 @@ def editor_data_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 def synthetic_saves() -> list[Path]:
     return sorted(SYNTHETIC_DIR.glob("*.sav"))
+
+
+def real_fixtures() -> list[Path]:
+    return sorted(REAL_FIXTURE_DIR.glob("*.sav"))
 
 
 def real_saves() -> list[Path]:

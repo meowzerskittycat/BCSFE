@@ -14,7 +14,7 @@ import pytest
 
 from bcsfe import core
 
-from .conftest import TESTS_DIR, real_saves, synthetic_saves
+from .conftest import TESTS_DIR, real_fixtures, real_saves, synthetic_saves
 
 sys.path.insert(0, str(TESTS_DIR / "tools"))
 import gen_fixtures  # noqa: E402
@@ -54,6 +54,22 @@ def test_region_detected_from_hash(path: Path) -> None:
     cc = path.stem.split("_")[0]
     save = core.SaveFile(core.Data(path.read_bytes()))
     assert save.cc.get_code() == cc
+
+
+@pytest.mark.parametrize("path", real_fixtures(), ids=lambda p: p.name)
+def test_real_fixture_round_trip(path: Path) -> None:
+    save = assert_round_trips(path.read_bytes())
+    cc, gv = path.stem.split("_")
+    assert save.cc == core.CountryCode(cc)
+    assert save.game_version == core.GameVersion(int(gv))
+
+
+def test_real_fixtures_hold_no_account_details() -> None:
+    for path in real_fixtures():
+        save = core.SaveFile(core.Data(path.read_bytes()))
+        assert save.inquiry_code == "000000000", path.name
+        assert set(save.password_refresh_token) <= {"0"}, path.name
+        assert save.transfer_code == save.confirmation_code == "", path.name
 
 
 @pytest.mark.skipif(not real_saves(), reason="no real saves in tests/saves")
