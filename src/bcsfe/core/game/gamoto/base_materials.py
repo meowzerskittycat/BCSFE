@@ -1,71 +1,22 @@
 from __future__ import annotations
+from dataclasses import dataclass
+from typing import ClassVar
+
+from bcsfe.core.io.schema import I32, Array, Nested, Struct, field
 from bcsfe import core
 from bcsfe.cli import dialog_creator
 
 
-class Material:
-    def __init__(self, amount: int):
-        self.amount = amount
-
-    @staticmethod
-    def init() -> Material:
-        return Material(0)
-
-    @staticmethod
-    def read(stream: core.Data) -> Material:
-        amount = stream.read_int()
-        return Material(amount)
-
-    def write(self, stream: core.Data):
-        stream.write_int(self.amount)
-
-    def serialize(self) -> int:
-        return self.amount
-
-    @staticmethod
-    def deserialize(data: int) -> Material:
-        return Material(data)
-
-    def __repr__(self) -> str:
-        return f"Material(amount={self.amount!r})"
-
-    def __str__(self) -> str:
-        return self.__repr__()
+@dataclass
+class Material(Struct):
+    __transparent__: ClassVar[bool] = True
+    amount: int = field(I32)
 
 
-class BaseMaterials:
-    def __init__(self, materials: list[Material]):
-        self.materials = materials
-
-    @staticmethod
-    def init() -> BaseMaterials:
-        return BaseMaterials([])
-
-    @staticmethod
-    def read(stream: core.Data) -> BaseMaterials:
-        total = stream.read_int()
-        materials: list[Material] = []
-        for _ in range(total):
-            materials.append(Material.read(stream))
-        return BaseMaterials(materials)
-
-    def write(self, stream: core.Data):
-        stream.write_int(len(self.materials))
-        for material in self.materials:
-            material.write(stream)
-
-    def serialize(self) -> list[int]:
-        return [material.serialize() for material in self.materials]
-
-    @staticmethod
-    def deserialize(data: list[int]) -> BaseMaterials:
-        return BaseMaterials([Material.deserialize(material) for material in data])
-
-    def __repr__(self) -> str:
-        return f"Materials(materials={self.materials!r})"
-
-    def __str__(self) -> str:
-        return self.__repr__()
+@dataclass
+class BaseMaterials(Struct):
+    __transparent__: ClassVar[bool] = True
+    materials: list[Material] = field(Array(Nested(Material)))
 
     def edit_base_materials(self, save_file: core.SaveFile):
         names = core.core_data.get_gatya_item_names(save_file).names

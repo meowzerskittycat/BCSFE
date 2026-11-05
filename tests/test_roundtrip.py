@@ -6,7 +6,9 @@ field is read or written, at least one fixture stops round-tripping.
 
 from __future__ import annotations
 
+import gzip
 import json
+
 import sys
 from pathlib import Path
 
@@ -70,6 +72,24 @@ def test_real_fixtures_hold_no_account_details() -> None:
         assert save.inquiry_code == "000000000", path.name
         assert set(save.password_refresh_token) <= {"0"}, path.name
         assert save.transfer_code == save.confirmation_code == "", path.name
+
+
+JSON_V3_6_0 = sorted((TESTS_DIR / "fixtures" / "json_v3_6_0").glob("*.json.gz"))
+
+
+@pytest.mark.parametrize("path", JSON_V3_6_0, ids=lambda p: p.name)
+def test_json_from_v3_6_0_still_imports(path: Path) -> None:
+    """Saves exported to JSON by editor 3.6.0 must import to the same bytes.
+
+    The JSON was written by the code as it was before any schema changes,
+    so it catches section rewrites that change key names or value shapes.
+    """
+    with gzip.open(path, "rt") as f:
+        exported = json.load(f)
+    save_name = path.name.replace(".json.gz", ".sav")
+    raw = next(p for p in synthetic_saves() + real_fixtures() if p.name == save_name)
+    imported = core.SaveFile.from_dict(exported, warn=False)
+    assert imported.to_data().to_bytes() == raw.read_bytes()
 
 
 @pytest.mark.skipif(not real_saves(), reason="no real saves in tests/saves")
