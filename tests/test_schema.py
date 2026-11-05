@@ -16,8 +16,10 @@ from bcsfe.core.io.schema import (
     Grid,
     Map,
     Nested,
+    Optional,
     String,
     Struct,
+    Tuple,
     field,
     transient,
 )
@@ -152,3 +154,17 @@ def test_empty_grid_has_no_columns() -> None:
 def test_unknown_part_is_an_error() -> None:
     with pytest.raises(ValueError):
         Split().read_part(core.Data(), "nope")
+
+
+def test_optional_tuple() -> None:
+    codec = Optional(Tuple(I32, I8, Bool))
+    for value, raw in [
+        (None, b"\x00"),
+        ((7, -1, True), b"\x01\x07\x00\x00\x00\xff\x01"),
+    ]:
+        data = core.Data()
+        codec.write(data, value)
+        assert data.to_bytes() == raw
+        data.reset_pos()
+        assert codec.read(data) == value
+        assert codec.from_json(json.loads(json.dumps(codec.to_json(value)))) == value

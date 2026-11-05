@@ -300,6 +300,61 @@ class Grid(Codec[list[list[T]]]):
         return f"Grid({self.item!r}, {self.length!r})"
 
 
+class Tuple(Codec[tuple[Any, ...]]):
+    """A fixed sequence of differently typed values (a JSON list)."""
+
+    def __init__(self, *items: Codec[Any]):
+        self.items = items
+
+    def read(self, data: Data, gv: Any = None) -> tuple[Any, ...]:
+        return tuple(item.read(data, gv) for item in self.items)
+
+    def write(self, data: Data, value: tuple[Any, ...], gv: Any = None) -> None:
+        for item, v in zip(self.items, value, strict=True):
+            item.write(data, v, gv)
+
+    def default(self) -> tuple[Any, ...]:
+        return tuple(item.default() for item in self.items)
+
+    def to_json(self, value: tuple[Any, ...]) -> Any:
+        return [item.to_json(v) for item, v in zip(self.items, value, strict=True)]
+
+    def from_json(self, value: Any) -> tuple[Any, ...]:
+        return tuple(
+            item.from_json(v) for item, v in zip(self.items, value, strict=True)
+        )
+
+    def __repr__(self) -> str:
+        return f"Tuple{self.items!r}"
+
+
+class Optional(Codec["T | None"]):
+    """A bool saying whether a value follows, then the value if it does."""
+
+    def __init__(self, item: Codec[T]):
+        self.item = item
+
+    def read(self, data: Data, gv: Any = None) -> T | None:
+        return self.item.read(data, gv) if data.read_bool() else None
+
+    def write(self, data: Data, value: T | None, gv: Any = None) -> None:
+        data.write_bool(value is not None)
+        if value is not None:
+            self.item.write(data, value, gv)
+
+    def default(self) -> T | None:
+        return None
+
+    def to_json(self, value: T | None) -> Any:
+        return None if value is None else self.item.to_json(value)
+
+    def from_json(self, value: Any) -> T | None:
+        return None if value is None else self.item.from_json(value)
+
+    def __repr__(self) -> str:
+        return f"Optional({self.item!r})"
+
+
 class Section(Codec[Any]):
     """A section class with its own read/write/serialize/deserialize/init,
     for embedding sections that aren't declared with the schema yet.
