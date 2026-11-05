@@ -488,13 +488,13 @@ class SaveFile:
             self.data.expect_int(53)
 
         if 29 <= self.game_version:
-            self.gamatoto.read_2(self.data)
+            self.gamatoto.read_part(self.data, "helpers")
             self.data.expect_int(54)
             self.item_pack = core.ItemPack.read(self.data)
             self.data.expect_int(54)
 
         if self.game_version >= 30:
-            self.gamatoto.read_skin(self.data)
+            self.gamatoto.read_part(self.data, "skin")
             self.platinum_tickets = self.data.read_int()
             self.logins = core.LoginBonus.read(self.data, self.game_version)
             if self.game_version < 101000:
@@ -597,7 +597,7 @@ class SaveFile:
             self.data.expect_int(69)
 
         if self.game_version >= 46:
-            self.gamatoto.read_collab_data(self.data)
+            self.gamatoto.read_part(self.data, "collab")
 
             self.data.expect_int(71)
 
@@ -1602,13 +1602,13 @@ class SaveFile:
             self.data.write_int(53)
 
         if 29 <= self.game_version:
-            self.gamatoto.write_2(self.data)
+            self.gamatoto.write_part(self.data, "helpers")
             self.data.write_int(54)
             self.item_pack.write(self.data)
             self.data.write_int(54)
 
         if self.game_version >= 30:
-            self.gamatoto.write_skin(self.data)
+            self.gamatoto.write_part(self.data, "skin")
             self.data.write_int(self.platinum_tickets)
             self.logins.write(self.data, self.game_version)
 
@@ -1703,7 +1703,7 @@ class SaveFile:
             self.data.write_int(69)
 
         if self.game_version >= 46:
-            self.gamatoto.write_collab_data(self.data)
+            self.gamatoto.write_part(self.data, "collab")
             self.data.write_int(71)
 
         if self.game_version < 90300:
