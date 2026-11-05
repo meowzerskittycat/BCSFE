@@ -1,4 +1,5 @@
 from __future__ import annotations
+import sys
 import traceback
 
 from bcsfe import cli, copy_to_data_dir
@@ -15,6 +16,7 @@ def migrate(force: bool):
     v_path = core.Path.get_data_folder().add("version.txt")
     if not v_path.exists():
         try:
+            v_path.parent().generate_dirs()
             v_path.write(core.Data(__version__))
         except FileNotFoundError:
             print(
@@ -71,6 +73,8 @@ def main():
         help=f"copy all data from bcsfe/src/files to {core.Path.get_data_folder()}",
     )
 
+    cli.commands.add_subcommands(parser)
+
     args = parser.parse_args()
     if args.version:
         print(bcsfe.__version__)
@@ -94,6 +98,9 @@ def main():
     migrate(args.force_migrate)
 
     core.core_data.init_data()
+
+    if args.command is not None:
+        sys.exit(cli.commands.run(args))
 
     try:
         cli.main.Main().main(args.input_path)

@@ -347,6 +347,21 @@ game servers in the editor and re-download it in-game, the saves aren't automati
 Apparently doing the Google Account / Apple Account link limits the number of data transfers you can
 do within a certain time. So to be safe, I would avoid linking your account.
 
+### Command line
+
+Some things can be done without the menus, which is handy for scripts and on
+Android (Termux):
+
+```sh
+bcsfe info SAVE_DATA                 # region, game version, cat food, tickets...
+bcsfe check SAVE_DATA                # can the editor read and write this save safely?
+bcsfe export SAVE_DATA save.json     # save -> JSON (use - to print it)
+bcsfe import save.json SAVE_DATA     # JSON -> save
+```
+
+If a game update stops the editor from working, please include the output of
+`bcsfe check` in your bug report.
+
 ### Using a rooted device via adb
 
 1. Add adb to your PATH environment variable, or edit the config to set ADB path editor config option
