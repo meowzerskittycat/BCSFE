@@ -159,3 +159,11 @@ def test_json_import_restores_int_keys(path: Path) -> None:
     found: set[str] = set()
     _string_keyed_dicts(loaded, "save", set(), found)
     assert not found
+
+
+def test_dojo_json_import_restores_int_keys() -> None:
+    """Dojo scores are nested id maps; editing after a JSON import must not
+    add a second entry for the same stage."""
+    dojo = core.Dojo.deserialize(json.loads(json.dumps({"chapters": {"0": {"0": 5}}})))
+    dojo.chapters.get_stage(0, 0).score = 9
+    assert dojo.chapters.serialize() == {0: {0: 9}}

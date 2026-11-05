@@ -1,135 +1,38 @@
 from __future__ import annotations
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, ClassVar
+
 from bcsfe import core
 from bcsfe.cli import dialog_creator
+from bcsfe.core.io.schema import I32, Map, Nested, Struct, field
 
 
-class Stage:
-    def __init__(self, score: int):
-        self.score = score
-
-    @staticmethod
-    def init() -> Stage:
-        return Stage(0)
-
-    @staticmethod
-    def read(stream: core.Data) -> Stage:
-        score = stream.read_int()
-        return Stage(score)
-
-    def write(self, stream: core.Data):
-        stream.write_int(self.score)
-
-    def serialize(self) -> int:
-        return self.score
-
-    @staticmethod
-    def deserialize(data: int) -> Stage:
-        return Stage(data)
-
-    def __repr__(self) -> str:
-        return f"Stage(score={self.score!r})"
-
-    def __str__(self) -> str:
-        return f"Stage(score={self.score!r})"
+@dataclass
+class Stage(Struct):
+    __transparent__: ClassVar[bool] = True
+    score: int = field(I32)
 
 
-class Chapter:
-    def __init__(self, stages: dict[int, Stage]):
-        self.stages = stages
+@dataclass
+class Chapter(Struct):
+    __transparent__: ClassVar[bool] = True
+    stages: dict[int, Stage] = field(Map(I32, Nested(Stage)))
 
     def get_stage(self, stage_id: int) -> Stage:
         if stage_id not in self.stages:
             self.stages[stage_id] = Stage.init()
         return self.stages[stage_id]
 
-    @staticmethod
-    def init() -> Chapter:
-        return Chapter({})
 
-    @staticmethod
-    def read(stream: core.Data) -> Chapter:
-        total = stream.read_int()
-        stages: dict[int, Stage] = {}
-        for _ in range(total):
-            stage_id = stream.read_int()
-            stage = Stage.read(stream)
-            stages[stage_id] = stage
-
-        return Chapter(stages)
-
-    def write(self, stream: core.Data):
-        stream.write_int(len(self.stages))
-        for stage_id, stage in self.stages.items():
-            stream.write_int(stage_id)
-            stage.write(stream)
-
-    def serialize(self) -> dict[int, Any]:
-        return {stage_id: stage.serialize() for stage_id, stage in self.stages.items()}
-
-    @staticmethod
-    def deserialize(data: dict[int, Any]) -> Chapter:
-        return Chapter(
-            {stage_id: Stage.deserialize(stage) for stage_id, stage in data.items()}
-        )
-
-    def __repr__(self) -> str:
-        return f"Chapter(stages={self.stages!r})"
-
-    def __str__(self) -> str:
-        return f"Chapter(stages={self.stages!r})"
-
-
-class Chapters:
-    def __init__(self, chapters: dict[int, Chapter]):
-        self.chapters = chapters
+@dataclass
+class Chapters(Struct):
+    __transparent__: ClassVar[bool] = True
+    chapters: dict[int, Chapter] = field(Map(I32, Nested(Chapter)))
 
     def get_stage(self, chapter_id: int, stage_id: int) -> Stage:
         if chapter_id not in self.chapters:
             self.chapters[chapter_id] = Chapter.init()
         return self.chapters[chapter_id].get_stage(stage_id)
-
-    @staticmethod
-    def init() -> Chapters:
-        return Chapters({})
-
-    @staticmethod
-    def read(stream: core.Data) -> Chapters:
-        total = stream.read_int()
-        chapters: dict[int, Chapter] = {}
-        for _ in range(total):
-            chapter_id = stream.read_int()
-            chapter = Chapter.read(stream)
-            chapters[chapter_id] = chapter
-
-        return Chapters(chapters)
-
-    def write(self, stream: core.Data):
-        stream.write_int(len(self.chapters))
-        for chapter_id, chapter in self.chapters.items():
-            stream.write_int(chapter_id)
-            chapter.write(stream)
-
-    def serialize(self) -> dict[int, Any]:
-        return {
-            chapter_id: chapter.serialize()
-            for chapter_id, chapter in self.chapters.items()
-        }
-
-    @staticmethod
-    def deserialize(data: dict[int, Any]) -> Chapters:
-        return Chapters(
-            {
-                chapter_id: Chapter.deserialize(chapter)
-                for chapter_id, chapter in data.items()
-            }
-        )
-
-    def __repr__(self) -> str:
-        return f"Chapters(chapters={self.chapters!r})"
-
-    def __str__(self) -> str:
-        return f"Chapters(chapters={self.chapters!r})"
 
 
 class Ranking:
