@@ -97,7 +97,7 @@ class SaveFile:
         self.data.set_pos(-32)
         try:
             hash = self.data.read_string(32)
-        except UnicodeDecodeError:
+        except (UnicodeDecodeError, core.EndOfDataError):
             return None
         return hash
 
@@ -388,7 +388,7 @@ class SaveFile:
             if self.not_jp():
                 self.ub2 = self.data.read_bool()
 
-            assert self.data.read_int() == 44
+            self.data.expect_int(44)
 
             self.itf1_complete = self.data.read_int()
 
@@ -401,10 +401,10 @@ class SaveFile:
 
             self.combo_unlocked_10k_ur = self.data.read_bool()
 
-            assert self.data.read_int() == 45
+            self.data.expect_int(45)
 
         if 21 <= self.game_version:
-            assert self.data.read_int() == 46
+            self.data.expect_int(46)
 
             self.gatya.read_event_seed(self.data, self.game_version)
             if self.game_version < 34:
@@ -414,10 +414,10 @@ class SaveFile:
                 self.event_capsules = self.data.read_int_list()
                 self.event_capsules_counter = self.data.read_int_list()
 
-            assert self.data.read_int() == 47
+            self.data.expect_int(47)
 
         if 22 <= self.game_version:
-            assert self.data.read_int() == 48
+            self.data.expect_int(48)
 
         if 23 <= self.game_version:
             if not self.not_jp():
@@ -434,18 +434,18 @@ class SaveFile:
             self.catfood_beginner_expired = self.data.read_bool_list(length=3)
             self.rank_up_sale_value = self.data.read_int()
 
-            assert self.data.read_int() == 49
+            self.data.expect_int(49)
 
         if 24 <= self.game_version:
-            assert self.data.read_int() == 50
+            self.data.expect_int(50)
 
         if 25 <= self.game_version:
-            assert self.data.read_int() == 51
+            self.data.expect_int(51)
 
         if 26 <= self.game_version:
             self.cats.read_catguide_collected(self.data)
 
-            assert self.data.read_int() == 52
+            self.data.expect_int(52)
 
         if 27 <= self.game_version:
             self.time_since_time_check_cumulative = self.data.read_double()
@@ -464,13 +464,13 @@ class SaveFile:
             self.unlock_popups_6 = self.data.read_bool_list()
             self.ex_stages = core.ExChapters.read(self.data)
 
-            assert self.data.read_int() == 53
+            self.data.expect_int(53)
 
         if 29 <= self.game_version:
             self.gamatoto.read_2(self.data)
-            assert self.data.read_int() == 54
+            self.data.expect_int(54)
             self.item_pack = core.ItemPack.read(self.data)
-            assert self.data.read_int() == 54
+            self.data.expect_int(54)
 
         if self.game_version >= 30:
             self.gamatoto.read_skin(self.data)
@@ -487,7 +487,7 @@ class SaveFile:
             self.ui13 = self.data.read_int()
             self.ui14 = self.data.read_int()
 
-            assert self.data.read_int() == 55
+            self.data.expect_int(55)
 
         if self.game_version >= 31:
             self.ub3 = self.data.read_bool()
@@ -496,19 +496,19 @@ class SaveFile:
 
             self.backup_frame = self.data.read_int()
 
-            assert self.data.read_int() == 56
+            self.data.expect_int(56)
 
         if self.game_version >= 32:
             self.ub4 = self.data.read_bool()
             self.cats.read_favorites(self.data)
 
-            assert self.data.read_int() == 57
+            self.data.expect_int(57)
 
         if self.game_version >= 33:
             self.dojo = core.Dojo.read_chapters(self.data)
             self.dojo.read_item_locks(self.data)
 
-            assert self.data.read_int() == 58
+            self.data.expect_int(58)
 
         if self.game_version >= 34:
             self.last_checked_zombie_time = self.data.read_double()
@@ -521,37 +521,37 @@ class SaveFile:
             self.first_locks = self.data.read_int_bool_dict()
             self.energy_penalty_timestamp = self.data.read_double()
 
-            assert self.data.read_int() == 60
+            self.data.expect_int(60)
 
         if self.game_version >= 36:
             self.cats.read_chara_new_flags(self.data)
             self.shown_maxcollab_mg = self.data.read_bool()
             self.item_pack.read_displayed_packs(self.data)
 
-            assert self.data.read_int() == 61
+            self.data.expect_int(61)
 
         if self.game_version >= 38:
             self.unlock_popups = core.UnlockPopups.read(self.data)
-            assert self.data.read_int() == 63
+            self.data.expect_int(63)
 
         if self.game_version >= 39:
             self.ototo = core.Ototo.read(self.data)
             self.ototo.read_2(self.data, self.game_version)
             self.last_checked_castle_time = self.data.read_double()
 
-            assert self.data.read_int() == 64
+            self.data.expect_int(64)
 
         if self.game_version >= 40:
             self.beacon_base = core.BeaconEventListScene.read(self.data)
 
-            assert self.data.read_int() == 65
+            self.data.expect_int(65)
 
         if self.game_version >= 41:
             self.tower = core.TowerChapters.read(self.data)
             self.missions = core.Missions.read(self.data, self.game_version)
             self.tower.read_item_obtain_states(self.data)
 
-            assert self.data.read_int() == 66
+            self.data.expect_int(66)
 
         if self.game_version >= 42:
             self.dojo.read_ranking(self.data, self.game_version)
@@ -560,34 +560,34 @@ class SaveFile:
             self.challenge.read_scores(self.data)
             self.challenge.read_popup(self.data)
 
-            assert self.data.read_int() == 67
+            self.data.expect_int(67)
 
         if self.game_version >= 43:
             self.missions.read_weekly_missions(self.data)
             self.dojo.ranking.read_did_win_rewards(self.data)
             self.event_update_flags = self.data.read_bool()
 
-            assert self.data.read_int() == 68
+            self.data.expect_int(68)
 
         if self.game_version >= 44:
             self.event_stages.read_dicts(self.data)
             self.cotc_1_complete = self.data.read_int()
 
-            assert self.data.read_int() == 69
+            self.data.expect_int(69)
 
         if self.game_version >= 46:
             self.gamatoto.read_collab_data(self.data)
 
-            assert self.data.read_int() == 71
+            self.data.expect_int(71)
 
         if self.game_version < 90300:
             self.map_resets = core.MapResets.read(self.data)
 
-            assert self.data.read_int() == 72
+            self.data.expect_int(72)
 
         if self.game_version >= 51:
             self.uncanny = core.UncannyChapters.read(self.data)
-            assert self.data.read_int() == 76
+            self.data.expect_int(76)
 
         if self.game_version >= 77:
             self.catamin_stages = core.UncannyChapters.read(self.data)
@@ -596,7 +596,7 @@ class SaveFile:
 
             self.ub5 = self.data.read_bool()
 
-            assert self.data.read_int() == 77
+            self.data.expect_int(77)
 
         if self.game_version >= 80000:
             self.officer_pass.read_gold_pass(self.data, self.game_version)
@@ -604,25 +604,25 @@ class SaveFile:
             self.np = self.data.read_int()
             self.ub6 = self.data.read_bool()
 
-            assert self.data.read_int() == 80000
+            self.data.expect_int(80000)
 
         if self.game_version >= 80200:
             self.ub7 = self.data.read_bool()
             self.leadership = self.data.read_short()
             self.officer_pass.read_cat_data(self.data)
 
-            assert self.data.read_int() == 80200
+            self.data.expect_int(80200)
 
         if self.game_version >= 80300:
             self.filibuster_stage_id = self.data.read_byte()
             self.filibuster_stage_enabled = self.data.read_bool()
 
-            assert self.data.read_int() == 80300
+            self.data.expect_int(80300)
 
         if self.game_version >= 80500:
             self.stage_ids_10s = self.data.read_int_list()
 
-            assert self.data.read_int() == 80500
+            self.data.expect_int(80500)
 
         if self.game_version >= 80600:
             length = self.data.read_short()
@@ -631,7 +631,7 @@ class SaveFile:
             self.ush1 = self.data.read_short()
             self.uby1 = self.data.read_byte()
 
-            assert self.data.read_int() == 80600
+            self.data.expect_int(80600)
 
         if self.game_version >= 80700:
             length = self.data.read_int()
@@ -641,22 +641,22 @@ class SaveFile:
                 value = self.data.read_int_list()
                 self.uiid1[key] = value
 
-            assert self.data.read_int() == 80700
+            self.data.expect_int(80700)
 
         if self.game_version >= 100600:
             if self.is_en():
                 self.uby2 = self.data.read_byte()
-                assert self.data.read_int() == 100600
+                self.data.expect_int(100600)
 
         if self.game_version >= 81000:
             self.restart_pack = self.data.read_byte()
-            assert self.data.read_int() == 81000
+            self.data.expect_int(81000)
 
         if self.game_version >= 90000:
             self.medals = core.Medals.read(self.data)
             self.wildcat_slots = core.GamblingEvent.read(self.data, self.game_version)
 
-            assert self.data.read_int() == 90000
+            self.data.expect_int(90000)
 
         if self.game_version >= 90100:
             self.ush2 = self.data.read_short()
@@ -664,7 +664,7 @@ class SaveFile:
             self.ui15 = self.data.read_int()
             self.ud1 = self.data.read_double()
 
-            assert self.data.read_int() == 90100
+            self.data.expect_int(90100)
 
         if self.game_version >= 90300:
             length = self.data.read_short()
@@ -684,14 +684,14 @@ class SaveFile:
 
             self.gauntlets = core.GauntletChapters.read(self.data)
 
-            assert self.data.read_int() == 90300
+            self.data.expect_int(90300)
 
         if self.game_version >= 90400:
             self.enigma_clears = core.GauntletChapters.read(self.data)
             self.enigma = core.Enigma.read(self.data, self.game_version)
             self.cleared_slots = core.ClearedSlots.read(self.data)
 
-            assert self.data.read_int() == 90400
+            self.data.expect_int(90400)
 
         if self.game_version >= 90500:
             self.collab_gauntlets = core.GauntletChapters.read(self.data)
@@ -728,7 +728,7 @@ class SaveFile:
                     value = self.data.read_double()
                     self.uidd3[key] = value
 
-            assert self.data.read_int() == 90500
+            self.data.expect_int(90500)
 
         if self.game_version >= 90700:
             self.talent_orbs = core.TalentOrbs.read(self.data, self.game_version)
@@ -748,26 +748,26 @@ class SaveFile:
 
             self.ub10 = self.data.read_bool()
 
-            assert self.data.read_int() == 90700
+            self.data.expect_int(90700)
 
         if self.game_version >= 90800:
             length = self.data.read_short()
             self.uil7 = self.data.read_int_list(length)
             self.ubl2 = self.data.read_bool_list(10)
 
-            assert self.data.read_int() == 90800
+            self.data.expect_int(90800)
 
         if self.game_version >= 90900:
             self.cat_shrine = core.CatShrine.read(self.data)
             self.ud6 = self.data.read_double()
             self.ud7 = self.data.read_double()
 
-            assert self.data.read_int() == 90900
+            self.data.expect_int(90900)
 
         if self.game_version >= 91000:
             self.lineups.read_slot_names(self.data, self.game_version)
 
-            assert self.data.read_int() == 91000
+            self.data.expect_int(91000)
 
         if self.game_version >= 100000:
             self.legend_tickets = self.data.read_int()
@@ -789,36 +789,36 @@ class SaveFile:
             self.ud8 = self.data.read_double()
             self.ud9 = self.data.read_double()
 
-            assert self.data.read_int() == 100000
+            self.data.expect_int(100000)
 
         if self.game_version >= 100100:
             self.date_int = self.data.read_int()
 
-            assert self.data.read_int() == 100100
+            self.data.expect_int(100100)
 
         if self.game_version >= 100300:
             self.battle_items.read_endless_items(self.data)
 
-            assert self.data.read_int() == 100300
+            self.data.expect_int(100300)
 
         if self.game_version >= 100400:
             length = self.data.read_byte()
             self.event_capsules_2 = self.data.read_int_list(length)
             self.two_battle_lines = self.data.read_bool()
 
-            assert self.data.read_int() == 100400
+            self.data.expect_int(100400)
 
         if self.game_version >= 100600:
             self.ud10 = self.data.read_double()
             self.platinum_shards = self.data.read_int()
             self.ub15 = self.data.read_bool()
 
-            assert self.data.read_int() == 100600
+            self.data.expect_int(100600)
 
         if self.game_version >= 100700:
             self.cat_scratcher = core.GamblingEvent.read(self.data, self.game_version)
 
-            assert self.data.read_int() == 100700
+            self.data.expect_int(100700)
 
         if self.game_version >= 100900:
             self.aku = core.AkuChapters.read(self.data)
@@ -854,12 +854,12 @@ class SaveFile:
 
             self.ub18 = self.data.read_bool()
 
-            assert self.data.read_int() == 100900
+            self.data.expect_int(100900)
 
         if self.game_version >= 101000:
             self.uby6 = self.data.read_byte()
 
-            assert self.data.read_int() == 101000
+            self.data.expect_int(101000)
 
         if self.game_version >= 110000:
             length = self.data.read_short()
@@ -872,18 +872,18 @@ class SaveFile:
                 )
                 self.uidtii[key] = value
 
-            assert self.data.read_int() == 110000
+            self.data.expect_int(110000)
 
         if self.game_version >= 110500:
             self.behemoth_culling = core.GauntletChapters.read(self.data)
             self.ub19 = self.data.read_bool()
 
-            assert self.data.read_int() == 110500
+            self.data.expect_int(110500)
 
         if self.game_version >= 110600:
             self.ub20 = self.data.read_bool()
 
-            assert self.data.read_int() == 110600
+            self.data.expect_int(110600)
 
         if self.game_version >= 110700:
             length = self.data.read_int()
@@ -899,7 +899,7 @@ class SaveFile:
             if self.not_jp():
                 self.ub20 = self.data.read_bool()
 
-            assert self.data.read_int() == 110700
+            self.data.expect_int(110700)
 
         if self.game_version >= 110800:
             self.cat_shrine.read_dialogs(self.data)
@@ -908,7 +908,7 @@ class SaveFile:
             self.ub22 = self.data.read_bool()
             self.ub23 = self.data.read_bool()
 
-            assert self.data.read_int() == 110800
+            self.data.expect_int(110800)
 
         if self.game_version >= 111000:
             self.ui17 = self.data.read_int()
@@ -951,19 +951,19 @@ class SaveFile:
             length = self.data.read_byte()
             self.labyrinth_medals = self.data.read_short_list(length)
 
-            assert self.data.read_int() == 111000
+            self.data.expect_int(111000)
 
         if self.game_version >= 120000:
             self.zero_legends = core.ZeroLegendsChapters.read(self.data)
             self.uby12 = self.data.read_byte()
 
-            assert self.data.read_int() == 120000
+            self.data.expect_int(120000)
 
         if self.game_version >= 120100:
             length = self.data.read_short()
             self.ushl6 = self.data.read_short_list(length)
 
-            assert self.data.read_int() == 120100
+            self.data.expect_int(120100)
 
         if self.game_version >= 120200:
             self.ub31 = self.data.read_bool()
@@ -975,13 +975,13 @@ class SaveFile:
                 value = self.data.read_short()
                 self.ushshd[key] = value
 
-            assert self.data.read_int() == 120200
+            self.data.expect_int(120200)
 
         if self.game_version >= 120400:
             self.ud11 = self.data.read_double()
             self.ud12 = self.data.read_double()
 
-            assert self.data.read_int() == 120400
+            self.data.expect_int(120400)
 
         if self.game_version >= 120500:
             self.ub32 = self.data.read_bool()
@@ -991,13 +991,13 @@ class SaveFile:
             self.ui21 = self.data.read_int()
             self.golden_cpu_count = self.data.read_byte()
 
-            assert self.data.read_int() == 120500
+            self.data.expect_int(120500)
 
         if self.game_version >= 120600:
             self.sound_effects_volume = self.data.read_byte()
             self.background_music_volume = self.data.read_byte()
 
-            assert self.data.read_int() == 120600
+            self.data.expect_int(120600)
 
         if (self.not_jp() and self.game_version >= 120700) or (
             self.is_jp() and self.game_version >= 130000
@@ -1010,9 +1010,9 @@ class SaveFile:
                 self.ustl1.append((s1, s2))
 
             if self.not_jp():
-                assert self.data.read_int() == 120700
+                self.data.expect_int(120700)
             else:
-                assert self.data.read_int() == 130000
+                self.data.expect_int(130000)
 
         if self.game_version >= 130100:
             length = self.data.read_int()
@@ -1022,7 +1022,7 @@ class SaveFile:
                 i2 = self.data.read_long()
                 self.utl3.append((i1, i2))
 
-            assert self.data.read_int() == 130100
+            self.data.expect_int(130100)
 
         if self.game_version >= 130301:
             length = self.data.read_int()
@@ -1033,13 +1033,13 @@ class SaveFile:
                 value_2 = self.data.read_double()
                 self.ustid1[key] = (value_1, value_2)
 
-            assert self.data.read_int() == 130301
+            self.data.expect_int(130301)
 
         if self.game_version >= 130400:
             self.ud13 = self.data.read_double()
             self.ud14 = self.data.read_double()
 
-            assert self.data.read_int() == 130400
+            self.data.expect_int(130400)
 
         if self.game_version >= 130500:
             self.utl4: list[tuple[int, list[tuple[int, int, int, list[int]]]]] = []
@@ -1064,7 +1064,7 @@ class SaveFile:
 
                 self.utl4.append((id, ls2))
 
-            assert self.data.read_int() == 130500
+            self.data.expect_int(130500)
 
         if self.game_version >= 130600:
             self.uby14 = self.data.read_byte()
@@ -1072,7 +1072,7 @@ class SaveFile:
             if self.not_jp():
                 self.ush12 = self.data.read_short()
 
-            assert self.data.read_int() == 130600
+            self.data.expect_int(130600)
 
         if self.game_version >= 130700:
             if self.is_jp():
@@ -1109,7 +1109,7 @@ class SaveFile:
 
                 self.ushd1[key] = (value, value_2, data2)
 
-            assert self.data.read_int() == 130700
+            self.data.expect_int(130700)
 
         if self.game_version >= 140000:
             self.ui22 = self.data.read_int()
@@ -1150,11 +1150,11 @@ class SaveFile:
                 value = self.data.read_byte()
                 self.ushd2[key] = value
 
-            assert self.data.read_int() == 140000
+            self.data.expect_int(140000)
 
         if self.game_version >= 140100 and self.game_version < 140500:
             self.uby21 = self.data.read_byte()
-            assert self.data.read_int() == 140100
+            self.data.expect_int(140100)
 
         if self.game_version >= 140200:
             length = self.data.read_byte()
@@ -1228,7 +1228,7 @@ class SaveFile:
 
             self.hundred_million_ticket = self.data.read_int()
 
-            assert self.data.read_int() == 140200
+            self.data.expect_int(140200)
 
         if self.game_version >= 140300:
             length = self.data.read_byte()
@@ -1263,7 +1263,7 @@ class SaveFile:
 
             self.ub37 = self.data.read_bool()
 
-            assert self.data.read_int() == 140300
+            self.data.expect_int(140300)
 
         self.remaining_data = self.data.read_to_end(32)
 

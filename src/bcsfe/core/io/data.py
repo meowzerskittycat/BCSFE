@@ -9,6 +9,19 @@ from bcsfe import core
 import datetime
 
 
+class DataError(Exception):
+    """Raised when binary data doesn't have the expected layout."""
+
+
+class EndOfDataError(DataError, EOFError):
+    """Raised when reading past the end (or before the start) of the data."""
+
+
+class UnexpectedValueError(DataError):
+    """Raised when a value that must have a fixed value (e.g. a save section
+    marker) has some other value. Usually means the save layout changed."""
+
+
 class PaddingType(enum.Enum):
     PKCS7 = enum.auto()
     ZERO = enum.auto()
@@ -133,9 +146,29 @@ class Data:
         return self.data
 
     def read_bytes(self, length: int) -> bytes:
-        result = self.data[self.pos : self.pos + length]
-        self.pos += length
+        end = self.pos + length
+        if length < 0 or self.pos < 0 or end > len(self.data):
+            raise EndOfDataError(
+                f"tried to read {length} bytes at offset {self.pos} "
+                f"(0x{max(self.pos, 0):x}), but the data is only {len(self.data)} bytes long"
+            )
+        result = self.data[self.pos : end]
+        self.pos = end
         return result
+
+    def expect_int(self, expected: int, what: str = "section marker") -> None:
+        """Read an int and check it equals `expected`.
+
+        Save files end each version-specific section with a marker int equal
+        to that game version, so a mismatch pinpoints where parsing went
+        out of step with the real layout.
+        """
+        pos = self.pos
+        value = self.read_int()
+        if value != expected:
+            raise UnexpectedValueError(
+                f"expected {what} {expected} at offset {pos} (0x{pos:x}), found {value}"
+            )
 
     def read_to_end(self, remaining_data: int = 0) -> bytes:
         length = len(self.data) - self.pos - remaining_data

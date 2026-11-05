@@ -136,7 +136,12 @@ from bcsfe.core.io.waydroid import WayDroidHandler
 from bcsfe.core.io.bc_csv import CSV, Delimeter, Row
 from bcsfe.core.io.command import Command, CommandResult
 from bcsfe.core.io.config import Config, ConfigKey
-from bcsfe.core.io.data import Data
+from bcsfe.core.io.data import (
+    Data,
+    DataError,
+    EndOfDataError,
+    UnexpectedValueError,
+)
 from bcsfe.core.io.json_file import JsonFile
 from bcsfe.core.io.path import Path
 from bcsfe.core.io.save import SaveError, SaveFile, CantDetectSaveCCError
@@ -497,6 +502,9 @@ __all__ = [
     "CountryCode",
     "Path",
     "Data",
+    "DataError",
+    "EndOfDataError",
+    "UnexpectedValueError",
     "CSV",
     "ServerHandler",
     "GameVersion",

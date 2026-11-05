@@ -67,3 +67,25 @@ def test_corrupted_hash_is_rejected() -> None:
     raw[10] ^= 0xFF
     with pytest.raises(core.CantDetectSaveCCError):
         core.SaveFile(core.Data(bytes(raw)))
+
+
+def test_truncated_save_reports_offset() -> None:
+    raw = synthetic_saves()[-1].read_bytes()
+    save = core.SaveFile(core.Data(raw))  # find the region from the intact file
+    truncated = core.Data(raw[: len(raw) // 2])
+    broken = core.SaveFile(cc=save.cc, load=False)
+    broken.data = truncated
+    with pytest.raises(core.EndOfDataError, match="offset"):
+        broken.load()
+
+
+def test_layout_change_is_reported_with_marker() -> None:
+    data = core.Data()
+    data.write_int(110700)
+    data.write_int(110800)
+    data.reset_pos()
+    data.expect_int(110700)
+    with pytest.raises(
+        core.UnexpectedValueError, match="expected section marker 110900"
+    ):
+        data.expect_int(110900)
