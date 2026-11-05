@@ -1,39 +1,23 @@
 from __future__ import annotations
-from typing import Any
+from dataclasses import dataclass
+from typing import ClassVar
 from bcsfe import core
 from bcsfe.cli import edits, color
+from bcsfe.core.io.schema import (
+    I8,
+    I16,
+    Array,
+    Nested,
+    Struct,
+    field,
+    transient,
+)
 
 
-class Stage:
-    def __init__(self, clear_times: int):
-        self.clear_times = clear_times
-
-    @staticmethod
-    def init() -> Stage:
-        return Stage(0)
-
-    @staticmethod
-    def read(data: core.Data) -> Stage:
-        clear_times = data.read_short()
-        return Stage(clear_times)
-
-    def write(self, data: core.Data):
-        data.write_short(self.clear_times)
-
-    def serialize(self) -> int:
-        return self.clear_times
-
-    @staticmethod
-    def deserialize(data: int) -> Stage:
-        return Stage(
-            data,
-        )
-
-    def __repr__(self):
-        return f"Stage({self.clear_times})"
-
-    def __str__(self):
-        return self.__repr__()
+@dataclass
+class Stage(Struct):
+    __transparent__: ClassVar[bool] = True
+    clear_times: int = field(I16)
 
     def clear_stage(self, clear_amount: int = 1, ensure_cleared_only: bool = False):
         if ensure_cleared_only:
@@ -45,20 +29,13 @@ class Stage:
         self.clear_times = 0
 
 
-class Chapter:
-    def __init__(
-        self,
-        selected_stage: int,
-        clear_progress: int,
-        unlock_state: int,
-        stages: list[Stage],
-    ):
-        self.selected_stage = selected_stage
-        self.clear_progress = clear_progress
-        self.unlock_state = unlock_state
-        self.stages = stages
-
-        self.total_stages = 0
+@dataclass
+class Chapter(Struct):
+    selected_stage: int = field(I8)
+    clear_progress: int = field(I8)
+    unlock_state: int = field(I8)
+    stages: list[Stage] = field(Array(Nested(Stage), I16))
+    total_stages: int = transient(int)
 
     def clear_stage(
         self,
@@ -72,7 +49,7 @@ class Chapter:
         else:
             self.clear_progress = max(self.clear_progress, index + 1)
         self.stages[index].clear_stage(clear_amount, ensure_cleared_only)
-        self.chapter_unlock_state = 3
+        self.unlock_state = 3
         if index == self.total_stages - 1:
             return True
         return False
@@ -82,60 +59,11 @@ class Chapter:
         self.stages[index].unclear_stage()
         return True
 
-    @staticmethod
-    def init() -> Chapter:
-        return Chapter(0, 0, 0, [])
 
-    @staticmethod
-    def read(data: core.Data) -> Chapter:
-        selected_stage = data.read_byte()
-        clear_progress = data.read_byte()
-        unlock_state = data.read_byte()
-        total_stages = data.read_short()
-        stages = [Stage.read(data) for _ in range(total_stages)]
-        return Chapter(
-            selected_stage,
-            clear_progress,
-            unlock_state,
-            stages,
-        )
-
-    def write(self, data: core.Data):
-        data.write_byte(self.selected_stage)
-        data.write_byte(self.clear_progress)
-        data.write_byte(self.unlock_state)
-        data.write_short(len(self.stages))
-        for stage in self.stages:
-            stage.write(data)
-
-    def serialize(self) -> dict[str, Any]:
-        return {
-            "selected_stage": self.selected_stage,
-            "clear_progress": self.clear_progress,
-            "unlock_state": self.unlock_state,
-            "stages": [stage.serialize() for stage in self.stages],
-        }
-
-    @staticmethod
-    def deserialize(data: dict[str, Any]) -> Chapter:
-        return Chapter(
-            data.get("selected_stage", 0),
-            data.get("clear_progress", 0),
-            data.get("unlock_state", 0),
-            [Stage.deserialize(stage) for stage in data.get("stages", [])],
-        )
-
-    def __repr__(self):
-        return f"Chapter({self.selected_stage}, {self.clear_progress}, {self.unlock_state}, {self.stages})"
-
-    def __str__(self):
-        return self.__repr__()
-
-
-class ChaptersStars:
-    def __init__(self, unknown: int, chapters: list[Chapter]):
-        self.unknown = unknown
-        self.chapters = chapters
+@dataclass
+class ChaptersStars(Struct):
+    unknown: int = field(I8)
+    chapters: list[Chapter] = field(Array(Nested(Chapter), I8))
 
     def clear_stage(
         self,
@@ -150,59 +78,23 @@ class ChaptersStars:
         )
         if finished:
             if star + 1 < len(self.chapters):
-                self.chapters[star + 1].chapter_unlock_state = 1
+                self.chapters[star + 1].unlock_state = 1
         return finished
 
     def unclear_stage(self, star: int, stage: int) -> bool:
         finished = self.chapters[star].unclear_stage(stage)
         if finished and star + 1 < len(self.chapters):
             for chapter in self.chapters[star + 1 :]:
-                chapter.chapter_unlock_state = 0
+                chapter.unlock_state = 0
         return finished
 
-    @staticmethod
-    def init() -> ChaptersStars:
-        return ChaptersStars(0, [])
 
-    @staticmethod
-    def read(data: core.Data) -> ChaptersStars:
-        unknown = data.read_byte()
-        total_stars = data.read_byte()
-        chapters = [Chapter.read(data) for _ in range(total_stars)]
-        return ChaptersStars(
-            unknown,
-            chapters,
-        )
+@dataclass
+class ZeroLegendsChapters(Struct):
+    """Zero Legends, and (stored the same way) the Catclaw Championships."""
 
-    def write(self, data: core.Data):
-        data.write_byte(self.unknown)
-        data.write_byte(len(self.chapters))
-        for chapter in self.chapters:
-            chapter.write(data)
-
-    def serialize(self) -> dict[str, Any]:
-        return {
-            "unknown": self.unknown,
-            "chapters": [chapter.serialize() for chapter in self.chapters],
-        }
-
-    @staticmethod
-    def deserialize(data: dict[str, Any]) -> ChaptersStars:
-        return ChaptersStars(
-            data.get("unknown", 0),
-            [Chapter.deserialize(chapter) for chapter in data.get("chapters", [])],
-        )
-
-    def __repr__(self):
-        return f"ChaptersStars({self.unknown}, {self.chapters})"
-
-    def __str__(self):
-        return self.__repr__()
-
-
-class ZeroLegendsChapters:
-    def __init__(self, chapters: list[ChaptersStars]):
-        self.chapters = chapters
+    __transparent__: ClassVar[bool] = True
+    chapters: list[ChaptersStars] = field(Array(Nested(ChaptersStars), I16))
 
     def clear_stage(
         self,
@@ -218,7 +110,7 @@ class ZeroLegendsChapters:
             star, stage, clear_amount, overwrite_clear_progress, ensure_cleared_only
         )
         if finished and map + 1 < len(self.chapters):
-            self.chapters[map + 1].chapters[0].chapter_unlock_state = 1
+            self.chapters[map + 1].chapters[0].unlock_state = 1
 
         return finished
 
@@ -227,41 +119,9 @@ class ZeroLegendsChapters:
         finished = self.chapters[map].unclear_stage(star, stage)
         if finished and map + 1 < len(self.chapters) and star == 0:
             for chapter in self.chapters[map + 1].chapters:
-                chapter.chapter_unlock_state = 0
+                chapter.unlock_state = 0
 
         return finished
-
-    @staticmethod
-    def init() -> ZeroLegendsChapters:
-        return ZeroLegendsChapters([])
-
-    @staticmethod
-    def read(data: core.Data) -> ZeroLegendsChapters:
-        total_chapters = data.read_short()
-        chapters = [ChaptersStars.read(data) for _ in range(total_chapters)]
-        return ZeroLegendsChapters(
-            chapters,
-        )
-
-    def write(self, data: core.Data):
-        data.write_short(len(self.chapters))
-        for chapter in self.chapters:
-            chapter.write(data)
-
-    def serialize(self) -> list[dict[str, Any]]:
-        return [chapter.serialize() for chapter in self.chapters]
-
-    @staticmethod
-    def deserialize(data: list[dict[str, Any]]) -> ZeroLegendsChapters:
-        return ZeroLegendsChapters(
-            [ChaptersStars.deserialize(chapter) for chapter in data],
-        )
-
-    def __repr__(self):
-        return f"Chapters({self.chapters})"
-
-    def __str__(self):
-        return self.__repr__()
 
     def get_total_stars(self, chapter_id: int) -> int:
         return len(self.chapters[chapter_id].chapters)
@@ -273,11 +133,16 @@ class ZeroLegendsChapters:
         diff = chapter_id - len(self.chapters)
 
         if diff >= 0:
+            # new maps are shaped like the first one; each stage and star
+            # must be its own object, or clearing one clears them all
+            total_stars = self.get_total_stars(0) if self.chapters else 0
+            total_stages = self.get_total_stages(0, 0) if total_stars else 0
             for _ in range(diff + 1):
-                stages = [Stage(0)] * self.get_total_stages(0, 0)
-                chapters = [Chapter(0, 0, 0, stages)] * self.get_total_stars(0)
-                chapters_stars = ChaptersStars(0, chapters)
-                self.chapters.append(chapters_stars)
+                chapters = [
+                    Chapter(0, 0, 0, [Stage(0) for _ in range(total_stages)])
+                    for _ in range(total_stars)
+                ]
+                self.chapters.append(ChaptersStars(0, chapters))
 
     @staticmethod
     def edit_zero_legends(save_file: core.SaveFile):
