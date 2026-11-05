@@ -125,6 +125,9 @@ class VarIntCodec(Codec[int]):
     def default(self) -> int:
         return 0
 
+    def from_json(self, value: Any) -> int:
+        return int(value)
+
     def __repr__(self) -> str:
         return "VarInt"
 

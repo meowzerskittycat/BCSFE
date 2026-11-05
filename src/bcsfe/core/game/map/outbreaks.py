@@ -76,7 +76,7 @@ class Chapter:
         return Chapter(
             id,
             {
-                outbreak_id: Outbreak.deserialize(outbreak_data)
+                int(outbreak_id): Outbreak.deserialize(outbreak_data)
                 for outbreak_id, outbreak_data in data.items()
             },
         )
@@ -165,7 +165,7 @@ class Outbreaks:
     def deserialize(data: dict[str, Any]) -> Outbreaks:
         outbreaks = Outbreaks(
             {
-                chapter_id: Chapter.deserialize(chapter_data, chapter_id)
+                int(chapter_id): Chapter.deserialize(chapter_data, int(chapter_id))
                 for chapter_id, chapter_data in data.get("chapters", {}).items()
             }
         )
@@ -173,7 +173,7 @@ class Outbreaks:
             "zombie_event_remaining_time", 0.0
         )
         outbreaks.current_outbreaks = {
-            chapter_id: Chapter.deserialize(chapter_data, chapter_id)
+            int(chapter_id): Chapter.deserialize(chapter_data, int(chapter_id))
             for chapter_id, chapter_data in data.get("current_outbreaks", {}).items()
         }
 

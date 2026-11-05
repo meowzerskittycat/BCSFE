@@ -283,7 +283,7 @@ class Cannons:
     def deserialize(data: dict[str, Any]) -> Cannons:
         return Cannons(
             {
-                cannon_id: Cannon.deserialize(cannon)
+                int(cannon_id): Cannon.deserialize(cannon)
                 for cannon_id, cannon in data.get("cannons", {}).items()
             },
             data.get("selected_parts", []),

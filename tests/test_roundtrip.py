@@ -10,6 +10,7 @@ import gzip
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -124,3 +125,37 @@ def test_layout_change_is_reported_with_marker() -> None:
         core.UnexpectedValueError, match="expected section marker 110900"
     ):
         data.expect_int(110900)
+
+
+def _string_keyed_dicts(value: Any, path: str, seen: set[int], out: set[str]) -> None:
+    if id(value) in seen:
+        return
+    seen.add(id(value))
+    if isinstance(value, dict):
+        if any(isinstance(k, str) and k.lstrip("-").isdigit() for k in value):
+            out.add(path)
+        for v in value.values():
+            _string_keyed_dicts(v, f"{path}[*]", seen, out)
+    elif isinstance(value, (list, tuple)):
+        for v in value:
+            _string_keyed_dicts(v, f"{path}[*]", seen, out)
+    elif type(value).__module__.startswith("bcsfe") and hasattr(value, "__dict__"):
+        for k, v in vars(value).items():
+            if k not in ("data", "save_file"):
+                _string_keyed_dicts(v, f"{path}.{k}", seen, out)
+
+
+@pytest.mark.parametrize(
+    "path", real_fixtures() + synthetic_saves()[::8], ids=lambda p: p.name
+)
+def test_json_import_restores_int_keys(path: Path) -> None:
+    """After a trip through real JSON, id-keyed dicts must have int keys again.
+
+    Otherwise editing an id adds a second entry next to the string one and
+    the save gets the id written twice.
+    """
+    save = core.SaveFile(core.Data(path.read_bytes()))
+    loaded = core.SaveFile.from_dict(json.loads(json.dumps(save.to_dict())), warn=False)
+    found: set[str] = set()
+    _string_keyed_dicts(loaded, "save", set(), found)
+    assert not found

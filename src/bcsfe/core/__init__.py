@@ -142,7 +142,7 @@ from bcsfe.core.io.data import (
     EndOfDataError,
     UnexpectedValueError,
 )
-from bcsfe.core.io.json_file import JsonFile
+from bcsfe.core.io.json_file import JsonFile, int_keys
 from bcsfe.core.io.path import Path
 from bcsfe.core.io.save import SaveError, SaveFile, CantDetectSaveCCError
 from bcsfe.core.io.thread_helper import thread_run_many, Thread
@@ -510,6 +510,7 @@ __all__ = [
     "GameVersion",
     "SaveFile",
     "JsonFile",
+    "int_keys",
     "ManagedItem",
     "ManagedItemType",
     "BackupMetaData",

@@ -180,16 +180,16 @@ class Missions:
     @staticmethod
     def deserialize(data: dict[str, Any]):
         missions = Missions(
-            data.get("clear_states", {}),
-            data.get("requirements", {}),
-            data.get("progress_types", {}),
-            data.get("gamatoto_values", {}),
-            data.get("nyancombo_values", {}),
-            data.get("user_rank_values", {}),
-            data.get("expiry_values", {}),
-            data.get("preparing_values", {}),
+            core.int_keys(data.get("clear_states", {})),
+            core.int_keys(data.get("requirements", {})),
+            core.int_keys(data.get("progress_types", {})),
+            core.int_keys(data.get("gamatoto_values", {})),
+            core.int_keys(data.get("nyancombo_values", {})),
+            core.int_keys(data.get("user_rank_values", {})),
+            core.int_keys(data.get("expiry_values", {})),
+            core.int_keys(data.get("preparing_values", {})),
         )
-        missions.weekly_missions = data.get("weekly_missions", {})
+        missions.weekly_missions = core.int_keys(data.get("weekly_missions", {}))
         return missions
 
     def __repr__(self):
