@@ -923,7 +923,7 @@ class SaveFile:
             self.data.expect_int(110700)
 
         if self.game_version >= 110800:
-            self.cat_shrine.read_dialogs(self.data)
+            self.cat_shrine.read_part(self.data, "dialogs")
             self.ub21 = self.data.read_bool()
             self.dojo_3x_speed = self.data.read_bool()
             self.ub22 = self.data.read_bool()
@@ -1983,7 +1983,7 @@ class SaveFile:
             self.data.write_int(110700)
 
         if self.game_version >= 110800:
-            self.cat_shrine.write_dialogs(self.data)
+            self.cat_shrine.write_part(self.data, "dialogs")
             self.data.write_bool(self.ub21)
             self.data.write_bool(self.dojo_3x_speed)
             self.data.write_bool(self.ub22)
