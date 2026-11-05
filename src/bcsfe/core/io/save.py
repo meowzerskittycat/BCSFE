@@ -547,7 +547,7 @@ class SaveFile:
         if self.game_version >= 36:
             self.cats.read_chara_new_flags(self.data)
             self.shown_maxcollab_mg = self.data.read_bool()
-            self.item_pack.read_displayed_packs(self.data)
+            self.item_pack.read_part(self.data, "displayed_packs")
 
             self.data.expect_int(61)
 
@@ -570,16 +570,16 @@ class SaveFile:
         if self.game_version >= 41:
             self.tower = core.TowerChapters.read(self.data)
             self.missions = core.Missions.read(self.data, self.game_version)
-            self.tower.read_item_obtain_states(self.data)
+            self.tower.read_part(self.data, "item_obtain_states")
 
             self.data.expect_int(66)
 
         if self.game_version >= 42:
             self.dojo.read_ranking(self.data, self.game_version)
-            self.item_pack.read_three_days(self.data)
+            self.item_pack.read_part(self.data, "three_days")
             self.challenge = core.ChallengeChapters.read(self.data)
-            self.challenge.read_scores(self.data)
-            self.challenge.read_popup(self.data)
+            self.challenge.read_part(self.data, "scores")
+            self.challenge.read_part(self.data, "popup")
 
             self.data.expect_int(67)
 
@@ -620,7 +620,7 @@ class SaveFile:
             self.data.expect_int(77)
 
         if self.game_version >= 80000:
-            self.officer_pass.read_gold_pass(self.data, self.game_version)
+            self.officer_pass.read_part(self.data, "gold_pass", self.game_version)
             self.cats.read_talents(self.data)
             self.np = self.data.read_int()
             self.ub6 = self.data.read_bool()
@@ -630,7 +630,7 @@ class SaveFile:
         if self.game_version >= 80200:
             self.ub7 = self.data.read_bool()
             self.leadership = self.data.read_short()
-            self.officer_pass.read_cat_data(self.data)
+            self.officer_pass.read_part(self.data, "cat_data")
 
             self.data.expect_int(80200)
 
@@ -1660,7 +1660,7 @@ class SaveFile:
         if self.game_version >= 36:
             self.cats.write_chara_new_flags(self.data)
             self.data.write_bool(self.shown_maxcollab_mg)
-            self.item_pack.write_displayed_packs(self.data)
+            self.item_pack.write_part(self.data, "displayed_packs")
             self.data.write_int(61)
 
         if self.game_version >= 38:
@@ -1680,15 +1680,15 @@ class SaveFile:
         if self.game_version >= 41:
             self.tower.write(self.data)
             self.missions.write(self.data, self.game_version)
-            self.tower.write_item_obtain_states(self.data)
+            self.tower.write_part(self.data, "item_obtain_states")
             self.data.write_int(66)
 
         if self.game_version >= 42:
             self.dojo.write_ranking(self.data, self.game_version)
-            self.item_pack.write_three_days(self.data)
+            self.item_pack.write_part(self.data, "three_days")
             self.challenge.write(self.data)
-            self.challenge.write_scores(self.data)
-            self.challenge.write_popup(self.data)
+            self.challenge.write_part(self.data, "scores")
+            self.challenge.write_part(self.data, "popup")
             self.data.write_int(67)
 
         if self.game_version >= 43:
@@ -1721,7 +1721,7 @@ class SaveFile:
             self.data.write_int(77)
 
         if self.game_version >= 80000:
-            self.officer_pass.write_gold_pass(self.data, self.game_version)
+            self.officer_pass.write_part(self.data, "gold_pass", self.game_version)
             self.cats.write_talents(self.data)
             self.data.write_int(self.np)
             self.data.write_bool(self.ub6)
@@ -1730,7 +1730,7 @@ class SaveFile:
         if self.game_version >= 80200:
             self.data.write_bool(self.ub7)
             self.data.write_short(self.leadership)
-            self.officer_pass.write_cat_data(self.data)
+            self.officer_pass.write_part(self.data, "cat_data")
             self.data.write_int(80200)
 
         if self.game_version >= 80300:

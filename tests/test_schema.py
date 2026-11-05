@@ -13,11 +13,13 @@ from bcsfe.core.io.schema import (
     I32,
     Array,
     Bool,
+    Grid,
     Map,
     Nested,
     String,
     Struct,
     field,
+    transient,
 )
 
 
@@ -113,3 +115,40 @@ def test_transparent_struct_json_is_its_value() -> None:
     # through real JSON, where keys become strings
     again = Holder.deserialize(json.loads(json.dumps(value.serialize())))
     assert again == value
+
+
+@dataclass
+class Split(Struct):
+    head: int = field(I8)
+    later: list[int] = field(Array(I8, I8), part="later")
+    grid: list[list[bool]] = field(Grid(Bool, I8), part="grid")
+    cache: list[int] = transient(list)
+
+
+def test_parts_are_read_and_written_separately() -> None:
+    value = Split(1, [2, 3], [[True, False]])
+    value.cache.append(99)
+    data = core.Data()
+    value.write(data)
+    value.write_part(data, "later")
+    value.write_part(data, "grid")
+    assert data.to_bytes() == b"\x01" + b"\x02\x02\x03" + b"\x01\x02\x01\x00"
+
+    data.reset_pos()
+    again = Split.read(data)
+    again.read_part(data, "later")
+    again.read_part(data, "grid")
+    assert again == value  # transient fields aren't compared
+    assert again.cache == []
+    assert "cache" not in value.serialize()
+
+
+def test_empty_grid_has_no_columns() -> None:
+    data = core.Data()
+    Grid(Bool, I8).write(data, [])
+    assert data.to_bytes() == b"\x00\x00"
+
+
+def test_unknown_part_is_an_error() -> None:
+    with pytest.raises(ValueError):
+        Split().read_part(core.Data(), "nope")

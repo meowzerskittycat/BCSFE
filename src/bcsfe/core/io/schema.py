@@ -267,9 +267,79 @@ class Nested(Codec[S]):
         return f"Nested({self.struct_type.__name__})"
 
 
+class Grid(Codec[list[list[T]]]):
+    """Rows of equal length: the row count, the column count, then the items
+    row by row. An empty grid is written with 0 columns."""
+
+    def __init__(self, item: Codec[T], length: Codec[int] = I32):
+        self.item = item
+        self.length = length
+
+    def read(self, data: Data, gv: Any = None) -> list[list[T]]:
+        rows = self.length.read(data, gv)
+        cols = self.length.read(data, gv)
+        return [[self.item.read(data, gv) for _ in range(cols)] for _ in range(rows)]
+
+    def write(self, data: Data, value: list[list[T]], gv: Any = None) -> None:
+        self.length.write(data, len(value), gv)
+        self.length.write(data, len(value[0]) if value else 0, gv)
+        for row in value:
+            for v in row:
+                self.item.write(data, v, gv)
+
+    def default(self) -> list[list[T]]:
+        return []
+
+    def to_json(self, value: list[list[T]]) -> Any:
+        return [[self.item.to_json(v) for v in row] for row in value]
+
+    def from_json(self, value: Any) -> list[list[T]]:
+        return [[self.item.from_json(v) for v in row] for row in value]
+
+    def __repr__(self) -> str:
+        return f"Grid({self.item!r}, {self.length!r})"
+
+
+class Section(Codec[Any]):
+    """A section class with its own read/write/serialize/deserialize/init,
+    for embedding sections that aren't declared with the schema yet.
+
+    `versioned` says whether its read/write (and init) take the game version.
+    """
+
+    def __init__(self, section_type: Any, versioned: bool = False):
+        self.section_type = section_type
+        self.versioned = versioned
+
+    def read(self, data: Data, gv: Any = None) -> Any:
+        if self.versioned:
+            return self.section_type.read(data, gv)
+        return self.section_type.read(data)
+
+    def write(self, data: Data, value: Any, gv: Any = None) -> None:
+        if self.versioned:
+            value.write(data, gv)
+        else:
+            value.write(data)
+
+    def default(self) -> Any:
+        return self.section_type.init()
+
+    def to_json(self, value: Any) -> Any:
+        return value.serialize()
+
+    def from_json(self, value: Any) -> Any:
+        return self.section_type.deserialize(value)
+
+    def __repr__(self) -> str:
+        return f"Section({self.section_type.__name__})"
+
+
 _CODEC = "bcsfe_codec"
 _SINCE = "bcsfe_since"
 _BEFORE = "bcsfe_before"
+_PART = "bcsfe_part"
+_TRANSIENT = "bcsfe_transient"
 
 
 def field(
@@ -278,6 +348,7 @@ def field(
     *,
     since: int | None = None,
     before: int | None = None,
+    part: str | None = None,
 ) -> Any:
     """Declare a binary field.
 
@@ -285,23 +356,35 @@ def field(
     for game versions where the field isn't stored; it defaults to the
     codec's default. With `since` / `before` the field is only read and
     written when ``since <= game version < before``.
+
+    Some sections are stored in several places in the save. Fields with a
+    `part` name aren't handled by :meth:`Struct.read` / :meth:`Struct.write`;
+    read and write them where they occur with :meth:`Struct.read_part` /
+    :meth:`Struct.write_part`. JSON still has all fields together.
     """
     factory: Callable[[], Any] = default if default is not None else codec.default
     return dataclasses.field(
         default_factory=factory,
-        metadata={_CODEC: codec, _SINCE: since, _BEFORE: before},
+        metadata={_CODEC: codec, _SINCE: since, _BEFORE: before, _PART: part},
+    )
+
+
+def transient(default: Callable[[], T]) -> Any:
+    """An attribute that is neither in the save nor in JSON (editor state)."""
+    return dataclasses.field(
+        default_factory=default, compare=False, repr=False, metadata={_TRANSIENT: True}
     )
 
 
 class _Field:
-    __slots__ = ("name", "codec", "since", "before", "factory")
+    __slots__ = ("name", "codec", "since", "before", "part")
 
     def __init__(self, f: dataclasses.Field[Any]):
         self.name = f.name
         self.codec: Codec[Any] = f.metadata[_CODEC]
         self.since: int | None = f.metadata.get(_SINCE)
         self.before: int | None = f.metadata.get(_BEFORE)
-        self.factory: Callable[[], Any] = f.default_factory  # type: ignore[assignment]
+        self.part: str | None = f.metadata.get(_PART)
 
     def present(self, gv: Any, owner: str) -> bool:
         if self.since is None and self.before is None:
@@ -317,9 +400,9 @@ class Struct:
     """Base class for sections whose layout is a fixed sequence of fields.
 
     Subclasses must be dataclasses whose fields are all declared with
-    :func:`field`. Set ``__transparent__ = True`` on a single-field struct
-    to make its JSON form just that field's value (e.g. a bare int) rather
-    than an object.
+    :func:`field` (or :func:`transient`). Set ``__transparent__ = True`` on a
+    single-field struct to make its JSON form just that field's value (e.g. a
+    bare int) rather than an object.
     """
 
     __layout__: ClassVar[list[_Field] | None] = None
@@ -331,6 +414,8 @@ class Struct:
         if cached is None:
             layout: list[_Field] = []
             for f in dataclasses.fields(cls):  # type: ignore[arg-type]
+                if f.metadata.get(_TRANSIENT):
+                    continue
                 if f.metadata.get(_CODEC) is None:
                     raise TypeError(
                         f"{cls.__name__}.{f.name} is not declared with field()"
@@ -342,19 +427,34 @@ class Struct:
         return cached
 
     @classmethod
+    def _part(cls, part: str | None) -> list[_Field]:
+        fields = [f for f in cls.layout() if f.part == part]
+        if part is not None and not fields:
+            raise ValueError(f"{cls.__name__} has no part {part!r}")
+        return fields
+
+    @classmethod
     def init(cls: type[S]) -> S:
         return cls()
 
     @classmethod
     def read(cls: type[S], data: Data, gv: Any = None) -> S:
         values: dict[str, Any] = {}
-        for f in cls.layout():
+        for f in cls._part(None):
             if f.present(gv, cls.__name__):
                 values[f.name] = f.codec.read(data, gv)
         return cls(**values)
 
     def write(self, data: Data, gv: Any = None) -> None:
-        for f in self.layout():
+        self.write_part(data, None, gv)
+
+    def read_part(self, data: Data, part: str, gv: Any = None) -> None:
+        for f in self._part(part):
+            if f.present(gv, type(self).__name__):
+                setattr(self, f.name, f.codec.read(data, gv))
+
+    def write_part(self, data: Data, part: str | None, gv: Any = None) -> None:
+        for f in self._part(part):
             if f.present(gv, type(self).__name__):
                 f.codec.write(data, getattr(self, f.name), gv)
 
