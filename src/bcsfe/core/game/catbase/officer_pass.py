@@ -5,13 +5,13 @@ from typing import Any
 from bcsfe import core
 from bcsfe.cli import color
 from bcsfe.core.game.catbase.nyanko_club import NyankoClub
-from bcsfe.core.io.schema import I16, I32, Section, Struct, field
+from bcsfe.core.io.schema import I16, I32, Nested, Struct, field
 
 
 @dataclass
 class OfficerPass(Struct):
     play_time: int = field(I32)
-    gold_pass: NyankoClub = field(Section(NyankoClub, versioned=True), part="gold_pass")
+    gold_pass: NyankoClub = field(Nested(NyankoClub), part="gold_pass")
     cat_id: int = field(I16, part="cat_data")
     cat_form: int = field(I16, part="cat_data")
 
