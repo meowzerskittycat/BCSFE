@@ -185,6 +185,8 @@ class ChaptersStars:
                 chapter.stages.append(Stage.read(data))
 
     def write_stages(self, data: core.Data):
+        if not self.chapters:
+            return
         for i in range(len(self.chapters[0].stages)):
             for chapter in self.chapters:
                 chapter.stages[i].write(data)

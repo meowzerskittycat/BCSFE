@@ -1,5 +1,8 @@
 from __future__ import annotations
+from dataclasses import dataclass
+
 from bcsfe import core
+from bcsfe.core.io.schema import I32, Array, Struct, field
 from bcsfe.cli import dialog_creator, color
 
 
@@ -41,50 +44,10 @@ class SchemeDataItem:
         return name.replace("<flash>,", "").replace("<flash>", "")
 
 
-class SchemeItems:
-    def __init__(self, to_obtain: list[int], received: list[int]):
-        self.to_obtain = to_obtain
-        self.received = received
-
-    @staticmethod
-    def init() -> SchemeItems:
-        return SchemeItems([], [])
-
-    @staticmethod
-    def read(stream: core.Data) -> SchemeItems:
-        total = stream.read_int()
-        to_obtain: list[int] = []
-        for _ in range(total):
-            to_obtain.append(stream.read_int())
-
-        total = stream.read_int()
-        received: list[int] = []
-        for _ in range(total):
-            received.append(stream.read_int())
-
-        return SchemeItems(to_obtain, received)
-
-    def write(self, stream: core.Data):
-        stream.write_int(len(self.to_obtain))
-        for item in self.to_obtain:
-            stream.write_int(item)
-
-        stream.write_int(len(self.received))
-        for item in self.received:
-            stream.write_int(item)
-
-    def serialize(self) -> dict[str, list[int]]:
-        return {"to_obtain": self.to_obtain, "received": self.received}
-
-    @staticmethod
-    def deserialize(data: dict[str, list[int]]) -> SchemeItems:
-        return SchemeItems(data.get("to_obtain", []), data.get("received", []))
-
-    def __repr__(self) -> str:
-        return f"SchemeItems(to_obtain={self.to_obtain!r}, received={self.received!r})"
-
-    def __str__(self) -> str:
-        return self.__repr__()
+@dataclass
+class SchemeItems(Struct):
+    to_obtain: list[int] = field(Array(I32))
+    received: list[int] = field(Array(I32))
 
     def edit(self, save_file: core.SaveFile):
         item_names = core.core_data.get_gatya_item_names(save_file)

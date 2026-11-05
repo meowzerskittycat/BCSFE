@@ -1,95 +1,19 @@
 from __future__ import annotations
-from typing import Any
+from dataclasses import dataclass
 from bcsfe import core
 from bcsfe.cli import color, dialog_creator
+from bcsfe.core.io.schema import F64, I8, I32, I64, Array, Bool, Struct, field
 
 
-class CatShrine:
-    def __init__(
-        self,
-        unknown: bool,
-        stamp_1: float,
-        stamp_2: float,
-        shrine_gone: bool,
-        flags: list[int],
-        xp_offering: int,
-    ):
-        self.unknown = unknown
-        self.stamp_1 = stamp_1
-        self.stamp_2 = stamp_2
-        self.shrine_gone = shrine_gone
-        self.flags = flags
-        self.xp_offering = xp_offering
-        self.dialogs = 0
-
-    @staticmethod
-    def init() -> CatShrine:
-        return CatShrine(False, 0.0, 0.0, False, [], 0)
-
-    @staticmethod
-    def read(stream: core.Data) -> CatShrine:
-        unknown = stream.read_bool()
-        stamp_1 = stream.read_double()
-        stamp_2 = stream.read_double()
-        shrine_gone = stream.read_bool()
-        flags = stream.read_byte_list(length=stream.read_byte())
-        xp_offering = stream.read_long()
-        return CatShrine(unknown, stamp_1, stamp_2, shrine_gone, flags, xp_offering)
-
-    def write(self, stream: core.Data):
-        stream.write_bool(self.unknown)
-        stream.write_double(self.stamp_1)
-        stream.write_double(self.stamp_2)
-        stream.write_bool(self.shrine_gone)
-        stream.write_byte(len(self.flags))
-        stream.write_byte_list(self.flags, write_length=False)
-        stream.write_long(self.xp_offering)
-
-    def read_dialogs(self, stream: core.Data):
-        self.dialogs = stream.read_int()
-
-    def write_dialogs(self, stream: core.Data):
-        stream.write_int(self.dialogs)
-
-    def serialize(self) -> dict[str, Any]:
-        return {
-            "unknown": self.unknown,
-            "stamp_1": self.stamp_1,
-            "stamp_2": self.stamp_2,
-            "shrine_gone": self.shrine_gone,
-            "flags": self.flags,
-            "xp_offering": self.xp_offering,
-            "dialogs": self.dialogs,
-        }
-
-    @staticmethod
-    def deserialize(data: dict[str, Any]) -> CatShrine:
-        shrine = CatShrine(
-            data.get("unknown", False),
-            data.get("stamp_1", 0.0),
-            data.get("stamp_2", 0.0),
-            data.get("shrine_gone", False),
-            data.get("flags", []),
-            data.get("xp_offering", 0),
-        )
-        shrine.dialogs = data.get("dialogs", 0)
-        return shrine
-
-    def __repr__(self):
-        return (
-            f"CatShrine("
-            f"unknown={self.unknown}, "
-            f"stamp_1={self.stamp_1}, "
-            f"stamp_2={self.stamp_2}, "
-            f"shrine_gone={self.shrine_gone}, "
-            f"flags={self.flags}, "
-            f"xp_offering={self.xp_offering}, "
-            f"dialogs={self.dialogs}"
-            f")"
-        )
-
-    def __str__(self):
-        return self.__repr__()
+@dataclass
+class CatShrine(Struct):
+    unknown: bool = field(Bool)
+    stamp_1: float = field(F64)
+    stamp_2: float = field(F64)
+    shrine_gone: bool = field(Bool)
+    flags: list[int] = field(Array(I8, I8))
+    xp_offering: int = field(I64)
+    dialogs: int = field(I32, part="dialogs")
 
     def appear(self):
         self.shrine_gone = False
@@ -113,7 +37,10 @@ class CatShrine:
         )
         if level is None:
             return
-        save_file.cat_shrine.xp_offering = data.get_xp_from_level(level)
+        xp = data.get_xp_from_level(level)
+        if xp is None:
+            return
+        save_file.cat_shrine.xp_offering = xp
 
     @staticmethod
     def edit_xp(save_file: core.SaveFile):

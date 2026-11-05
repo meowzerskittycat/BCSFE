@@ -13,9 +13,7 @@ class GatyaItemNames:
         data = gdg.download("resLocal", "GatyaitemName.csv")
         if data is None:
             return None
-        csv = core.CSV(
-            data, core.Delimeter.from_country_code_res(self.save_file.cc)
-        )
+        csv = core.CSV(data, core.Delimeter.from_country_code_res(self.save_file.cc))
         names: list[str] = []
         for line in csv:
             names.append(line[0].to_str())
@@ -64,6 +62,7 @@ class GatyaItemBuyItem:
         self.gatya_ticket_id = gatya_ticket_id
         self.comment = comment
 
+
 class GatyaItemCategory(enum.Enum):
     MISC = 0
     EVENT_TICKETS = 1
@@ -78,6 +77,7 @@ class GatyaItemCategory(enum.Enum):
     LUCKY_TICKETS_2 = 10
     LABYRINTH_MEDALS = 11
     TREASURE_CHESTS = 12
+
 
 class GatyaItemBuy:
     def __init__(self, save_file: core.SaveFile):
@@ -119,7 +119,9 @@ class GatyaItemBuy:
         items.sort(key=lambda x: x.index)
         return items
 
-    def get_by_category(self, category: int | GatyaItemCategory) -> list[GatyaItemBuyItem] | None:
+    def get_by_category(
+        self, category: int | GatyaItemCategory
+    ) -> list[GatyaItemBuyItem] | None:
         if self.buy is None:
             return None
         if isinstance(category, GatyaItemCategory):
@@ -128,7 +130,9 @@ class GatyaItemBuy:
             [item for item in self.buy if item.category == category]
         )
 
-    def get_names_by_category(self, category: int | GatyaItemCategory) -> list[tuple[GatyaItemBuyItem, str | None]] | None:
+    def get_names_by_category(
+        self, category: int | GatyaItemCategory
+    ) -> list[tuple[GatyaItemBuyItem, str | None]] | None:
         items = self.get_by_category(category)
         if items is None:
             return None

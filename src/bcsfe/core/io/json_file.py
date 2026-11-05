@@ -1,7 +1,9 @@
 from __future__ import annotations
 import json
-from typing import Any
+from typing import Any, TypeVar
 from bcsfe import core
+
+V = TypeVar("V")
 
 
 class JsonFile:
@@ -28,3 +30,14 @@ class JsonFile:
 
     def as_object(self) -> Any:
         return self.obj
+
+
+def int_keys(d: dict[Any, V]) -> dict[int, V]:
+    """Turn the string keys JSON gives back into ints.
+
+    JSON object keys are always strings, so a dict[int, ...] written to JSON
+    comes back with "5" instead of 5. Left like that, the editor's own int
+    lookups miss, and adding an id can create a second entry for it, which
+    then gets written twice into the save.
+    """
+    return {int(k): v for k, v in d.items()}

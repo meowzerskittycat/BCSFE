@@ -734,18 +734,21 @@ class Cat:
 
     @staticmethod
     def deserialize(data: dict[str, Any]) -> Cat:
-        cat = Cat(data["id"], data["unlocked"])
-        cat.upgrade = core.Upgrade.deserialize(data["upgrade"])
-        cat.current_form = data["current_form"]
-        cat.unlocked_forms = data["unlocked_forms"]
-        cat.gatya_seen = data["gatya_seen"]
-        cat.max_upgrade_level = core.Upgrade.deserialize(data["max_upgrade_level"])
-        cat.catguide_collected = data["catguide_collected"]
-        cat.fourth_form = data["fourth_form"]
-        cat.catseyes_used = data["catseyes_used"]
+        cat = Cat(data["id"], data.get("unlocked", 0))
+        if "upgrade" in data:
+            cat.upgrade = core.Upgrade.deserialize(data["upgrade"])
+        cat.current_form = data.get("current_form", 0)
+        cat.unlocked_forms = data.get("unlocked_forms", 0)
+        cat.gatya_seen = data.get("gatya_seen", 0)
+        if "max_upgrade_level" in data:
+            cat.max_upgrade_level = core.Upgrade.deserialize(data["max_upgrade_level"])
+        cat.catguide_collected = data.get("catguide_collected", False)
+        cat.fourth_form = data.get("fourth_form", 0)
+        cat.catseyes_used = data.get("catseyes_used", 0)
+        talents = data.get("talents")
         cat.talents = (
-            [Talent.deserialize(talent) for talent in data["talents"]]
-            if data["talents"] is not None
+            [Talent.deserialize(talent) for talent in talents]
+            if talents is not None
             else None
         )
         return cat

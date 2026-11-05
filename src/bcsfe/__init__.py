@@ -4,17 +4,21 @@ __version__ = "3.6.0"
 
 __app_name__ = "bcsfe"
 
-try:
-    from importlib.resources.abc import Traversable
-except ImportError:
-    pass
+import sys
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    if sys.version_info >= (3, 11):
+        from importlib.resources.abc import Traversable
+    else:
+        from importlib.abc import Traversable
 
 from bcsfe import core, cli
 
 __all__ = ["core", "cli"]
 
 
-def copy_to_data_dir(base_path: "Traversable", path: "Traversable"):
+def copy_to_data_dir(base_path: Traversable, path: Traversable):
     if path.is_dir():
         for item in path.iterdir():
             copy_to_data_dir(base_path, item)

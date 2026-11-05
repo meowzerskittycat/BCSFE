@@ -600,7 +600,7 @@ class SaveOrbs:
 
         all_effects_str = ", ".join(
             f"<{color_from_effect(self.orb_info_list.get_all_effects().index(effect))}>{effect_str}</>"
-            for effect_str, effect in zip(all_effects_str, all_effects)
+            for effect_str, effect in zip(all_effects_str, all_effects, strict=False)
         )
 
         color.color_print_key(

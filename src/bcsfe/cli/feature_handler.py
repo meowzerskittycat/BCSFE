@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 from bcsfe import core
 from bcsfe.cli import dialog_creator, color, edits, save_management, main
 

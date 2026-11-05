@@ -1,6 +1,6 @@
 from __future__ import annotations
 import enum
-from typing import Any, Optional
+from typing import Any
 from bcsfe import core
 from bcsfe.cli import color, dialog_creator
 import requests
@@ -357,7 +357,7 @@ class Config:
         color.color_print_key(text)
         all_locales = core.LocalManager.get_all_locales()
         value = dialog_creator.single_select_key(
-            dialog_creator.Actions[Optional[str]]
+            dialog_creator.Actions[str | None]
             .new()
             .add_new_raw(all_locales, lambda v: all_locales[v])
             .add_new_key("add_locale", lambda _: self.add_locale())
@@ -450,7 +450,7 @@ class Config:
         )
         color.color_print_key(text)
         value = dialog_creator.single_select_key(
-            dialog_creator.Actions[Optional[str]]
+            dialog_creator.Actions[str | None]
             .new()
             .add_new_raw(themes, lambda v: themes[v])
             .add_new_key("add_theme", lambda _: self.add_theme())

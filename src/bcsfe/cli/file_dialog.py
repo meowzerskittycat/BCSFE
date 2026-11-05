@@ -1,5 +1,4 @@
 from __future__ import annotations
-from typing import Optional
 from bcsfe import core
 from bcsfe.cli import color, dialog_creator
 
@@ -53,7 +52,7 @@ class FileDialog:
         files_str_ls = [file.basename() for file in files]
 
         return dialog_creator.single_select_key(
-            dialog_creator.Actions[Optional[str]]
+            dialog_creator.Actions[str | None]
             .new()
             .add_new_raw(files_str_ls, lambda index: files[index].to_str())
             .add_new_key(

@@ -53,14 +53,20 @@ class RootHandler:
         return core.CommandResult.create_success()
 
     def close_game(self) -> core.CommandResult:
-        cmd = core.Command(
-            f"sudo pkill -f {self.get_package_name()}",
-        )
+        cmd = core.Command(["sudo", "pkill", "-f", self.get_package_name()])
         return cmd.run()
 
     def run_game(self) -> core.CommandResult:
         cmd = core.Command(
-            f"sudo monkey -p {self.get_package_name()} -c android.intent.category.LAUNCHER 1",
+            [
+                "sudo",
+                "monkey",
+                "-p",
+                self.get_package_name(),
+                "-c",
+                "android.intent.category.LAUNCHER",
+                "1",
+            ]
         )
         return cmd.run()
 

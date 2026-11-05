@@ -1,4 +1,4 @@
-from __future__ import annotations, division
+from __future__ import annotations
 from bcsfe import core, cli
 
 from typing import Any

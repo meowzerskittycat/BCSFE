@@ -1,62 +1,26 @@
 from __future__ import annotations
 
 import datetime
+from dataclasses import dataclass
 from math import inf
 import math
 from typing import Any
 from bcsfe import core
 from bcsfe.cli import dialog_creator, color
+from bcsfe.core.io.schema import F64, I8, Bool, Struct, field
 
 
-class EndlessItem:
-    def __init__(
-        self, active: bool, unknown: bool, amount: int, start: float, end: float
-    ):
-        self.active = active
-        self.unknown = unknown
-        self.amount = amount
-        self.start = start
-        self.end = end
+@dataclass
+class EndlessItem(Struct):
+    """A battle item that is on for a while (start/end are timestamps)."""
 
-    @staticmethod
-    def init() -> EndlessItem:
-        return EndlessItem(False, False, 0, 0, 0)
-
-    @staticmethod
-    def read(stream: core.Data) -> EndlessItem:
-        return EndlessItem(
-            stream.read_bool(),
-            stream.read_bool(),
-            stream.read_byte(),
-            stream.read_double(),
-            stream.read_double(),
-        )
-
-    def write(self, stream: core.Data):
-        stream.write_bool(self.active)
-        stream.write_bool(self.unknown)
-        stream.write_byte(self.amount)
-        stream.write_double(self.start)
-        stream.write_double(self.end)
-
-    def serialize(self) -> dict[str, Any]:
-        return {
-            "active": self.active,
-            "unknown": self.unknown,
-            "amount": self.amount,
-            "start": self.start,
-            "end": self.end,
-        }
-
-    @staticmethod
-    def deserialize(data: dict[str, Any]) -> EndlessItem:
-        return EndlessItem(
-            data.get("active", False),
-            data.get("unknown", False),
-            data.get("amount", 0),
-            data.get("start", 0.0),
-            data.get("end", 0.0),
-        )
+    active: bool = field(Bool)
+    unknown: bool = field(Bool)
+    amount: int = field(I8)
+    # new saves have always started these as int 0 (written as 0.0); kept so
+    # the generated test fixtures stay identical
+    start: float = field(F64, default=int)
+    end: float = field(F64, default=int)
 
     def get_endless_duration(self) -> datetime.timedelta | None:
         if not self.active:
@@ -252,7 +216,7 @@ class BattleItems:
         options = dialog_creator.multi_select_indexes_key(
             [
                 core.localize("endless_item_item", item=item, int=val, escape=False)
-                for item, val in zip(item_names, current_values)
+                for item, val in zip(item_names, current_values, strict=False)
             ],
             "select_option",
         )

@@ -2,10 +2,10 @@ from __future__ import annotations
 import glob
 import os
 import shutil
+import sys
 
 from bcsfe import core, __app_name__
 import re
-import sys  # type: ignore maybe fix issue with windows not creating dirs, idk someone said this on stackoverflow
 
 
 class Path:
@@ -29,11 +29,21 @@ class Path:
         self.generate_dirs()
         if os.name == "nt":
             os.startfile(self.path)  # type: ignore
+        elif sys.platform == "darwin":
+            core.Command(["open", self.path], display_output=False).run()
         elif os.name == "posix":
-            cmd = f"dbus-send --session --dest=org.freedesktop.FileManager1 --type=method_call --print-reply /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:'file://{self.path}' string:''"
+            cmd = [
+                "dbus-send",
+                "--session",
+                "--dest=org.freedesktop.FileManager1",
+                "--type=method_call",
+                "--print-reply",
+                "/org/freedesktop/FileManager1",
+                "org.freedesktop.FileManager1.ShowItems",
+                f"array:string:file://{self.path}",
+                "string:",
+            ]
             core.Command(cmd, display_output=False).run_in_thread()
-        elif os.name == "mac":
-            core.Command(f"open {self.path}", display_output=False).run()
         else:
             raise OSError("Unknown OS")
 
@@ -41,17 +51,16 @@ class Path:
         os_name = os.name
         if os_name == "nt":
             os.startfile(self.path)  # type: ignore
+        elif sys.platform == "darwin":
+            core.Command(["open", self.path], display_output=False).run()
         elif os_name == "posix":
-            cmd = f"xdg-open {self.path}"
-            core.Command(cmd, display_output=False).run_in_thread()
-        elif os_name == "mac":
-            core.Command(f"open {self.path}", display_output=False).run()
+            core.Command(["xdg-open", self.path], display_output=False).run_in_thread()
         else:
             raise OSError("Unknown OS")
 
-    def run(self, arg: str = "", display_output: bool = False) -> core.CommandResult:
-        cmd_text = self.path + " " + arg
-        cmd = core.Command(cmd_text, display_output=display_output)
+    def run(self, *args: str, display_output: bool = False) -> core.CommandResult:
+        """Run this path as a program with the given arguments."""
+        cmd = core.Command([self.path, *args], display_output=display_output)
         return cmd.run()
 
     def to_str(self) -> str:
@@ -236,7 +245,7 @@ class Path:
     def is_file(self) -> bool:
         return os.path.isfile(self.path)
 
-    def get_dirs(self) -> list["Path"]:
+    def get_dirs(self) -> list[Path]:
         return [file for file in self.get_paths_dir() if file.is_directory()]
 
     def glob(self, pattern: str, recursive: bool = False) -> list[Path]:

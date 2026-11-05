@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import Callable, Any, Iterable
+from typing import Any
+from collections.abc import Callable, Iterable
 import threading
 
 

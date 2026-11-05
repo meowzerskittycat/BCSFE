@@ -42,7 +42,7 @@ class CountryCode:
         return CountryCode(code)
 
     @staticmethod
-    def get_all() -> list["CountryCode"]:
+    def get_all() -> list[CountryCode]:
         return [CountryCode(cc) for cc in CountryCodeType]
 
     @staticmethod

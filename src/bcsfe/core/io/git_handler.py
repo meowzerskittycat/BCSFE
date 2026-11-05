@@ -17,7 +17,7 @@ class Repo:
         path.generate_dirs()
         return path
 
-    def run_cmd(self, cmd: str) -> bool:
+    def run_cmd(self, cmd: list[str]) -> bool:
         result = core.Command(cmd).run()
         success = result.exit_code == 0
         if not success and self.output_error:
@@ -25,25 +25,21 @@ class Repo:
         return success
 
     def clone_to_temp(self, path: core.Path) -> bool:
-        cmd = f"git clone {self.url} {path}"
-        return self.run_cmd(cmd)
+        return self.run_cmd(["git", "clone", "--", self.url, str(path)])
 
     def clone(self) -> bool:
         if self.is_cloned():
             return True
-        cmd = f"git clone {self.url} {self.get_path()}"
-        success = self.run_cmd(cmd)
+        success = self.run_cmd(["git", "clone", "--", self.url, str(self.get_path())])
         if not success:
             self.get_path().remove()
         return success
 
     def pull(self) -> bool:
-        cmd = f"git -C {self.get_path()} pull"
-        return self.run_cmd(cmd)
+        return self.run_cmd(["git", "-C", str(self.get_path()), "pull"])
 
     def fetch(self) -> bool:
-        cmd = f"git -C {self.get_path()} fetch"
-        return self.run_cmd(cmd)
+        return self.run_cmd(["git", "-C", str(self.get_path()), "fetch"])
 
     def get_file(self, file_path: core.Path) -> core.Data | None:
         path = self.get_path().add(file_path)
@@ -86,5 +82,4 @@ class GitHandler:
 
     @staticmethod
     def is_git_installed() -> bool:
-        cmd = "git --version"
-        return core.Command(cmd).run().exit_code == 0
+        return core.Command(["git", "--version"]).run().exit_code == 0

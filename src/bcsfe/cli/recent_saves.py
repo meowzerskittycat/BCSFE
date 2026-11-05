@@ -47,7 +47,7 @@ class RecentSave:
             core.CountryCode(cc),
             core.GameVersion.from_string(gv),
             inquiry,
-            datetime.datetime.fromtimestamp(time_stamp),
+            core.io.save.from_timestamp(time_stamp),
             core.Path(name),
         )
 
@@ -57,7 +57,7 @@ class RecentSave:
             "cc": self.cc.get_code(),
             "gv": self.gv.to_string(),
             "inquiry": self.inquiry,
-            "timestamp": self.time.timestamp(),
+            "timestamp": core.io.save.to_timestamp(self.time),
             "name": self.name.to_str(),
         }
 

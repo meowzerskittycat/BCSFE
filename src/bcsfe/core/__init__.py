@@ -1,6 +1,6 @@
 from __future__ import annotations
 from collections.abc import Callable
-from typing import Any, Optional, TypeVar
+from typing import Any, TypeVar
 
 from bcsfe import __app_name__
 
@@ -136,8 +136,13 @@ from bcsfe.core.io.waydroid import WayDroidHandler
 from bcsfe.core.io.bc_csv import CSV, Delimeter, Row
 from bcsfe.core.io.command import Command, CommandResult
 from bcsfe.core.io.config import Config, ConfigKey
-from bcsfe.core.io.data import Data
-from bcsfe.core.io.json_file import JsonFile
+from bcsfe.core.io.data import (
+    Data,
+    DataError,
+    EndOfDataError,
+    UnexpectedValueError,
+)
+from bcsfe.core.io.json_file import JsonFile, int_keys
 from bcsfe.core.io.path import Path
 from bcsfe.core.io.save import SaveError, SaveFile, CantDetectSaveCCError
 from bcsfe.core.io.thread_helper import thread_run_many, Thread
@@ -385,7 +390,7 @@ def manage_game_data(_: Any = None):
         items = GameDataGetter.get_downloaded_versions_region(cc)
         items.sort(reverse=True)
         actions = (
-            dialog_creator.Actions[tuple[Optional[GameVersion], bool, bool]]
+            dialog_creator.Actions[tuple[GameVersion | None, bool, bool]]
             .new()
             .add_new_raw(
                 [ver.to_string() for ver in items],
@@ -443,7 +448,7 @@ def add_version(cc: CountryCode) -> GameVersion | None:
     if versions is None:
         return None
     actions = (
-        dialog_creator.Actions[Optional[str]]
+        dialog_creator.Actions[str | None]
         .new()
         .add_new_raw(versions, lambda i: versions[i])
         .add_new_key("none", lambda _: None)
@@ -497,11 +502,15 @@ __all__ = [
     "CountryCode",
     "Path",
     "Data",
+    "DataError",
+    "EndOfDataError",
+    "UnexpectedValueError",
     "CSV",
     "ServerHandler",
     "GameVersion",
     "SaveFile",
     "JsonFile",
+    "int_keys",
     "ManagedItem",
     "ManagedItemType",
     "BackupMetaData",
