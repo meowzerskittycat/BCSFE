@@ -36,6 +36,12 @@ Ctrl+C or Ctrl+D at the main menu asks whether to save before exiting
 explained and asked again (instead of quietly dropping the bad parts), lists take numbers, ranges
 and `all`, options can be picked by name, and yes/no questions only accept yes or no
 
+- `bcsfe.core` no longer imports the CLI: every menu, prompt and editor now lives under
+`bcsfe.cli` (mostly `cli/edits/`), and core reports status through `core.messages`, which the CLI
+connects to its output. Code that called editor methods on core classes (for example
+`core.StoryChapters.edit_treasures` or `save_file.gamatoto.edit_xp`) should call the matching
+function in `bcsfe.cli.edits` instead
+
 - A blank answer now cancels a prompt or keeps the current value, instead of repeating "Invalid
 input" forever
 
