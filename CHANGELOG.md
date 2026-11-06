@@ -2,12 +2,25 @@
 
 ## [Unreleased]
 
+### Links and updates
+
+- The fork is now version 4.0.0, so it no longer shares a version number with upstream's
+  3.6.0. JSON exported by 3.6.0 still imports.
+- The welcome banner and bug-report messages now point to this fork's GitHub repository and
+  issues instead of upstream's Discord and donation links (English, Vietnamese and Traditional
+  Chinese).
+- **Check for updates** now follows this fork's `main` branch on GitHub. It used to check PyPI's
+  `bcsfe`, which is upstream's package, so updating could replace this fork with upstream's
+  editor. The unused "Update to Beta Versions" option is gone.
+- Removed `.github/FUNDING.yml`, which pointed to upstream's donation page.
+
 ### Changed
 
 - Python 3.14 or later is now required (the version Termux ships)
 
 - Save sections are described once in a declarative schema instead of separately for reading,
-writing, JSON export, JSON import and new saves
+writing, JSON export, JSON import and new saves, and so is the order of every field in the save
+(`core/io/save_layout.py`), replacing about 3,000 lines of hand-written code
 
 - Stage-progress sections (main chapters, gauntlets, legend quest, aku, events, story, item reward
 and timed score stages) share one model and one set of read/write helpers
@@ -33,10 +46,17 @@ input" forever
 - `bcsfe info`, `bcsfe check`, `bcsfe export` and `bcsfe import` commands for scripts and bug
 reports
 
+- A test that runs every menu feature with several kinds of typed answers, offline and without
+game data, and checks none crash or leave a save that doesn't read back
+
 - A test suite (real saves from several regions and versions, including 15.7) and CI on Windows,
 macOS and Linux
 
 ### Fixed
+
+- `ui14` was never saved: `ui13` was written in its place, so it came back as a copy of `ui13`
+
+- Importing JSON dropped `uby21` (game versions 14.1 to 14.4)
 
 - The crash backup was written by a background thread while the editor kept using the save, so it
 could be half-written ("Failed to recover save file from temp file") or corrupt the save in use

@@ -1,359 +1,192 @@
-# Battle Cats Save File Editor
+<div align="center">
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/fieryhenry)
+# 🐱 Battle Cats Save File Editor
 
-[![LiberaPay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/fieryhenry)
+**A command line save editor for The Battle Cats, made safer and easier to use.**
 
-BCSFE is a python command line save editor for The Battle Cats.
+[![CI](https://github.com/meowzerskittycat/BCSFE/actions/workflows/ci.yml/badge.svg)](https://github.com/meowzerskittycat/BCSFE/actions/workflows/ci.yml)
+![Python 3.14+](https://img.shields.io/badge/python-3.14%2B-3776AB?logo=python&logoColor=white)
+![Game version 15.7](https://img.shields.io/badge/game%20version-up%20to%2015.7-orange)
+![Platforms](https://img.shields.io/badge/runs%20on-Android%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)
+[![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue)](LICENSE)
 
-Please submit issues and pull requests on [codeberg](https://codeberg.org/fieryhenry/BCSFE-Python)
+[Install](#-installation) · [Edit your save](#-editing-your-save) · [Menu tips](#-using-the-menu) · [Avoid bans](#%EF%B8%8F-avoiding-bans) · [Report a bug](https://github.com/meowzerskittycat/BCSFE/issues)
 
-Join the [discord server](https://discord.gg/DvmMgvn5ZB) if you want to suggest
-new features, report bugs or get help on how to use the editor (please read the
-below tutorials first before asking for help).
+</div>
 
-## Thanks to
+---
 
-Lethal's editor for giving me inspiration to start the project and it helped me
-work out how to patch the save data and edit cf/xp: <https://www.reddit.com/r/BattleCatsCheats/comments/djehhn/editoren/>
+A fork of [BCSFE-Python](https://codeberg.org/fieryhenry/BCSFE-Python) by fieryhenry.
 
-Beeven and csehydrogen's free and open source code, which helped me figure out how to
-patch save data: [beeven/battlecats](https://github.com/beeven/battlecats), [csehydrogen/BattleCatsHacker](https://github.com/csehydrogen/BattleCatsHacker)
+> [!IMPORTANT]
+> `pip install bcsfe` installs **upstream's** editor, not this fork. Use the [install commands below](#-installation).
+>
+> Report bugs in [this repo's issues](https://github.com/meowzerskittycat/BCSFE/issues). Upstream's Discord and Codeberg don't support this fork.
 
-Anyone who has supported my on [Ko-Fi](https://ko-fi.com/fieryhenry) or [LiberaPay](https://liberapay.com/fieryhenry)
+## ✨ What this fork adds
 
-Everyone who's given me saves, which helped to test save loading/saving and to
-test/develop new features
+| | Feature | What it means for you |
+|---|---|---|
+| ↩️ | **Undo** | Step back through your last 10 edits from the main menu. |
+| 🛡️ | **Safer editing** | If a feature fails, or you press Ctrl+C, your save is left exactly as it was. |
+| 🧭 | **Easier menu** | Stays in the same category after an edit; `0` goes back; type a name to run a feature. |
+| ⌨️ | **Command line tools** | `bcsfe info`, `check`, `export` and `import`, for scripts and bug reports. |
+| 🐛 | **Bug fixes** | No more save corruption after a JSON import, crowns and maps unlock properly, and [more](CHANGELOG.md). |
+| ✅ | **Tested** | Real saves from several regions and versions, checked on Windows, macOS and Linux. |
 
-### Localization
+## 📦 Installation
 
-- HungJoesifer for Vietnamese localization
+The editor can run on any device. It doesn't have to be the one the game is on. Click your platform:
 
-- LinYuAn for Traditional Chinese localization
+<details open>
+<summary><b>🤖 Android (Termux)</b></summary>
 
-### Themes
+<br>
 
-- HungJoesifer for the `discord` inspired theme
+1. Install **Termux** from [F-Droid](https://f-droid.org/packages/com.termux/) or [GitHub](https://github.com/termux/termux-app/releases).
 
-## Installation
+   > [!WARNING]
+   > The Google Play version of Termux doesn't fully work.
 
-Note the following tutorials are for the device you wish to run the editor on, not the device
-that you have the game installed on.
+2. Open Termux and run:
 
-For example just because you have the game on an android device, does not mean you have to run
-the editor on it. It is easier to run the editor on a PC / laptop rather than on a mobile device.
+   ```sh
+   termux-setup-storage
+   pkg update && pkg upgrade
+   pkg install python git
+   pip install git+https://github.com/meowzerskittycat/BCSFE
+   ```
 
-### Windows / MacOS
+3. Start the editor:
 
-1. Install Python 3.14 or later if you don't already have it: <https://www.python.org/downloads/>
+   ```sh
+   bcsfe
+   ```
 
-2. Open a terminal such as PowerShell or Command Prompt
+> [!NOTE]
+> Warnings about **tkinter** are normal on Android. You'll type file paths instead of picking them
+> in a window. Your downloads folder is `/sdcard/Download/`, e.g. `/sdcard/Download/SAVE_DATA`.
 
-3. Run the following command:
+</details>
 
-```powershell
-py -m pip install bcsfe
-```
+<details>
+<summary><b>🪟 Windows / 🍎 macOS</b></summary>
 
-4. If you get an error saying that `py` is not a recongnised command, then try:
+<br>
 
-```powershell
-python -m pip install bcsfe
-```
+1. Install [Python 3.14+](https://www.python.org/downloads/) and [Git](https://git-scm.com/downloads).
+2. In a terminal (PowerShell on Windows), run:
 
-or
+   ```sh
+   py -m pip install git+https://github.com/meowzerskittycat/BCSFE
+   py -m bcsfe
+   ```
 
-```powershell
-python3 -m pip install bcsfe
-```
+> [!TIP]
+> On macOS, or if `py` isn't found, use `python3` instead of `py`.
 
-5. If you get an error saying `No module named pip`, then run:
+</details>
 
-```powershell
-py -m ensurepip --upgrade
-```
+<details>
+<summary><b>🐧 Linux</b></summary>
 
-Again change `py` for `python` or `python3` if needed. I won't mention this again, so just remember
-the one which works at keep using that.
+<br>
 
-5. To run the editor, as long as Python is in your PATH, you should be able to run:
+Install Python 3.14+ and git with your package manager, then:
 
-```powershell
+```sh
+pipx install git+https://github.com/meowzerskittycat/BCSFE
 bcsfe
 ```
 
-6. If Python is not in your path you'll need to run:
+> [!TIP]
+> For the file picker window, install `tk` (it may be called `python-tk` or `python3-tk`).
 
-```powershell
-py -m bcsfe
-```
+</details>
 
-If you are using Windows and you are still struggling, try watching this video [here](https://codeberg.org/fieryhenry/videos/media/branch/main/bcsfe_windows_help.webm).
+<details>
+<summary><b>📱 iOS (a-Shell)</b></summary>
 
-7. To update the editor run:
+<br>
 
-```powershell
-py -m pip install -U bcsfe
-```
-
-8. To uninstall the editor run:
-
-```powershell
-py -m pip uninstall bcsfe
-```
-
-### Linux
-
-1. Install Python 3.14 or later using your system's package manager if you don't already have it
-
-2. You might have to install pip seperately with a package called `python-pip` or something similar
-or you can run the following command:
+> [!CAUTION]
+> Run `python3 --version` first. If a-Shell's Python is older than **3.14**, the editor won't install.
 
 ```sh
-python3 -m ensurepip --upgrade
-```
-
-3. Depending on your distro you might not be able to install the editor directly using the system
-pip and you might need to use pipx (python-pipx) or create a virtual environment manually.
-
-4. Using pipx:
-
-```sh
-pipx install bcsfe
-```
-
-5. If `~/.local/bin/` is in your path you should be able to run the editor with the command:
-
-```sh
-bcsfe
-```
-
-6. You may also need to install `tk` with your system package manager to open the
-file selection dialog. This package may be called `tk` or `python-tk` or `python3-tk`.
-
-7. To update the editor if you are using pipx run:
-
-```sh
-pipx upgrade bcsfe
-```
-
-8. To uninstall the editor if you are using pipx run:
-
-```sh
-pipx uninstall bcsfe
-```
-
-If anyone wants to put the editor on the AUR or another package repo, feel free, I'll be happy to
-help if needed.
-
-### Android
-
-You need to install a terminal emulator to be able to install and run Python packages.
-
-[Termux](https://termux.dev/en/) is a good option and is what this tutorial will use.
-
-1. Download Termux, you can either get it from [F-Droid](https://f-droid.org/), or the APK directly
-from [GitHub](https://github.com/termux/termux-app?tab=readme-ov-file#github). DO NOT use the
-Google Play Store version, as it does not fully work.
-
-I recommend using F-Droid since it can update Termux for you (and it's just a better alternative
-than using the Google Play Store).
-
-On F-Droid Termux is called `Termux Terminal emulator with packages`
-
-2. Once Termux is installed, open it and run the following commands:
-
-```sh
-termux-setup-storage
-termux-change-repo
-pkg update
-pkg upgrade
-pkg install python python-pip
-```
-
-When it asks for a mirror, it doesn't really matter which one you pick, the default single mirror
-works fine.
-
-3. Install the editor with the following command:
-
-```sh
-pip install bcsfe
-```
-
-Or if that doesn't work try:
-
-```sh
-python -m pip install bcsfe
-```
-
-4. Run the editor with the following command:
-
-```sh
-bcsfe
-```
-
-Or if that doesn't work try:
-
-```sh
-python -m bcsfe
-```
-
-Note that the editor might give you warnings about tkinter not being installed, you can just
-ignore those as tkinter will not work on mobile. This just means that instead of a graphical file
-selection dialog, you just have to type the file path manually.
-
-For example to save your save file to your downloads directory, the path might look something like
-`/storage/emulated/0/Download/SAVE_DATA` or `/sdcard/Download/SAVE_DATA`
-
-5. To update the editor run:
-
-```sh
-pip install -U bcsfe
-```
-
-Or
-
-```sh
-python -m pip install -U bcsfe
-```
-
-
-5. To uninstall the editor run:
-
-```sh
-pip uninstall bcsfe
-```
-
-Or
-
-```sh
-python -m pip uninstall bcsfe
-```
-
-### iOS
-
-The editor needs Python 3.14 or later. Check with `python3 --version` in a-Shell first: if
-a-Shell's Python is older, the editor won't install there.
-
-I do not have an iOS device, so there is no tutorial. The video that was recommended is now outdated.
-But for a general overview of what you need to do:
-
-1. Download a-Shell from the App Store
-2. Install the editor with:
-
-```sh
-pip install bcsfe
-```
-
-3. Run the editor with:
-
-```sh
-bcsfe
-```
-
-Or if that doesn't work try:
-
-```sh
-python -m bcsfe
-```
-
-Or 
-
-```sh
+pip install git+https://github.com/meowzerskittycat/BCSFE
 python3 -m bcsfe
 ```
 
-4. To update the editor run:
+</details>
 
-```sh
-pip install -U bcsfe
-```
+<details>
+<summary><b>🔄 Updating / uninstalling</b></summary>
 
-5. To uninstall the editor run:
+<br>
 
-```sh
-pip uninstall bcsfe
-```
-## Terms of Use
+| Action | pip | pipx |
+|---|---|---|
+| Update | `pip install -U git+https://github.com/meowzerskittycat/BCSFE` | `pipx upgrade bcsfe` |
+| Uninstall | `pip uninstall bcsfe` | `pipx uninstall bcsfe` |
 
-I don't like that I have to have Terms of use but these terms are designed to prevent scams and the
-exploitation of users.
+If you're switching from upstream's editor, the update command replaces it.
 
-By using the editor you agree to the following:
+</details>
 
-If you are using the editor to run a paid service that profits off of the editor
-(e.g a service to provide people with hacked accounts, or a paid discord bot to edit people's accounts,
-etc) you must make it very clear that you are using this save editor.
+## 🎮 Editing your save
 
-This should be done by linking this Codeberg page, and explicitly stating that the tool you are
-using is available for free and that they don't need to use your service to hack their account.
+| Step | Where | What to do |
+|:---:|---|---|
+| 1 | 🎮 Game | **Settings → Change Account / Device → Change Device → Retrieve Data from Old Device**, then tap **Save Data to Server**. Note the transfer and confirmation codes. |
+| 2 | 💻 Editor | Choose **Download save file using transfer and confirmation code**. Enter both codes and your region: `en`, `jp`, `kr` or `tw`. |
+| 3 | 💻 Editor | Edit whatever you like (see [menu tips](#-using-the-menu)). |
+| 4 | 💻 Editor | In **Save Management**, choose **Upload save file to server and get transfer and confirmation code**. If it fails, try again. |
+| 5 | 🎮 Game | Tap **Close Game → Cancel Data Transfer** (and **Start Game From Beginning** if asked). |
+| 6 | 🎮 Game | **Change Account / Device → Resume Data Transfer → Transfer Data to New Device**, enter the new codes and tap **Resume Transfer**. 🎉 |
 
-This information needs to be visible and something the customer agrees to **before** any payment is made.
+> [!NOTE]
+> `en` also covers the Italian, Spanish, French, Thai and German versions. Repeat these steps every
+> time you edit, because the editor's copy and the game's copy aren't linked.
 
-This also includes paid services which claim to teach people "How To Hack The Battle Cats". In those
-cases, this still applies, so you still need to state and have the customer acknowledge the things
-I said above.
+> [!WARNING]
+> **Keep your transfer codes private.** Anyone with them can take your account. Linking a Google or
+> Apple account may limit how often you can transfer, so it's safest not to link one.
 
-Free services / derivative works (such as a third party discord bot or editor gui) are fine to use
-the editor under the hood as long as you abide by the [License](#license). Basically if you are
-distributing a program which uses the editor, you need to license your own program under the GPL
-or a compatible license (basically make it open source / free software too).
+## 🧭 Using the menu
 
-Also if you **are** profiting from the editor, it would be greatly appreciated if you could
-give back something and support me.
+| Type | To |
+|---|---|
+| `3` (a number) | Open a category or run a feature |
+| `0` | Go back |
+| `cat food` (text) | Search; an exact name runs straight away |
+| Enter on the main menu | List every feature |
+| Enter on a question | Keep the current value, or cancel (`q` works too) |
+| <kbd>Ctrl</kbd>+<kbd>C</kbd> | Cancel the current feature, leaving the save untouched. At the main menu it exits, asking whether to save first |
 
-## Usage
+Made a mistake? Pick **Undo last edit** from the main menu. The number next to it is how many edits
+you can undo.
 
-Once you have installed and ran the editor, you can now begin to edit your save file!
+## ⚠️ Avoiding bans
 
-1. In `The Battle Cats` enter the `Change Account / Device` menu in the `Settings` on the main menu.
+Directly adding **cat food**, **rare tickets** or **platinum tickets** is the most likely way to get
+banned. Try these instead:
 
-2. Then enter the `Change Device` -> `Retrieve Data from Old Device` menu.
+| Instead of adding… | Use |
+|---|---|
+| 💎 Platinum tickets | **Platinum Shards** |
+| 🎟️ Rare tickets | **Rare Ticket Trade** |
+| 🥫 Cat food | What you'd buy with it (XP, battle items, catamins, leadership), or clear and unclear catnip missions in **Catnip Challenges / Missions**, then collect the reward in the game |
+| 🎫 Any tickets | The cats and upgrades you want, directly |
 
-3. Then click / tap `Save Data to Server`, this should give you a transfer code and a confirmation
-code.
+> [!TIP]
+> If you're banned, use **Account → Unban account**, or upload the save again.
 
-4. In the editor use the option called `Download save file using transfer and
-confirmation code` by entering the number `1`
+## 🧰 More ways to use it
 
-5. Enter your transfer code
+<details>
+<summary><b>⌨️ Command line</b></summary>
 
-6. Enter your confirmation code
-
-7. Select the country code that you are using, `en`=english,
-`kr`=korean, `jp`=japanese, `tw`=taiwanese.
-
-Note that `en` also includes the `it`, `es`, `fr`, `th`, and `de` translations.
-
-8. Edit what you want. Note that in most cases, if you want to exit the current
-   input you can enter `q` and press enter to go back to the previous menu
-
-9. In the editor, go into the `Save Management` category and select `Save changes and upload to
-game servers (get transfer and confirmation codes)`. It may take some time, it
-may also fail, if it does then try again.
-
-10. This should give you a new transfer code and a new confirmation code.
-
-11. Back in-game, tap the `Close Game` button, then tap `Cancel Data Transfer` (and also possibly
-`Start Game From Beginning`)
-
-12. Go back into the `Change Account / Device` menu and then go into the `Resume Data Transfer` ->
-`Transfer Data to New Device` menu
-
-13. Enter the new codes, and tap `Resume Transfer`
-
-14. Then done! You should see your edits in-game.
-
-15. Every time that you want to make an edit to your save, you will have to re-upload it to the
-game servers in the editor and re-download it in-game, the saves aren't automatically linked together.
-
-Apparently doing the Google Account / Apple Account link limits the number of data transfers you can
-do within a certain time. So to be safe, I would avoid linking your account.
-
-### Command line
-
-Some things can be done without the menus, which is handy for scripts and on
-Android (Termux):
+<br>
 
 ```sh
 bcsfe info SAVE_DATA                 # region, game version, cat food, tickets...
@@ -362,142 +195,73 @@ bcsfe export SAVE_DATA save.json     # save -> JSON (use - to print it)
 bcsfe import save.json SAVE_DATA     # JSON -> save
 ```
 
-If a game update stops the editor from working, please include the output of
-`bcsfe check` in your bug report.
+If a game update breaks the editor, include the output of `bcsfe check` in your bug report.
+Set `NO_COLOR=1` to turn colours off.
 
-### Using a rooted device via adb
+</details>
 
-1. Add adb to your PATH environment variable, or edit the config to set ADB path editor config option
-  to the full path of the adb executable. You can download adb from
-  [platform-tools](https://developer.android.com/studio/releases/platform-tools)
+<details>
+<summary><b>🔓 Rooted devices</b></summary>
 
-1. Open the editor and select the option named `Pull save file from device
-using adb` and enter your game version, or select the option named
-`Select save file from file` and select a copy of your save data
+<br>
 
-1. Edit what you want
+| Method | Steps |
+|---|---|
+| **adb** (from a PC) | Put adb from [platform-tools](https://developer.android.com/studio/releases/platform-tools) on your PATH, or set its path in the editor config. Choose **Pull save file from device using adb**, edit, then push it back from **Save Management**. |
+| **On the device** | Run the editor in Termux (possibly with `sudo`). Choose **Pull save file from root storage**, edit, then push it back from **Save Management**. |
 
-1. Go into save management and select an option to push save data to the game
+</details>
 
-1. Enter the game and you should see changes
+## 💸 This editor is free
 
-### Using a rooted device directly
+> [!CAUTION]
+> If you paid for this editor, or for a service built on it, **you were scammed**. It's free and
+> open source under the GPL, and anyone can install it with the commands above.
 
-1. You need to be running the editor on the device itself, so you'll need to
-follow the [Android tutorial](#android) to install the editor
+## 🛠️ Development
 
-1. You may have to run the editor with `sudo python -m bcsfe` or something, so you might have to
-setup the termux root repo and run `pkg install sudo`
+<details>
+<summary><b>Set up and run the checks</b></summary>
 
-1. In the editor select the option named `Pull save file from root storage`
-
-1. Edit what you want
-
-1. Go into save management and select an option to push save data to the game
-
-1. Enter the game and you should see changes
-
-
-### How to unban your account
-
-1. Select the option in `Account` to `Unban account` or
-just upload the save data to the game servers again
-
-1. It may take some time but after, you should be able to choose one of the
-options in save management to push the save data to the game.
-
-#### How to prevent a ban in the future
-
-- Instead of editing in platinum tickets use the `Platinum Shards` feature
-
-- Instead of editing in rare tickets use the `Normal Ticket Max Trade Progress
-(allows for unbannable rare tickets)` feature
-
-- Instead of hacking in cat food, just edit everything in that you can buy with
-cat food, e.g battle items, catamins, xp, energy refills (leaderships), etc.
-If you really want catfood then you can clear and unclear catnip missions with
-the feature `Catnip Challenges / Missions` then entering 1 when asked.
-You'll need to collect the catfood in-game after each clear though
-
-- Instead of hacking in tickets, just hack in the cats/upgrades you want directly
-
-### Install from source
-
-If you want the latest features then you can install the editor from the git repo.
-
-1. Download git:
-    - Windows: [Git](https://git-scm.com/downloads)
-    - Linux: (use package manager, e.g `sudo apt-get install git` or `sudo pacman -S git`)
-    - Android: Termux: `pkg install git`
-    - iOS: a-Shell should already include it
-
-2. Run the following commands: (You may have to replace `py` with `python` or `python3`)
+<br>
 
 ```sh
-git clone https://codeberg.org/fieryhenry/BCSFE-Python.git
-cd BCSFE-Python
-py -m pip install -e .
-py -m bcsfe
-```
-
-Then if you want the latest changes you only need to run `git pull` in the downloaded
-`BCSFE-Python` folder. (use `cd` to change the folder)
-
-Alternatively you can use pip directly, although it won't auto-update with the latest
-git commits.
-
-```sh
-py -m pip install -U git+https://codeberg.org/fieryhenry/BCSFE-Python.git
-py -m bcsfe
-```
-
-Again, you might need change `py` for `python` or `python3`
-
-If you want to use the editor again all you need to do is run the `py -m bcsfe` command
-
-## Documentation
-
-- [Custom Editor Locales](https://codeberg.org/fieryhenry/ExampleEditorLocale)
-- [Custom Editor Themes](https://codeberg.org/fieryhenry/ExampleEditorTheme)
-
-I only have documentation for the locales and themes atm, but I will probably
-add more documentation in the future.
-
-## Contributing
-
-If you want to contribute to the BCSFE, I recommend joining the [Discord Server](https://discord.gg/DvmMgvn5ZB) and starting a
-discussion in #dev-chat, or create an issue in this repo, or a draft pull request.
-
-If you need help with reverse engineering the save file, I have a basic starting guide here:
-<https://codeberg.org/fieryhenry/bc_ree>.
-
-If you want to localize the editor see [here](./LOCALIZATION.md).
-
-### Development setup
-
-```sh
+git clone https://github.com/meowzerskittycat/BCSFE
+cd BCSFE
 pip install -e ".[dev]"
-pytest          # save-format round-trip tests
-ruff check src tests && ruff format --check src tests
-pyright         # strict type checking
+pytest                                                 # tests
+ruff check src tests && ruff format --check src tests  # lint and formatting
+pyright                                                # strict type checking
 ```
 
-The tests read and re-write every save in `tests/fixtures/synthetic/` and
-check the output is byte-for-byte identical. Those saves are generated by
-`tests/tools/gen_fixtures.py`; only regenerate them deliberately (for example
-when adding a new game version), never to make a failing test pass.
+The tests read and write every save in `tests/fixtures/` and check that the output is byte for
+byte identical. They also drive the menus with typed answers. CI runs them on Windows, macOS and
+Linux.
 
-To test against real saves, copy them into `tests/saves/`. That folder is
-gitignored: real saves contain your account's inquiry code and tokens, so
-never commit them as they are. To add one as a permanent fixture, run
-`python tests/tools/sanitize_save.py path/to/save`, which replaces those
-details with placeholders and writes it to `tests/fixtures/real/`. The game
-progress stays in the file, so only do this for saves you're happy to share.
+</details>
 
-New save sections can be declared once with `bcsfe.core.io.schema`
-(see `core/game/catbase/medals.py`), instead of writing separate
-`read`/`write`/`serialize`/`deserialize`/`init` methods.
+<details>
+<summary><b>Where things live</b></summary>
 
-## License
+<br>
 
-BCSFE is licensed under the GNU GPLv3 which can be read [here](https://www.gnu.org/licenses/gpl-3.0.en.html).
+| Task | How |
+|---|---|
+| Test with real saves | Copy them into `tests/saves/` (gitignored). Real saves contain your account's inquiry code and tokens, so never commit them as they are. |
+| Keep a real save as a fixture | `python tests/tools/sanitize_save.py path/to/save` replaces those details and writes the save to `tests/fixtures/real/`. Its game progress stays in the file. |
+| Synthetic saves | Made by `tests/tools/gen_fixtures.py`. Only regenerate them on purpose (e.g. for a new game version), never to make a failing test pass. |
+| Add a save section | Declare it once with `bcsfe.core.io.schema` (see `core/game/catbase/medals.py`). Stage sections share `core/game/map/stage_grid.py`. |
+| Translate the editor | See [LOCALIZATION.md](LOCALIZATION.md). |
+
+</details>
+
+## 🙏 Credits
+
+- **[fieryhenry](https://codeberg.org/fieryhenry)** wrote [BCSFE-Python](https://codeberg.org/fieryhenry/BCSFE-Python), which this fork is based on.
+- **Lethal's editor**, [beeven/battlecats](https://github.com/beeven/battlecats) and [csehydrogen/BattleCatsHacker](https://github.com/csehydrogen/BattleCatsHacker) showed how to patch the save data.
+- **HungJoesifer** contributed the Vietnamese translation and the `discord` theme.
+- **LinYuAn** contributed the Traditional Chinese translation.
+
+## 📄 License
+
+[GNU GPLv3](LICENSE), as in upstream.

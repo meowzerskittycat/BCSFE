@@ -156,3 +156,49 @@ def test_undo_restores_previous_edits_in_order(
     assert handler.save_file.catfood == original
     handler.run(("undo_last_edit",))
     assert printed[-1] == "undo_nothing"
+
+
+@pytest.mark.parametrize(
+    ("latest", "installed", "expected"),
+    [
+        (("3.6.0", "b" * 40), "a" * 40, True),  # same version, newer commit
+        (("3.6.0", "a" * 40), "a" * 40, False),  # already on the latest commit
+        (("3.7.0", "a" * 40), None, True),  # newer version, not a git install
+        (("3.6.0", "b" * 40), None, False),  # can't tell, so don't offer
+        (("3.5.0", "b" * 40), "a" * 40, False),  # main is behind this install
+    ],
+)
+def test_updater_follows_this_fork(
+    monkeypatch, latest: tuple[str, str], installed: str | None, expected: bool
+) -> None:
+    from bcsfe.core.server import updater
+
+    monkeypatch.setattr(updater.bcsfe, "__version__", "3.6.0")
+    monkeypatch.setattr(
+        updater.Updater, "installed_commit", staticmethod(lambda: installed)
+    )
+    up = updater.Updater()
+    monkeypatch.setattr(up, "get_latest", lambda: latest)
+    assert up.update_available() is expected
+
+
+def test_updater_installs_from_github(monkeypatch) -> None:
+    from bcsfe.core.server import updater
+
+    ran: list[list[str]] = []
+
+    class Done:
+        exit_code = 0
+
+    class FakeCommand:
+        def __init__(self, cmd: list[str]):
+            ran.append(cmd)
+
+        def run(self):
+            return Done()
+
+    monkeypatch.setattr(updater.core, "Command", FakeCommand)
+    up = updater.Updater()
+    monkeypatch.setattr(up, "get_latest", lambda: ("3.6.0", "c" * 40))
+    assert up.update()
+    assert ran[0][-1] == "git+https://github.com/meowzerskittycat/BCSFE@" + "c" * 40

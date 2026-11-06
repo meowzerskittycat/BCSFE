@@ -26,10 +26,10 @@ keywords = ["battle cats", "save editor", "hacking"]
 dev = ["pytest>=8", "ruff>=0.6", "pyright>=1.1.380"]
 
 [project.urls]
-Homepage = "https://codeberg.org/fieryhenry/BCSFE-Python"
-Repository = "https://codeberg.org/fieryhenry/BCSFE-Python"
-Issues = "https://codeberg.org/fieryhenry/BCSFE-Python/issues"
-Changelog = "https://codeberg.org/fieryhenry/BCSFE-Python/raw/branch/main/CHANGELOG.md"
+Homepage = "https://github.com/meowzerskittycat/BCSFE"
+Repository = "https://github.com/meowzerskittycat/BCSFE"
+Issues = "https://github.com/meowzerskittycat/BCSFE/issues"
+Changelog = "https://github.com/meowzerskittycat/BCSFE/blob/main/CHANGELOG.md"
 
 [tool.setuptools.dynamic]
 version = { attr = "bcsfe.__version__" }
