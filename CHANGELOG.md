@@ -25,6 +25,8 @@
   piped into `head`).
 - CI runs once per pull request push and on `main` (it used to run twice for every push to a
   pull request), cancels runs a newer push replaced, and uses current versions of its actions.
+- Pushes to `main` test on Windows and Linux; pull requests also test on macOS. A macOS job
+  that waited too long for a runner was cancelled and turned `main`'s badge red.
 - Removed `.github/FUNDING.yml`, which pointed to upstream's donation page.
 
 ### Changed
