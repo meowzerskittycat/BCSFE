@@ -1,4 +1,4 @@
-from bcsfe.cli import dialog_creator, main, color, file_dialog
+from bcsfe.cli import color, edits, file_dialog, main, prompt
 from bcsfe import core
 
 
@@ -9,13 +9,13 @@ class ServerCLI:
     def download_save(
         self,
     ) -> tuple[core.Path, core.CountryCode] | None:
-        transfer_code = dialog_creator.str_input_key("enter_transfer_code")
+        transfer_code = prompt.text("enter_transfer_code")
         if transfer_code is None:
             return None
-        confirmation_code = dialog_creator.str_input_key("enter_confirmation_code")
+        confirmation_code = prompt.text("enter_confirmation_code")
         if confirmation_code is None:
             return None
-        cc = core.CountryCode.select()
+        cc = edits.settings.select_country()
         if cc is None:
             return None
         gv = core.GameVersion(120200)  # not important
@@ -37,7 +37,7 @@ class ServerCLI:
             color.color_print_key("invalid_codes_error")
             if cc == "jp":
                 color.color_print_key("jp_tw_mixup")
-            # if dialog_creator.yes_no_key("display_response_debug_info_q"):
+            # if prompt.confirm("display_response_debug_info_q"):
             #     if result.response is not None:
             #         color.color_print_key(
             #             "response_text_display",

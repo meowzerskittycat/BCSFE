@@ -1,5 +1,5 @@
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, dialog_creator, prompt
 from bcsfe.cli.edits.cat_editor import SelectMode
 
 
@@ -53,9 +53,7 @@ class EnemyEditor:
             return None
 
         if current_enemies:
-            mode_id = dialog_creator.int_input_key(
-                "and_mode_q", dialog_creator.MaxValue.always_cap(3)
-            )
+            mode_id = prompt.number("and_mode_q", max=prompt.MaxValue.always_cap(3))
             if mode_id is None:
                 mode = SelectMode.OR
             elif mode_id == 1:
@@ -100,9 +98,8 @@ class EnemyEditor:
         return [core.Enemy(id) for id in invalid_ids]
 
     def select_id(self) -> list[core.Enemy] | None:
-        enemy_ids = dialog_creator.range_multi_input_key(
-            "enter_enemy_ids",
-            dialog_creator.MaxValue.always_cap(len(self.save_file.enemy_guide) - 1),
+        enemy_ids = prompt.numbers(
+            "enter_enemy_ids", max=len(self.save_file.enemy_guide) - 1
         )
         if enemy_ids is None:
             return None
@@ -117,7 +114,7 @@ class EnemyEditor:
         return enemies
 
     def select_name(self) -> list[core.Enemy] | None:
-        usr_name = dialog_creator.str_input_key("enter_enemy_name")
+        usr_name = prompt.text("enter_enemy_name")
         if usr_name is None:
             return None
         enemies = self.get_enemies_by_name(usr_name)
@@ -133,9 +130,7 @@ class EnemyEditor:
 
             new_enemy_names.append(enemy_name)
 
-        enemy_option_ids = dialog_creator.multi_select_indexes_key(
-            new_enemy_names, dialog="select_enemies"
-        )
+        enemy_option_ids = prompt.choose_many(new_enemy_names, dialog="select_enemies")
         if enemy_option_ids is None:
             return None
         enemies_selected: list[core.Enemy] = []

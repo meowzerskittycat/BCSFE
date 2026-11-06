@@ -1,4 +1,6 @@
 import argparse
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -41,6 +43,21 @@ def test_export_then_import_gives_the_same_save(tmp_path: Path) -> None:
     assert run("export", str(save), str(out_json)) == 0
     assert run("import", str(out_json), str(out_save)) == 0
     assert out_save.read_bytes() == save.read_bytes()
+
+
+def test_export_to_a_closed_pipe_is_quiet() -> None:
+    """`bcsfe export SAVE - | head` shouldn't print a broken pipe error."""
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "bcsfe", "export", str(real_fixtures()[0]), "-"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert proc.stdout is not None and proc.stderr is not None
+    assert proc.stdout.read(10).startswith(b"{")
+    proc.stdout.close()
+    err = proc.stderr.read().decode()
+    proc.wait(timeout=60)
+    assert "Broken pipe" not in err and "Traceback" not in err
 
 
 def test_import_rejects_bad_json(tmp_path: Path) -> None:

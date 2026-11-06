@@ -1,6 +1,6 @@
 from bcsfe import core
 
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, prompt
 
 
 class RareTicketTrade:
@@ -14,10 +14,9 @@ class RareTicketTrade:
         if max_amount == 0:
             color.color_print_key("rare_ticket_trade_maxed")
             return
-        to_add = dialog_creator.int_input_key(
+        to_add = prompt.number(
             "rare_ticket_trade_enter",
-            dialog_creator.MaxValue.i32(max_amount),
-            max=max_amount,
+            max=prompt.MaxValue.i32(max_amount),
             current=current_amount,
         )
         if to_add is None:

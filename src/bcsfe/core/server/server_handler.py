@@ -3,9 +3,9 @@ import time
 from typing import Any
 
 from bcsfe import core
+from bcsfe.core import messages
 import jwt
 
-from bcsfe.cli import color
 import requests
 
 
@@ -284,7 +284,7 @@ class ServerHandler:
     def log_no_internet(self, result: RequestResult):
         ServerHandler.log_error("no_internet", result)
         if self.print:
-            core.print_no_internet()
+            messages.show("no_internet")
 
     def get_save_key_new(self, auth_token: str) -> dict[str, Any] | None:
         self.print_key("getting_save_key")
@@ -379,7 +379,7 @@ class ServerHandler:
 
     def print_key(self, key: str, **kwargs: Any):
         if self.print:
-            color.color_print_key(key, **kwargs)
+            messages.show(key, **kwargs)
 
     def get_codes(
         self, upload_managed_items: bool = True, tries: int = 3
@@ -543,7 +543,7 @@ class ServerHandler:
         response = core.RequestHandler(url, headers, core.Data(data_str)).post()
         if response is None:
             if print:
-                core.print_no_internet()
+                messages.show("no_internet")
             return None, None
         resp_headers = response.headers
         content_type = resp_headers.get("content-type", "")
@@ -564,12 +564,10 @@ class ServerHandler:
             try:
                 temp_path.write(core.Data(save_data))
             except Exception as e:
-                color.color_print_key(
-                    "transfer_backup_fail", path=str(temp_path), error=e
-                )
+                messages.show("transfer_backup_fail", path=str(temp_path), error=e)
             else:
                 if print:
-                    color.color_print_key("transfer_backup", path=str(temp_path))
+                    messages.show("transfer_backup", path=str(temp_path))
 
         save_file = core.SaveFile(core.Data(save_data), cc=cc)
 

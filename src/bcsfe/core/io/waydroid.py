@@ -1,7 +1,7 @@
 import shlex
 
 from bcsfe import core
-from bcsfe.cli import color
+from bcsfe.core import messages
 from bcsfe.core import io
 from bcsfe.core.io.command import CommandResult
 
@@ -49,7 +49,7 @@ class WayDroidHandler(io.root_handler.RootHandler):
 
     @staticmethod
     def display_waydroid_not_installed(e: WayDroidNotInstalledError):
-        color.color_print_key("waydroid_not_installed", error=e)
+        messages.show("waydroid_not_installed", error=e)
         return
 
     @staticmethod

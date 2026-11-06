@@ -4,11 +4,11 @@ import sys
 import traceback
 from typing import Any, NoReturn
 from bcsfe.cli import (
+    prompt,
     file_dialog,
     color,
     feature_handler,
     save_management,
-    dialog_creator,
 )
 from bcsfe import core, __app_name__
 import json
@@ -67,9 +67,7 @@ class Main:
         )
 
         if updater.update_available():
-            update = dialog_creator.yes_no_key(
-                "update_available", latest_version=latest_version
-            )
+            update = prompt.confirm("update_available", latest_version=latest_version)
             if update is None:
                 return
 

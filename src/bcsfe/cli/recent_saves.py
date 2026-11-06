@@ -3,7 +3,7 @@ from typing import Any
 from bcsfe import core
 import datetime
 import json
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, prompt
 
 
 class RecentSave:
@@ -132,7 +132,7 @@ class RecentSaves:
             )
         items.reverse()
 
-        resp = dialog_creator.basic_pick_key_index(items, dialog="select_recent")
+        resp = prompt.choose(items, dialog="select_recent")
         if resp is None:
             return None
 

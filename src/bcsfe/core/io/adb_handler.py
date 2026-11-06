@@ -1,7 +1,7 @@
 import shlex
 from bcsfe import core
 from bcsfe.core import io
-from bcsfe.cli import dialog_creator, color
+from bcsfe.core import messages
 
 
 class DeviceIDNotSet(Exception):
@@ -26,7 +26,7 @@ class AdbHandler(io.root_handler.RootHandler):
 
     @staticmethod
     def display_no_adb_error(e: AdbNotInstalled):
-        color.color_print_key(
+        messages.show(
             "adb_not_installed",
             path=core.core_data.config.get_str(core.ConfigKey.ADB_PATH),
             error=e,
@@ -180,13 +180,3 @@ class AdbHandler(io.root_handler.RootHandler):
         return self.run_shell(
             f"monkey --pct-syskeys 0 -p {shlex.quote(self.get_package_name())} 1"
         )
-
-    def select_device(self) -> bool:
-        devices = self.get_connected_devices()
-        device = dialog_creator.basic_pick_key(devices, dialog="select_device")
-        if device is None:
-            color.color_print_key("no_device_error")
-            return False
-
-        self.set_device(device)
-        return True

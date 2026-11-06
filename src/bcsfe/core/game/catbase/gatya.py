@@ -2,7 +2,7 @@ import enum
 from typing import Any
 from collections.abc import Callable
 from bcsfe import core
-from bcsfe.cli import dialog_creator, color
+from bcsfe.core import messages
 
 
 class Gatya:
@@ -138,25 +138,6 @@ class Gatya:
     def __str__(self) -> str:
         return f"Gatya({self.serialize()})"
 
-    def edit_rare_gatya_seed(self):
-        self.rare_seed = dialog_creator.edit_int_key(
-            "rare_gatya_seed", self.rare_seed, dialog_creator.MaxValue.u32().hide_max()
-        )
-
-    def edit_normal_gatya_seed(self):
-        self.normal_seed = dialog_creator.edit_int_key(
-            "normal_gatya_seed",
-            self.normal_seed,
-            dialog_creator.MaxValue.u32().hide_max(),
-        )
-
-    def edit_event_gatya_seed(self):
-        self.event_seed = dialog_creator.edit_int_key(
-            "event_gatya_seed",
-            self.event_seed,
-            dialog_creator.MaxValue.u32().hide_max(),
-        )
-
     def read_gatya_data_set(self, save_file: core.SaveFile) -> GatyaDataSet:
         if self.gatya_data_set is not None:
             return self.gatya_data_set
@@ -239,7 +220,7 @@ class GatyaInfo:
         try:
             data.to_file(self.get_file_path())
         except Exception as e:
-            color.color_print_key("save_gatya_error", error=e)
+            messages.show("save_gatya_error", error=e)
         self.data = data
 
     def load_data_from_file(self) -> core.Data | None:
@@ -314,7 +295,7 @@ class GatyaInfos:
 
     def get(self, gatya_id: int, print_progress: bool):
         if print_progress:
-            color.color_print_key(
+            messages.show(
                 "gatya_info_progress",
                 current=len(self.infos or []) + 1,
                 total=len(self.gatya_data_set or []),

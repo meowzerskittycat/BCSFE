@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from bcsfe import core
-from bcsfe.cli import dialog_creator
 from bcsfe.core.io.schema import I32, Map, Nested, Struct, field
 
 
@@ -247,15 +246,3 @@ class Dojo:
 
     def __str__(self) -> str:
         return self.__repr__()
-
-    def edit_score(self):
-        stage = self.chapters.get_stage(0, 0)
-        stage.score = dialog_creator.edit_int_key(
-            "dojo_score",
-            stage.score,
-            dialog_creator.MaxValue.i32().hide_max(),
-        )
-
-
-def edit_dojo_score(save_file: core.SaveFile):
-    save_file.dojo.edit_score()

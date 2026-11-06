@@ -1,5 +1,5 @@
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, dialog_creator, prompt
 from bcsfe.cli.edits import cat_editor
 
 
@@ -111,10 +111,10 @@ def add_cats(save_file: core.SaveFile):
             name = core.localize("unknown")
         else:
             name = names[0]
-        quantity = dialog_creator.int_input_key(
+        quantity = prompt.number(
             "cat_quantity",
+            max=prompt.MaxValue.i32().hide_max(),
             default=1,
-            _max=dialog_creator.MaxValue.i32().hide_max(),
             name=name,
             id=cat.id,
         )
@@ -156,9 +156,7 @@ def add_special_skills(save_file: core.SaveFile):
         )
     )
 
-    options = dialog_creator.multi_select_indexes_key(
-        skill_names, dialog="select_special_skills"
-    )
+    options = prompt.choose_many(skill_names, dialog="select_special_skills")
 
     if options is None:
         return
@@ -168,9 +166,9 @@ def add_special_skills(save_file: core.SaveFile):
     for id in options:
         item = core.StorageItem.from_special_skill(id)
 
-        quantity = dialog_creator.int_input_key(
+        quantity = prompt.number(
             "skill_quantity",
-            dialog_creator.MaxValue.i32().hide_max(),
+            max=prompt.MaxValue.i32().hide_max(),
             default=1,
             name=skill_names[id],
         )
@@ -205,7 +203,7 @@ def remove_items(save_file: core.SaveFile):
             continue
         options2.append(get_item_str(item, save_file))
 
-    choices = dialog_creator.multi_select_indexes_key(options2, "select_item")
+    choices = prompt.choose_many(options2, "select_item")
     if choices is None:
         return
 

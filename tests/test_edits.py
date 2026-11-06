@@ -3,6 +3,7 @@
 import json
 
 from bcsfe import core
+from bcsfe.cli import edits
 from bcsfe.core.game.map.zero_legends import Chapter, ChaptersStars, Stage
 
 
@@ -49,7 +50,7 @@ def run_chapter_menu(monkeypatch, answers: list[str]) -> tuple[list[str], list[s
     """Drive the gauntlet/event/legend chapter menu with typed answers.
 
     Returns the edits that ran and the answers left unread."""
-    from bcsfe.cli import color, edits
+    from bcsfe.cli import color
 
     left = list(answers)
     monkeypatch.setattr(color, "color_input", lambda *a, **k: left.pop(0))

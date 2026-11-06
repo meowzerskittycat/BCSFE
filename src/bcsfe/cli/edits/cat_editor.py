@@ -1,7 +1,7 @@
 import enum
 
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, dialog_creator, prompt
 
 
 class SelectMode(enum.Enum):
@@ -112,9 +112,7 @@ class CatEditor:
             return current_cats, False
 
         if current_cats:
-            mode_id = dialog_creator.int_input_key(
-                "and_mode_q", dialog_creator.MaxValue.always_cap(3)
-            )
+            mode_id = prompt.number("and_mode_q", max=prompt.MaxValue.always_cap(3))
             if mode_id is None:
                 mode = SelectMode.OR
             elif mode_id == 1:
@@ -137,10 +135,7 @@ class CatEditor:
         return new_cats, False
 
     def select_id(self) -> list[core.Cat] | None:
-        cat_ids = dialog_creator.range_multi_input_key(
-            "enter_cat_ids",
-            dialog_creator.MaxValue.always_cap(len(self.save_file.cats.cats) - 1),
-        )
+        cat_ids = prompt.numbers("enter_cat_ids", max=len(self.save_file.cats.cats) - 1)
         if cat_ids is None:
             return None
         return self.save_file.cats.get_cats_by_ids(cat_ids)
@@ -178,7 +173,7 @@ class CatEditor:
 
         print()
 
-        usr_input = dialog_creator.str_input_key("select_gv")
+        usr_input = prompt.text("select_gv")
         if usr_input is None:
             return None
         chunks = usr_input.split(" ")
@@ -219,9 +214,7 @@ class CatEditor:
 
     def select_rarity(self) -> list[core.Cat] | None:
         rarity_names = self.save_file.cats.get_rarity_names(self.save_file)
-        rarity_ids = dialog_creator.multi_select_indexes_key(
-            rarity_names, "select_rarity"
-        )
+        rarity_ids = prompt.choose_many(rarity_names, "select_rarity")
         if rarity_ids is None:
             return None
         cats: list[core.Cat] = []
@@ -231,7 +224,7 @@ class CatEditor:
         return cats
 
     def select_name(self) -> list[core.Cat] | None:
-        usr_name = dialog_creator.str_input_key("enter_name")
+        usr_name = prompt.text("enter_name")
         if usr_name is None:
             return []
         cats = self.get_cats_name(usr_name)
@@ -251,9 +244,7 @@ class CatEditor:
                     break
         if len(cat_names) == 1:
             color.color_print(f"<@t>{cat_names[0]}</>")
-        cat_option_ids = dialog_creator.multi_select_indexes_key(
-            cat_names, "select_name"
-        )
+        cat_option_ids = prompt.choose_many(cat_names, "select_name")
         if cat_option_ids is None:
             return None
         cats_selected: list[core.Cat] = []
@@ -265,7 +256,7 @@ class CatEditor:
         return self.get_cats_obtainable()
 
     def select_gatya_banner_name(self) -> list[int] | None:
-        filter_down = dialog_creator.yes_no_key("filter_down_q_gatya")
+        filter_down = prompt.confirm("filter_down_q_gatya")
         if filter_down is None:
             return None
 
@@ -304,7 +295,7 @@ class CatEditor:
             )
             formatted_names.append(formatted_name)
         # TODO: include ids?
-        gatya_option_ids = dialog_creator.multi_select_indexes_key(
+        gatya_option_ids = prompt.choose_many(
             formatted_names,
             dialog="select_gatya_banner",
         )
@@ -326,10 +317,7 @@ class CatEditor:
             .new()
             .add_new_key(
                 "by_id",
-                lambda _: dialog_creator.range_multi_input_key(
-                    "select_gatya_banner",
-                    dialog_creator.MaxValue.always_cap(len(gset) - 1),
-                ),
+                lambda _: prompt.numbers("select_gatya_banner", max=len(gset) - 1),
             )
             .add_new_key("by_name", lambda _: self.select_gatya_banner_name()),
             "gatya_by_id_q",
@@ -422,7 +410,7 @@ class CatEditor:
 
     def upgrade_many(self, cats: list[core.Cat]) -> bool:
         power_up = core.PowerUpHelper(cats[0], self.save_file)
-        upgrade, should_exit = core.Upgrade.get_user_upgrade(
+        upgrade, should_exit = get_user_upgrade(
             power_up.get_max_max_base_upgrade_level() - 1,
             power_up.get_max_max_plus_upgrade_level(),
         )
@@ -450,7 +438,7 @@ class CatEditor:
                 plus_level=cat.upgrade.plus,
             )
             power_up = core.PowerUpHelper(cat, self.save_file)
-            upgrade, should_exit = core.Upgrade.get_user_upgrade(
+            upgrade, should_exit = get_user_upgrade(
                 power_up.get_max_possible_base() - 1,
                 power_up.get_max_possible_plus(),
             )
@@ -508,7 +496,7 @@ class CatEditor:
                 save_version=self.save_file.game_version.to_string(),
                 data_version=data_version,
             )
-            should_stay = dialog_creator.yes_no_key("continue_q")
+            should_stay = prompt.confirm("continue_q")
             if not should_stay:
                 return
 
@@ -573,7 +561,7 @@ class CatEditor:
                 talent_names,
                 current_levels,
                 dialog_creator.MultiMax.new(
-                    [dialog_creator.MaxValue.i32(max_level) for max_level in max_levels]
+                    [prompt.MaxValue.i32(max_level) for max_level in max_levels]
                 ),
             )
             current_levels = values
@@ -752,7 +740,7 @@ class CatEditor:
             if finished:
                 stop = True
                 continue
-            finished = dialog_creator.yes_no_key("finished_cats_selection")
+            finished = prompt.confirm("finished_cats_selection")
             if finished is None:
                 return None, []
             stop = finished
@@ -841,3 +829,110 @@ class CatEditor:
     @staticmethod
     def set_rank_up_sale(save_file: core.SaveFile):
         save_file.rank_up_sale_value = 0x7FFFFFFF
+
+
+def get_user_upgrade(
+    max_pos_base: int,
+    max_pos_plus: int,
+) -> tuple[core.Upgrade | None, bool]:
+    disable_maxes = core.core_data.config.get_bool(core.ConfigKey.DISABLE_MAXES)
+    if disable_maxes:
+        max_pos_base = 50_000
+        max_pos_plus = 50_000
+    color.color_print_key(
+        "max_upgrade", max_base=max_pos_base + 1, max_plus=max_pos_plus
+    )
+    usr_input = color.color_input_key("upgrade_input")
+    if usr_input == core.core_data.local_manager.get_key("quit_key"):
+        return None, True
+    # example:
+    # 10+20 = Upgrade(base=9, plus=20)
+    # 10+ = Upgrade(base=9, plus=-1) # -1 means no change
+    # +20 = Upgrade(base=-1, plus=20) # -1 means no change
+    # 10 = Upgrade(base=9, plus=0)
+    # 5-10+20-30 = Upgrade(base=random.randint(4, 9), plus=random.randint(20, 30))
+    # 5-10+ = Upgrade(base=random.randint(4, 9), plus=-1)
+    # +20-30 = Upgrade(base=-1, plus=random.randint(20, 30))
+    # max+max = Upgrade(base=50000, plus=50000)
+
+    parts = usr_input.split("+")
+    if len(parts) == 1:
+        base = parts[0]
+        plus = "0"
+    else:
+        base = parts[0]
+        plus = parts[1]
+
+    min_base, max_base = None, None
+    min_plus, max_plus = None, None
+
+    max_text = core.core_data.local_manager.get_key("max")
+
+    if not base:
+        base_int = -1
+    else:
+        range_parts = base.split("-")
+        if len(range_parts) == 1:
+            if range_parts[0].strip() == max_text:
+                min_base = max_pos_base
+                max_base = max_pos_base
+            else:
+                try:
+                    min_base = int(range_parts[0]) - 1
+                    max_base = min_base
+                except ValueError:
+                    color.color_print_key("invalid_upgrade_base", base=base)
+                    return None, False
+        else:
+            try:
+                min_base = int(range_parts[0]) - 1
+                max_base = int(range_parts[1]) - 1
+            except ValueError:
+                color.color_print_key(
+                    "invalid_upgrade_base_random",
+                    min=range_parts[0],
+                    max=range_parts[1],
+                )
+                return None, False
+
+        base_int = (min_base + max_base) // 2
+
+    if not plus:
+        plus_int = -1
+    else:
+        range_parts = plus.split("-")
+        if len(range_parts) == 1:
+            if range_parts[0].strip() == max_text:
+                min_plus = max_pos_plus
+                max_plus = max_pos_plus
+            else:
+                try:
+                    min_plus = int(range_parts[0])
+                    max_plus = min_plus
+                except ValueError:
+                    color.color_print_key("invalid_upgrade_plus", plus=plus)
+                    return None, False
+        else:
+            try:
+                min_plus = int(range_parts[0])
+                max_plus = int(range_parts[1])
+            except ValueError:
+                color.color_print_key(
+                    "invalid_upgrade_plus_random",
+                    min=range_parts[0],
+                    max=range_parts[1],
+                )
+                return None, False
+
+        plus_int = (min_plus + max_plus) // 2
+
+    upgrade = core.Upgrade(plus_int, base_int)
+    upgrade.base_range = (
+        max(0, min(min_base or base_int, max_pos_base)),
+        max(0, min(max_base or base_int, max_pos_base)),
+    )
+    upgrade.plus_range = (
+        max(0, min(min_plus or plus_int, max_pos_plus)),
+        max(0, min(max_plus or plus_int, max_pos_plus)),
+    )
+    return upgrade, False

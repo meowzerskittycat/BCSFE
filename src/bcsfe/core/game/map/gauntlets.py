@@ -7,7 +7,6 @@ clear counts are shorts. A byte per map follows whose meaning isn't known.
 from typing import Any, ClassVar
 
 from bcsfe import core
-from bcsfe.cli import edits
 from bcsfe.core.game.map import stage_grid as grid
 from bcsfe.core.game.map.stage_grid import MapStars, Stage, Star
 from bcsfe.core.io.schema import I8, I16, Codec
@@ -77,24 +76,3 @@ class GauntletChapters(grid.Maps):
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.chapters}, {self.unknown})"
-
-    @staticmethod
-    def edit_gauntlets(save_file: core.SaveFile):
-        save_file.gauntlets.edit_chapters(save_file, "A", 24000)
-
-    @staticmethod
-    def edit_collab_gauntlets(save_file: core.SaveFile):
-        save_file.collab_gauntlets.edit_chapters(save_file, "CA", 27000)
-
-    @staticmethod
-    def edit_behemoth_culling(save_file: core.SaveFile):
-        save_file.behemoth_culling.edit_chapters(save_file, "Q", 31000)
-
-    @staticmethod
-    def edit_enigma_stages(save_file: core.SaveFile):
-        save_file.enigma_clears.edit_chapters(save_file, "H", 25000)
-
-    def edit_chapters(
-        self, save_file: core.SaveFile, letter_code: str, base_index: int
-    ):
-        edits.map.edit_chapters(save_file, self, letter_code, base_index=base_index)

@@ -11,6 +11,7 @@ must fail gracefully rather than crash.
 
 import itertools
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 import requests
@@ -25,9 +26,11 @@ from .conftest import real_fixtures
 SKIP_CATEGORIES = {"save_management"}
 SKIP_FEATURES = {"exit"}
 
+# `pytest --all-answers` (CI does this for pull requests) tries every set;
+# otherwise only the first, which exercises the most kinds of prompt.
 ANSWERS = {
-    "ones": ["1"],
     "mixed": ["1", "y", "5", "1 2", "n", "2"],
+    "ones": ["1"],
     "all": ["2", "y", "100", "all", "1", "n"],
 }
 MAX_ANSWERS = 60
@@ -55,11 +58,33 @@ def no_network(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(requests, "post", blocked)
 
 
+@pytest.fixture(autouse=True)
+def restore_settings() -> Iterator[None]:
+    """Features like Editor > Config change the editor's settings (its
+    language, for one). Put them back so later tests don't see the change."""
+    config = Path(core.core_data.config.config_object.path.path)
+    before = config.read_bytes() if config.exists() else None
+    yield
+    if before is None:
+        config.unlink(missing_ok=True)
+    else:
+        config.write_bytes(before)
+    core.core_data.init_data()
+
+
 def test_every_feature_is_tested() -> None:
     assert len(features()) > 80
 
 
-@pytest.mark.parametrize("answers", ANSWERS.values(), ids=ANSWERS.keys())
+def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
+    if "answers" not in metafunc.fixturenames:
+        return
+    names = list(ANSWERS)
+    if not metafunc.config.getoption("--all-answers"):
+        names = names[:1]
+    metafunc.parametrize("answers", [ANSWERS[n] for n in names], ids=names)
+
+
 @pytest.mark.parametrize("path", features(), ids="/".join)
 def test_feature_does_not_crash(
     monkeypatch: pytest.MonkeyPatch, path: tuple[str, ...], answers: list[str]
@@ -84,3 +109,15 @@ def test_feature_does_not_crash(
     written = save.to_data().to_bytes()
     reloaded = core.SaveFile(core.Data(written))
     assert reloaded.to_data().to_bytes() == written
+
+
+def test_settings_changes_do_not_leak(restore_settings: None) -> None:
+    """Regression: an answer set that picked another language made later
+    tests read `all` in that language."""
+    core.core_data.config.set(core.ConfigKey.LOCALE, "vi")
+    core.core_data.init_data()
+    assert core.localize("all") != "All"
+
+
+def test_language_is_english_again() -> None:
+    assert core.localize("all") == "All"

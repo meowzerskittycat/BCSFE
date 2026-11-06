@@ -12,6 +12,11 @@
 - **Check for updates** now follows this fork's `main` branch on GitHub. It used to check PyPI's
   `bcsfe`, which is upstream's package, so updating could replace this fork with upstream's
   editor. The unused "Update to Beta Versions" option is gone.
+- **Check for updates** now really installs the new commit. Commits often share a version number,
+  and pip skips a version that's already installed even with `--upgrade`, so updating used to
+  report success while leaving the old code in place.
+- `bcsfe export SAVE -` no longer prints a broken pipe error when its output is cut short (e.g.
+  piped into `head`).
 - Removed `.github/FUNDING.yml`, which pointed to upstream's donation page.
 
 ### Changed
@@ -32,6 +37,16 @@ directly, and results show their category
 - If a feature fails or is cancelled with Ctrl+C, the save is left as it was and the menu carries on;
 Ctrl+C or Ctrl+D at the main menu asks whether to save before exiting
 
+- Every question follows the same rules: nothing or `q` cancels, an answer that can't be used is
+explained and asked again (instead of quietly dropping the bad parts), lists take numbers, ranges
+and `all`, options can be picked by name, and yes/no questions only accept yes or no
+
+- `bcsfe.core` no longer imports the CLI: every menu, prompt and editor now lives under
+`bcsfe.cli` (mostly `cli/edits/`), and core reports status through `core.messages`, which the CLI
+connects to its output. Code that called editor methods on core classes (for example
+`core.StoryChapters.edit_treasures` or `save_file.gamatoto.edit_xp`) should call the matching
+function in `bcsfe.cli.edits` instead
+
 - A blank answer now cancels a prompt or keeps the current value, instead of repeating "Invalid
 input" forever
 
@@ -49,10 +64,16 @@ reports
 - A test that runs every menu feature with several kinds of typed answers, offline and without
 game data, and checks none crash or leave a save that doesn't read back
 
-- A test suite (real saves from several regions and versions, including 15.7) and CI on Windows,
-macOS and Linux
+- A test suite (saves from all four regions and game versions 9.0 to 15.7, including a sanitized
+real 15.7 save) and CI on Windows, macOS and Linux
 
 ### Fixed
+
+- `all` when entering ids (cats, enemies, stages, banners) left out the last one
+
+- Creating a locale accepted any text as its code (e.g. `1 2`), made a folder with that name and
+switched to it; codes must now be one word. A configured locale that no longer exists falls back
+to English
 
 - `ui14` was never saved: `ui13` was written in its place, so it came back as a copy of `ui13`
 

@@ -1,8 +1,6 @@
-from bcsfe import core, cli
+from bcsfe import core
 
 from typing import Any
-
-from bcsfe.cli import dialog_creator, color
 
 
 class SpecialSkill:
@@ -167,108 +165,6 @@ class SpecialSkills:
 
     def __str__(self) -> str:
         return f"Skills(skills={self.skills})"
-
-    def edit_ind(self, ids: list[int], names: list[str], save_file: core.SaveFile):
-        skills = self.get_valid_skills()
-        ability_data = core.core_data.get_ability_data(save_file)
-        if ability_data.ability_data is None:
-            return
-        for id in ids:
-            color.color_print_key(
-                "selected_skill_upgrades",
-                name=names[id],
-                base_level=skills[id].upgrade.base + 1,
-                plus_level=skills[id].upgrade.plus,
-            )
-            ability = ability_data.get_ability_data_item(id)
-            if ability is None:
-                continue
-            upgrade, should_exit = core.Upgrade.get_user_upgrade(
-                ability.max_base_level - 1, ability.max_plus_level
-            )
-            if should_exit:
-                return
-            if upgrade is not None:
-                self.set_upgrade(id, upgrade)
-                color.color_print_key(
-                    "selected_skill_upgraded",
-                    name=names[id],
-                    base_level=skills[id].upgrade.base + 1,
-                    plus_level=skills[id].upgrade.plus,
-                )
-
-    def edit_many(self, ids: list[int], save_file: core.SaveFile, names: list[str]):
-        skills = self.get_valid_skills()
-        ability_data = core.core_data.get_ability_data(save_file)
-        if ability_data.ability_data is None:
-            return
-        max_base_level = max(
-            [ability.max_base_level for ability in ability_data.ability_data]
-        )
-        max_plus_level = max(
-            [ability.max_plus_level for ability in ability_data.ability_data]
-        )
-        upgrade, should_exit = core.Upgrade.get_user_upgrade(
-            max_base_level - 1, max_plus_level
-        )
-        if should_exit or upgrade is None:
-            return
-        disable_maxes = core.core_data.config.get_bool(core.ConfigKey.DISABLE_MAXES)
-        for id in ids:
-            max_base_level = ability_data.ability_data[id].max_base_level - 1
-            max_plus_level = ability_data.ability_data[id].max_plus_level
-            if disable_maxes:
-                max_base_level = None
-                max_plus_level = None
-
-            self.set_upgrade(
-                id,
-                upgrade.copy(),
-                max_base=max_base_level,
-                max_plus=max_plus_level,
-            )
-
-            color.color_print_key(
-                "selected_skill_upgraded",
-                name=names[id],
-                base_level=skills[id].upgrade.base + 1,
-                plus_level=skills[id].upgrade.plus,
-            )
-
-    def edit(self, save_file: core.SaveFile):
-        names_o = core.core_data.get_gatya_item_names(save_file)
-        items = core.core_data.get_gatya_item_buy(save_file).get_by_category(2)
-        if items is None:
-            return
-        names: list[str] = []
-        for item in items:
-            name = names_o.get_name(item.id)
-            if name is None:
-                return
-            names.append(name)
-        ids = dialog_creator.multi_select_indexes_key(names, "special_skills_dialog")
-        if not ids:
-            return
-        if len(ids) == 1:
-            self.edit_ind(ids, names, save_file)
-        else:
-            dialog_creator.single_select_key(
-                dialog_creator.Actions[None]
-                .new()
-                .add_new_key(
-                    "upgrade_individual_skill",
-                    lambda _: self.edit_ind(ids, names, save_file),
-                )
-                .add_new_key(
-                    "upgrade_all_skills",
-                    lambda _: self.edit_many(ids, save_file, names),
-                ),
-                "upgrade_skills_select_mod",
-            )
-
-        cli.edits.cat_editor.CatEditor.set_rank_up_sale(save_file)
-
-        color.color_print_key("skills_edited")
 
     def get_from_id(self, id: int, only_valid: bool = True) -> SpecialSkill | None:
         if only_valid:

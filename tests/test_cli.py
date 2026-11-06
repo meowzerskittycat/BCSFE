@@ -5,7 +5,7 @@ from collections.abc import Iterator
 import pytest
 
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, dialog_creator, edits, prompt
 from bcsfe.cli.feature_handler import FeatureHandler
 from bcsfe.cli.save_management import SaveManagement
 
@@ -81,11 +81,11 @@ def test_failed_feature_leaves_the_save_unchanged(
 def test_blank_answers_cancel_or_keep(monkeypatch) -> None:
     monkeypatch.setattr(color, "color_print", lambda *a, **k: None)
     type_answers(monkeypatch, [""])
-    assert dialog_creator.edit_int_raw("x", 7, dialog_creator.MaxValue.i32()) == 7
+    assert dialog_creator.edit_int_raw("x", 7, prompt.MaxValue.i32()) == 7
     type_answers(monkeypatch, [""])
-    assert dialog_creator.basic_pick_raw_index(["a", "b"], "pick") is None
+    assert prompt.choose(["a", "b"], prompt.Raw("pick")) is None
     type_answers(monkeypatch, [""])
-    assert dialog_creator.multi_select_indexes_raw(["a", "b", "c"], "pick") is None
+    assert prompt.choose_many(["a", "b", "c"], prompt.Raw("pick")) is None
 
 
 def test_multi_select_rejects_bad_entries_without_keeping_them(monkeypatch) -> None:
@@ -93,7 +93,7 @@ def test_multi_select_rejects_bad_entries_without_keeping_them(monkeypatch) -> N
     monkeypatch.setattr(color, "color_print", lambda *a, **k: None)
     monkeypatch.setattr(color, "color_print_key", lambda key, **k: printed.append(k))
     type_answers(monkeypatch, ["1 9", "1 3"])
-    assert dialog_creator.multi_select_indexes_raw(["a", "b", "c"], "pick") == [0, 2]
+    assert prompt.choose_many(["a", "b", "c"], prompt.Raw("pick")) == [0, 2]
     assert printed == [{"min": 1, "max": 4}]
 
 
@@ -201,4 +201,29 @@ def test_updater_installs_from_github(monkeypatch) -> None:
     up = updater.Updater()
     monkeypatch.setattr(up, "get_latest", lambda: ("3.6.0", "c" * 40))
     assert up.update()
-    assert ran[0][-1] == "git+https://github.com/meowzerskittycat/BCSFE@" + "c" * 40
+    package = "git+https://github.com/meowzerskittycat/BCSFE@" + "c" * 40
+    # pip won't replace an installed copy with the same version number unless
+    # forced, and fork commits often share one.
+    assert ran[0][-4:] == ["install", "--force-reinstall", "--no-deps", package]
+    assert ran[1][-2:] == ["install", package]
+    assert len(ran) == 2
+
+
+@pytest.mark.parametrize(
+    ("code", "ok"),
+    [("de", True), ("pt-BR", True), ("1 2", False), ("../x", False), ("ext-a", False)],
+)
+def test_locale_codes_must_be_one_word(code: str, ok: bool) -> None:
+    assert core.Config.valid_locale_code(code) is ok
+
+
+def test_new_locale_rejects_bad_codes_without_creating_anything(monkeypatch) -> None:
+    before = core.LocalManager.get_all_locales()
+    answers = iter(["1 2"])
+    monkeypatch.setattr(color, "color_input", lambda *_a, **_k: next(answers))
+    assert edits.settings.new_locale(core.core_data.config) is None
+    assert core.LocalManager.get_all_locales() == before
+
+
+def test_missing_locale_falls_back_to_english() -> None:
+    assert core.LocalManager("does-not-exist").locale == "en"
