@@ -4,9 +4,15 @@ from bcsfe import core
 from bcsfe.cli import dialog_creator, color, edits, save_management, main
 
 
+# How many edits "Undo last edit" can step back through.
+MAX_UNDO = 10
+
+
 class FeatureHandler:
     def __init__(self, save_file: core.SaveFile):
         self.save_file = save_file
+        # (feature name, save bytes before that feature ran), newest last.
+        self.undo_stack: list[tuple[str, bytes]] = []
 
     def get_features(self) -> dict[str, Any]:
         cat_features = {"cats": edits.cat_editor.CatEditor.edit_cats}
@@ -141,6 +147,7 @@ class FeatureHandler:
                 "update_external": core.update_external_content,
                 "manage_game_data": core.manage_game_data,
             },
+            "undo_last_edit": self.undo_last_edit,
             "exit": main.Main.exit_editor,
         }
         return features
@@ -275,12 +282,16 @@ class FeatureHandler:
             if not feature:
                 continue
 
+            feature_name = feature[-1]
             feature = self.get_feature(feature)
 
             if isinstance(feature, Callable):
                 self.do_save_actions()
 
+                before = self.snapshot()
                 feature(self.save_file)
+                if feature != self.undo_last_edit:
+                    self.remember(feature_name, before)
 
                 self.save_file.to_file_thread(self.save_file.get_temp_path())
 
@@ -288,6 +299,32 @@ class FeatureHandler:
                 features = [[k] for k in features_dict.keys()]
 
                 core.core_data.game_data_getter = None  # reset game data getter so that if an old version is removed, it will download the new version
+
+    def snapshot(self) -> bytes | None:
+        try:
+            return self.save_file.to_data().to_bytes()
+        except Exception:
+            return None
+
+    def remember(self, feature_name: str, before: bytes | None):
+        """Keep `before` for undo if the feature changed the save."""
+        if before is None or self.snapshot() == before:
+            return
+        self.undo_stack.append((feature_name, before))
+        del self.undo_stack[:-MAX_UNDO]
+
+    def undo_last_edit(self, save_file: core.SaveFile):
+        if not self.undo_stack:
+            color.color_print_key("undo_nothing")
+            return
+        feature_name, before = self.undo_stack.pop()
+        restored = core.SaveFile(core.Data(before), save_file.cc)
+        save_file.load_save_file(restored)
+        color.color_print_key(
+            "undo_success",
+            feature=core.localize_no_alias(feature_name),
+            remaining=len(self.undo_stack),
+        )
 
     def do_save_actions(self):
         if core.core_data.config.get_bool(core.ConfigKey.CLEAR_TUTORIAL_ON_LOAD):

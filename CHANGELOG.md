@@ -9,7 +9,12 @@
 - Save sections are described once in a declarative schema instead of separately for reading,
 writing, JSON export, JSON import and new saves
 
+- Stage-progress sections (main chapters, gauntlets, legend quest, aku, events, story, item reward
+and timed score stages) share one model and one set of read/write helpers
+
 ### Added
+
+- "Undo last edit" in the main menu steps back through the last 10 edits
 
 - `bcsfe info`, `bcsfe check`, `bcsfe export` and `bcsfe import` commands for scripts and bug
 reports
@@ -24,6 +29,11 @@ export wrote the same id twice, corrupting the save
 
 - Clearing Zero Legends / Catclaw stages didn't unlock the next stage, and on new maps clearing one
 stage cleared all of them
+
+- In the gauntlet, event and legend quest menus, "Finish" started another edit, and each edit
+exited the menu instead of returning to it
+
+- Clearing the last stage of a gauntlet star didn't unlock the next star or map
 
 - Importing JSON with missing keys crashed
 
