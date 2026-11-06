@@ -45,7 +45,7 @@ the editor on it. It is easier to run the editor on a PC / laptop rather than on
 
 ### Windows / MacOS
 
-1. Install Python 3.9 or later if you don't already have it: <https://www.python.org/downloads/>
+1. Install Python 3.10 or later if you don't already have it: <https://www.python.org/downloads/>
 
 2. Open a terminal such as PowerShell or Command Prompt
 
@@ -104,7 +104,7 @@ py -m pip uninstall bcsfe
 
 ### Linux
 
-1. Install Python 3.9 or later using your system's package manager if you don't already have it
+1. Install Python 3.10 or later using your system's package manager if you don't already have it
 
 2. You might have to install pip seperately with a package called `python-pip` or something similar
 or you can run the following command:
