@@ -1,4 +1,3 @@
-from __future__ import annotations
 from typing import Any
 from bcsfe import core
 from bcsfe.cli import color_hex
@@ -160,12 +159,18 @@ def __stylize(text: str, style: str):
     return style + f"{text}{terminator}"
 
 
+def use_color() -> bool:
+    """Colours are off when NO_COLOR is set (https://no-color.org)."""
+    return not os.environ.get("NO_COLOR")
+
+
 def colorize(text: str) -> str:
     text_data = __parse(text)
     out: str = ""
+    plain = not use_color()
 
     for txt, color in text_data:
-        if not color:
+        if plain or not color:
             out += txt
             continue
 
@@ -175,7 +180,12 @@ def colorize(text: str) -> str:
 
 
 def color_input(text: str) -> str:
-    return input(colorize(text))
+    try:
+        return input(colorize(text))
+    except EOFError:
+        # Input closed (Ctrl+D, or a pipe ran out): treat it like Ctrl+C.
+        print()
+        raise KeyboardInterrupt from None
 
 
 def color_input_key(key: str, escape: bool = True, **kwargs: Any) -> str:

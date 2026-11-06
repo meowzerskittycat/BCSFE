@@ -1,129 +1,35 @@
-from __future__ import annotations
+"""Aku realm stages: only the selected stage and clear counts are stored,
+and each star's stages are stored together (not interleaved)."""
+
 from typing import Any
+
 from bcsfe import core
 from bcsfe.cli import color
+from bcsfe.core.game.map import stage_grid as grid
+from bcsfe.core.game.map.stage_grid import MapStars, Stage, Star
+from bcsfe.core.io.schema import I8, I16
+
+__all__ = ["AkuChapters", "ChaptersStars", "Chapter", "Stage"]
+
+ChaptersStars = MapStars
+Chapter = Star
 
 
-class Stage:
-    def __init__(self, clear_times: int):
-        self.clear_times = clear_times
-
-    @staticmethod
-    def init() -> Stage:
-        return Stage(0)
-
-    @staticmethod
-    def read(data: core.Data) -> Stage:
-        clear_times = data.read_short()
-        return Stage(clear_times)
-
-    def write(self, data: core.Data):
-        data.write_short(self.clear_times)
-
-    def serialize(self) -> int:
-        return self.clear_times
-
-    @staticmethod
-    def deserialize(data: int) -> Stage:
-        return Stage(
-            data,
-        )
-
-    def __repr__(self):
-        return f"Stage({self.clear_times})"
-
-    def __str__(self):
-        return self.__repr__()
-
-    def clear_stage(self, clear_count: int = 1):
-        self.clear_times = clear_count
+def _star_to_json(star: Star) -> dict[str, Any]:
+    return {
+        "current_stage": star.selected_stage,
+        "stages": [stage.clear_times for stage in star.stages],
+    }
 
 
-class Chapter:
-    def __init__(self, current_stage: int, total_stages: int = 0):
-        self.current_stage = current_stage
-        self.stages: list[Stage] = [Stage.init() for _ in range(total_stages)]
-
-    @staticmethod
-    def init(total_stages: int) -> Chapter:
-        return Chapter(0, total_stages)
-
-    @staticmethod
-    def read_current_stage(data: core.Data):
-        current_stage = data.read_byte()
-        return Chapter(current_stage)
-
-    def write_current_stage(self, data: core.Data):
-        data.write_byte(self.current_stage)
-
-    def read_stages(self, data: core.Data, total_stages: int):
-        self.stages = [Stage.read(data) for _ in range(total_stages)]
-
-    def write_stages(self, data: core.Data):
-        for stage in self.stages:
-            stage.write(data)
-
-    def serialize(self) -> dict[str, Any]:
-        return {
-            "current_stage": self.current_stage,
-            "stages": [stage.serialize() for stage in self.stages],
-        }
-
-    @staticmethod
-    def deserialize(data: dict[str, Any]) -> Chapter:
-        chapter = Chapter(data.get("current_stage", 0))
-        chapter.stages = [Stage.deserialize(stage) for stage in data.get("stages", [])]
-        return chapter
-
-    def __repr__(self):
-        return f"Chapter({self.current_stage}, {self.stages})"
-
-    def __str__(self):
-        return self.__repr__()
+def _star_from_json(data: dict[str, Any]) -> Star:
+    star = Star(data.get("current_stage", 0))
+    star.stages = [Stage(clears) for clears in data.get("stages", [])]
+    return star
 
 
-class ChaptersStars:
-    def __init__(self, chapters: list[Chapter]):
-        self.chapters = chapters
-
-    @staticmethod
-    def init(total_stages: int, total_stars: int) -> ChaptersStars:
-        return ChaptersStars([Chapter.init(total_stages) for _ in range(total_stars)])
-
-    @staticmethod
-    def read_current_stage(data: core.Data, total_stars: int):
-        chapters = [Chapter.read_current_stage(data) for _ in range(total_stars)]
-        return ChaptersStars(chapters)
-
-    def write_current_stage(self, data: core.Data):
-        for chapter in self.chapters:
-            chapter.write_current_stage(data)
-
-    def read_stages(self, data: core.Data, total_stages: int):
-        for chapter in self.chapters:
-            chapter.read_stages(data, total_stages)
-
-    def write_stages(self, data: core.Data):
-        for chapter in self.chapters:
-            chapter.write_stages(data)
-
-    def serialize(self) -> list[dict[str, Any]]:
-        return [chapter.serialize() for chapter in self.chapters]
-
-    @staticmethod
-    def deserialize(data: list[dict[str, Any]]) -> ChaptersStars:
-        chapters = [Chapter.deserialize(chapter) for chapter in data]
-        return ChaptersStars(chapters)
-
-    def __repr__(self):
-        return f"ChaptersStars({self.chapters})"
-
-    def __str__(self):
-        return self.__repr__()
-
-
-class AkuChapters:
-    def __init__(self, chapters: list[ChaptersStars]):
+class AkuChapters(grid.Maps):
+    def __init__(self, chapters: list[MapStars]):
         self.chapters = chapters
 
     @staticmethod
@@ -132,50 +38,32 @@ class AkuChapters:
 
     @staticmethod
     def read(data: core.Data) -> AkuChapters:
-        total_chapters = data.read_short()
+        total_maps = data.read_short()
         total_stages = data.read_byte()
         total_stars = data.read_byte()
-
-        chapters = [
-            ChaptersStars.read_current_stage(data, total_stars)
-            for _ in range(total_chapters)
-        ]
-
-        for chapter in chapters:
-            chapter.read_stages(data, total_stages)
-
-        return AkuChapters(chapters)
+        maps = grid.read_selected(data, total_maps, total_stars, I8)
+        grid.read_stages(data, maps, total_stages, I16, interleaved=False)
+        return AkuChapters(maps)
 
     def write(self, data: core.Data):
-        data.write_short(len(self.chapters))
-        try:
-            data.write_byte(len(self.chapters[0].chapters[0].stages))
-        except IndexError:
-            data.write_byte(0)
-        try:
-            data.write_byte(len(self.chapters[0].chapters))
-        except IndexError:
-            data.write_byte(0)
-
-        for chapter in self.chapters:
-            chapter.write_current_stage(data)
-
-        for chapter in self.chapters:
-            chapter.write_stages(data)
+        total_maps, total_stages, total_stars = grid.dims(self.chapters)
+        data.write_short(total_maps)
+        data.write_byte(total_stages)
+        data.write_byte(total_stars)
+        grid.write_selected(data, self.chapters, I8)
+        grid.write_stages(data, self.chapters, I16, interleaved=False)
 
     def serialize(self) -> list[list[dict[str, Any]]]:
-        return [chapter.serialize() for chapter in self.chapters]
+        return [[_star_to_json(star) for star in map.chapters] for map in self.chapters]
 
     @staticmethod
     def deserialize(data: list[list[dict[str, Any]]]) -> AkuChapters:
-        chapters = [ChaptersStars.deserialize(chapter) for chapter in data]
-        return AkuChapters(chapters)
+        return AkuChapters(
+            [MapStars([_star_from_json(star) for star in map]) for map in data]
+        )
 
-    def __repr__(self):
-        return f"Chapters({self.chapters})"
-
-    def __str__(self):
-        return self.__repr__()
+    def __repr__(self) -> str:
+        return f"AkuChapters({self.chapters})"
 
     @staticmethod
     def edit_aku_chapters(save_file: core.SaveFile):
@@ -214,6 +102,6 @@ class AkuChapters:
                 stage.clear_stage(clear_count)
 
         for i in range(clear_progress, len(chapter.stages)):
-            chapter.stages[i].clear_stage(clear_count=0)
+            chapter.stages[i].clear_stage(0)
 
         color.color_print_key("aku_clear_success")

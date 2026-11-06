@@ -1,4 +1,3 @@
-from __future__ import annotations
 from bcsfe import cli, core
 from bcsfe.cli import dialog_creator
 from bcsfe.core.game.catbase.gatya import GatyaEventType

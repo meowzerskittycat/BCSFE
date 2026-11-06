@@ -1,4 +1,3 @@
-from __future__ import annotations
 import shlex
 from bcsfe import core
 from bcsfe.core import io

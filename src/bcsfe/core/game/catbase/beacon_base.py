@@ -1,4 +1,3 @@
-from __future__ import annotations
 from dataclasses import dataclass
 
 from bcsfe.core.io.schema import I32, Array, Bool, Map, String, Struct, field

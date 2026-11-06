@@ -1,17 +1,11 @@
-from __future__ import annotations
-
 __version__ = "3.6.0"
 
 __app_name__ = "bcsfe"
 
-import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    if sys.version_info >= (3, 11):
-        from importlib.resources.abc import Traversable
-    else:
-        from importlib.abc import Traversable
+    from importlib.resources.abc import Traversable
 
 from bcsfe import core, cli
 

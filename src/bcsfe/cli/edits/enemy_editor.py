@@ -1,4 +1,3 @@
-from __future__ import annotations
 from bcsfe import core
 from bcsfe.cli import color, dialog_creator
 from bcsfe.cli.edits.cat_editor import SelectMode

@@ -45,7 +45,7 @@ the editor on it. It is easier to run the editor on a PC / laptop rather than on
 
 ### Windows / MacOS
 
-1. Install Python 3.9 or later if you don't already have it: <https://www.python.org/downloads/>
+1. Install Python 3.14 or later if you don't already have it: <https://www.python.org/downloads/>
 
 2. Open a terminal such as PowerShell or Command Prompt
 
@@ -104,7 +104,7 @@ py -m pip uninstall bcsfe
 
 ### Linux
 
-1. Install Python 3.9 or later using your system's package manager if you don't already have it
+1. Install Python 3.14 or later using your system's package manager if you don't already have it
 
 2. You might have to install pip seperately with a package called `python-pip` or something similar
 or you can run the following command:
@@ -231,6 +231,9 @@ python -m pip uninstall bcsfe
 ```
 
 ### iOS
+
+The editor needs Python 3.14 or later. Check with `python3 --version` in a-Shell first: if
+a-Shell's Python is older, the editor won't install there.
 
 I do not have an iOS device, so there is no tutorial. The video that was recommended is now outdated.
 But for a general overview of what you need to do:

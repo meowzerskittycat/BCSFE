@@ -1,6 +1,5 @@
-from __future__ import annotations
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any
 
 from bcsfe import __app_name__
 
@@ -181,21 +180,17 @@ from bcsfe.core.theme_handler import (
 from bcsfe.core.max_value_helper import MaxValueHelper
 
 
-T = TypeVar("T")
-R = TypeVar("R")
-
-
-def map_opt(v: T | None, func: Callable[[T], R]) -> R | None:
+def map_opt[T, R](v: T | None, func: Callable[[T], R]) -> R | None:
     if v is None:
         return None
     return func(v)
 
 
-def consume(v1: None, v2: T) -> T:
+def consume[T](v1: None, v2: T) -> T:
     return v2
 
 
-def first_tuple(v: tuple[T, Any] | None) -> T | None:
+def first_tuple[T](v: tuple[T, Any] | None) -> T | None:
     return map_opt(v, lambda x: x[0])
 
 

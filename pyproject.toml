@@ -8,16 +8,13 @@ authors = [{ name = "fieryhenry" }]
 description = "A save file editor for The Battle Cats"
 license = "GPL-3.0-or-later"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: End Users/Desktop",
   "Topic :: Utilities",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Operating System :: OS Independent",
 ]
 dependencies = ["pyjwt", "requests", "pyyaml"]
@@ -43,7 +40,7 @@ package-dir = { "" = "src" }
 [tool.pyright]
 typeCheckingMode = "strict"
 include = ["src"]
-pythonVersion = "3.10"
+pythonVersion = "3.14"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -51,7 +48,7 @@ pythonpath = ["src"]
 addopts = "-q"
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py314"
 src = ["src", "tests"]
 
 [tool.ruff.lint]

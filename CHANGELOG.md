@@ -1,5 +1,72 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Python 3.14 or later is now required (the version Termux ships)
+
+- Save sections are described once in a declarative schema instead of separately for reading,
+writing, JSON export, JSON import and new saves
+
+- Stage-progress sections (main chapters, gauntlets, legend quest, aku, events, story, item reward
+and timed score stages) share one model and one set of read/write helpers
+
+- Rebuilt main menu: after an edit it stays in the same category, `0` goes back (there's no "Go
+back" on the top menu any more), search ranks exact names first and runs an exact match
+directly, and results show their category
+
+- If a feature fails or is cancelled with Ctrl+C, the save is left as it was and the menu carries on;
+Ctrl+C or Ctrl+D at the main menu asks whether to save before exiting
+
+- A blank answer now cancels a prompt or keeps the current value, instead of repeating "Invalid
+input" forever
+
+- Bug reports now go to this fork's GitHub issues
+
+### Added
+
+- "Undo last edit" in the main menu steps back through the last 10 edits
+
+- `NO_COLOR` turns off colours
+
+- `bcsfe info`, `bcsfe check`, `bcsfe export` and `bcsfe import` commands for scripts and bug
+reports
+
+- A test suite (real saves from several regions and versions, including 15.7) and CI on Windows,
+macOS and Linux
+
+### Fixed
+
+- The crash backup was written by a background thread while the editor kept using the save, so it
+could be half-written ("Failed to recover save file from temp file") or corrupt the save in use
+
+- Updated text and themes weren't copied to the data folder unless the version number changed
+
+- "Convert game version" accepted any number, e.g. `5` set the save to version 0.0.5
+
+- Picking several entries showed `<built-in function min>` in its error and repeated entries typed
+before a mistake
+
+- Editing missions, outbreaks, cannons, dojo scores and other id-keyed data after importing a JSON
+export wrote the same id twice, corrupting the save
+
+- Clearing Zero Legends / Catclaw stages didn't unlock the next stage, and on new maps clearing one
+stage cleared all of them
+
+- In the gauntlet, event and legend quest menus, "Finish" started another edit, and each edit
+exited the menu instead of returning to it
+
+- Clearing the last stage of a gauntlet star didn't unlock the next star or map
+
+- Importing JSON with missing keys crashed
+
+- JSON export crashed on Windows for dates near 1970
+
+- Crashes in the cat shrine editor and with a new `--data-dir`
+
+- Parse errors now say what went wrong instead of failing an assert
+
 ## [3.6.0] - 2026-07-24
 
 ### Added

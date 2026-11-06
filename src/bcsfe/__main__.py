@@ -1,4 +1,3 @@
-from __future__ import annotations
 import sys
 import traceback
 
@@ -8,29 +7,46 @@ from bcsfe import core, __app_name__, __version__
 
 import bcsfe
 import argparse
+import hashlib
 
 from importlib import resources
+from importlib.resources.abc import Traversable
+
+
+def bundled_files_stamp(path: Traversable) -> str:
+    """The editor version plus a hash of the bundled files (locales, themes).
+
+    The files are copied to the data folder when this changes, so updated
+    text reaches users even when the version number stays the same.
+    """
+    digest = hashlib.sha256()
+
+    def add(item: Traversable, rel: str):
+        if item.is_dir():
+            for child in sorted(item.iterdir(), key=lambda c: c.name):
+                add(child, f"{rel}/{child.name}")
+        else:
+            digest.update(rel.encode() + b"\0" + item.read_bytes() + b"\0")
+
+    add(path, "")
+    return f"{__version__} {digest.hexdigest()[:16]}"
 
 
 def migrate(force: bool):
     v_path = core.Path.get_data_folder().add("version.txt")
-    if not v_path.exists():
-        try:
-            v_path.parent().generate_dirs()
-            v_path.write(core.Data(__version__))
-        except FileNotFoundError:
-            print(
-                "Failed to create data folder. Something is wrong with your user's permissions or anti-virus software"
-            )
-            print("Please set the --data-dir flag to something the editor can write to")
-            pass
-        vers = None
-    else:
-        vers = v_path.read().to_str().strip()
-    if vers != __version__ or force:
-        p = resources.files(__app_name__).joinpath("files")
-        copy_to_data_dir(p, p)
-        v_path.write(core.Data(__version__))
+    files = resources.files(__app_name__).joinpath("files")
+    stamp = bundled_files_stamp(files)
+    try:
+        v_path.parent().generate_dirs()
+        current = v_path.read().to_str().strip() if v_path.exists() else None
+        if current != stamp or force:
+            copy_to_data_dir(files, files)
+            v_path.write(core.Data(stamp))
+    except OSError:
+        print(
+            "Failed to create data folder. Something is wrong with your user's permissions or anti-virus software"
+        )
+        print("Please set the --data-dir flag to something the editor can write to")
 
 
 def main():

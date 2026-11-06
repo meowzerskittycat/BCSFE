@@ -1,6 +1,5 @@
 """EX stage clear counts: a list of chapters, each with 12 stages."""
 
-from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar
 

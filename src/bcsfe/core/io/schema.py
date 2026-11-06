@@ -19,22 +19,15 @@ order. Fields are read and written in declaration order, so the order of
 the class body *is* the binary layout.
 """
 
-from __future__ import annotations
-
 import dataclasses
 import struct
 from collections.abc import Callable
-from typing import Any, ClassVar, Generic, TypeVar
+from typing import Any, ClassVar, Self
 
 from bcsfe.core.io.data import Data
 
-T = TypeVar("T")
-K = TypeVar("K")
-V = TypeVar("V")
-S = TypeVar("S", bound="Struct")
 
-
-class Codec(Generic[T]):
+class Codec[T]:
     """How one value is laid out in the binary data and in JSON."""
 
     def read(self, data: Data, gv: Any = None) -> T:
@@ -163,7 +156,7 @@ VarInt = VarIntCodec()
 String = StringCodec()
 
 
-class Array(Codec[list[T]]):
+class Array[T](Codec[list[T]]):
     """A list of `item`.
 
     `length` is either a fixed count (nothing is stored), or a codec for the
@@ -201,7 +194,7 @@ class Array(Codec[list[T]]):
         return f"Array({self.item!r}, {self.length!r})"
 
 
-class Map(Codec[dict[K, V]]):
+class Map[K, V](Codec[dict[K, V]]):
     """A count (stored with `length`) followed by that many key/value pairs.
 
     JSON object keys are always strings, so keys are converted back with
@@ -242,7 +235,7 @@ class Map(Codec[dict[K, V]]):
         return f"Map({self.key!r}, {self.value!r}, {self.length!r})"
 
 
-class Nested(Codec[S]):
+class Nested[S: Struct](Codec[S]):
     """Another :class:`Struct` embedded in place."""
 
     def __init__(self, struct_type: type[S]):
@@ -267,7 +260,7 @@ class Nested(Codec[S]):
         return f"Nested({self.struct_type.__name__})"
 
 
-class Grid(Codec[list[list[T]]]):
+class Grid[T](Codec[list[list[T]]]):
     """Rows of equal length: the row count, the column count, then the items
     row by row. An empty grid is written with 0 columns."""
 
@@ -328,7 +321,7 @@ class Tuple(Codec[tuple[Any, ...]]):
         return f"Tuple{self.items!r}"
 
 
-class Optional(Codec["T | None"]):
+class Optional[T](Codec[T | None]):
     """A bool saying whether a value follows, then the value if it does."""
 
     def __init__(self, item: Codec[T]):
@@ -397,7 +390,7 @@ _PART = "bcsfe_part"
 _TRANSIENT = "bcsfe_transient"
 
 
-def field(
+def field[T](
     codec: Codec[T],
     default: Callable[[], T] | None = None,
     *,
@@ -424,7 +417,7 @@ def field(
     )
 
 
-def transient(default: Callable[[], T]) -> Any:
+def transient[T](default: Callable[[], T]) -> Any:
     """An attribute that is neither in the save nor in JSON (editor state)."""
     return dataclasses.field(
         default_factory=default, compare=False, repr=False, metadata={_TRANSIENT: True}
@@ -489,11 +482,11 @@ class Struct:
         return fields
 
     @classmethod
-    def init(cls: type[S]) -> S:
+    def init(cls) -> Self:
         return cls()
 
     @classmethod
-    def read(cls: type[S], data: Data, gv: Any = None) -> S:
+    def read(cls, data: Data, gv: Any = None) -> Self:
         values: dict[str, Any] = {}
         for f in cls._part(None):
             if f.present(gv, cls.__name__):
@@ -521,7 +514,7 @@ class Struct:
         return {f.name: f.codec.to_json(getattr(self, f.name)) for f in layout}
 
     @classmethod
-    def deserialize(cls: type[S], data: Any) -> S:
+    def deserialize(cls, data: Any) -> Self:
         layout = cls.layout()
         if cls.__transparent__:
             f = layout[0]

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Main class for the CLI."""
 
 import sys
@@ -246,7 +244,7 @@ class Main:
             return None
         try:
             json_data = core.JsonFile.from_data(path.read()).as_object()
-        except (json.JSONDecodeError, UnicodeDecodeError):
+        except json.JSONDecodeError, UnicodeDecodeError:
             color.color_print_key("parse_json_fail")
             return None
         try:

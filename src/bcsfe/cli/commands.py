@@ -8,8 +8,6 @@
 Output is plain English text, so it's easy to paste into bug reports.
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 import sys

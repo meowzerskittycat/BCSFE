@@ -1,38 +1,42 @@
-from __future__ import annotations
+"""Story chapters (Empire of Cats, Into the Future, Cats of the Cosmos).
+
+There are always 10 chapters with 51 stages each; chapter 3 is unused. Like
+the other stage sections, the values are stored column by column: one value
+per chapter (or per stage of every chapter) at a time, all as ints.
+"""
+
+import random
 from typing import Any
+
 from bcsfe import core
 from bcsfe.cli import color, dialog_creator
-import random
+
+TOTAL_CHAPTERS = 10
+TOTAL_STAGES = 51
+# Only the first 49 stages store a treasure, and only 48 are real stages.
+TREASURE_STAGES = 49
+VALID_TREASURE_STAGES = 48
+# Chapters whose stages store an Into the Future timed score.
+ITF_CHAPTERS = range(4, 7)
+
+_TREASURE_FESTIVAL = (
+    "time_until_treasure_chance",
+    "treasure_chance_duration",
+    "treasure_chance_value",
+    "treasure_chance_stage_id",
+    "treasure_festival_type",
+)
 
 
 class Stage:
-    def __init__(self, clear_times: int):
+    def __init__(self, clear_times: int = 0):
         self.clear_times = clear_times
         self.treasure = 0
         self.itf_timed_score = 0
 
     @staticmethod
     def init() -> Stage:
-        return Stage(0)
-
-    @staticmethod
-    def read_clear_times(stream: core.Data) -> Stage:
-        return Stage(stream.read_int())
-
-    def read_treasure(self, stream: core.Data):
-        self.treasure = stream.read_int()
-
-    def read_itf_timed_score(self, stream: core.Data):
-        self.itf_timed_score = stream.read_int()
-
-    def write_clear_times(self, stream: core.Data):
-        stream.write_int(self.clear_times)
-
-    def write_treasure(self, stream: core.Data):
-        stream.write_int(self.treasure)
-
-    def write_itf_timed_score(self, stream: core.Data):
-        stream.write_int(self.itf_timed_score)
+        return Stage()
 
     def serialize(self) -> dict[str, Any]:
         return {
@@ -48,11 +52,11 @@ class Stage:
         stage.itf_timed_score = data.get("itf_timed_score", 0)
         return stage
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Stage({self.clear_times}, {self.treasure}, {self.itf_timed_score})"
 
-    def __str__(self):
-        return self.__repr__()
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Stage) and vars(self) == vars(other)
 
     def clear_stage(self, clear_amount: int = 1):
         self.clear_times = clear_amount
@@ -68,15 +72,19 @@ class Stage:
 
 
 class Chapter:
-    def __init__(self, selected_stage: int):
+    def __init__(self, selected_stage: int = 0):
         self.selected_stage = selected_stage
         self.progress = 0
-        self.stages = [Stage.init() for _ in range(51)]
+        self.stages = [Stage() for _ in range(TOTAL_STAGES)]
         self.time_until_treasure_chance = 0
         self.treasure_chance_duration = 0
         self.treasure_chance_value = 0
         self.treasure_chance_stage_id = 0
         self.treasure_festival_type = 0
+
+    @staticmethod
+    def init() -> Chapter:
+        return Chapter()
 
     def clear_stage(
         self,
@@ -96,93 +104,32 @@ class Chapter:
     def is_stage_clear(self, stage_id: int) -> bool:
         return self.stages[stage_id].is_cleared()
 
-    @staticmethod
-    def init() -> Chapter:
-        return Chapter(0)
-
     def get_treasure_stages(self) -> list[Stage]:
-        return self.stages[:49]
+        return self.stages[:TREASURE_STAGES]
 
     def get_valid_treasure_stages(self) -> list[Stage]:
-        return self.stages[:48]
+        return self.stages[:VALID_TREASURE_STAGES]
 
-    @staticmethod
-    def read_selected_stage(stream: core.Data) -> Chapter:
-        return Chapter(stream.read_int())
+    def apply_progress(self, progress: int, clear_times: list[int] | None = None):
+        if clear_times is None:
+            clear_times = [1] * progress
 
-    def read_progress(self, stream: core.Data):
-        self.progress = stream.read_int()
+        self.progress = progress
+        for i in range(progress + 1, VALID_TREASURE_STAGES):
+            self.stages[i].unclear_stage()
 
-    def read_clear_times(self, stream: core.Data):
-        total_stages = 51
-        self.stages = [Stage.read_clear_times(stream) for _ in range(total_stages)]
+        for i in range(progress):
+            self.stages[i].clear_stage(clear_times[i])
 
-    def read_treasure(self, stream: core.Data):
-        for stage in self.get_treasure_stages():
-            stage.read_treasure(stream)
-
-    def read_time_until_treasure_chance(self, stream: core.Data):
-        self.time_until_treasure_chance = stream.read_int()
-
-    def read_treasure_chance_duration(self, stream: core.Data):
-        self.treasure_chance_duration = stream.read_int()
-
-    def read_treasure_chance_value(self, stream: core.Data):
-        self.treasure_chance_value = stream.read_int()
-
-    def read_treasure_chance_stage_id(self, stream: core.Data):
-        self.treasure_chance_stage_id = stream.read_int()
-
-    def read_treasure_festival_type(self, stream: core.Data):
-        self.treasure_festival_type = stream.read_int()
-
-    def read_itf_timed_scores(self, stream: core.Data):
-        for stage in self.stages:
-            stage.read_itf_timed_score(stream)
-
-    def write_selected_stage(self, stream: core.Data):
-        stream.write_int(self.selected_stage)
-
-    def write_progress(self, stream: core.Data):
-        stream.write_int(self.progress)
-
-    def write_clear_times(self, stream: core.Data):
-        for stage in self.stages:
-            stage.write_clear_times(stream)
-
-    def write_treasure(self, stream: core.Data):
-        for stage in self.get_treasure_stages():
-            stage.write_treasure(stream)
-
-    def write_time_until_treasure_chance(self, stream: core.Data):
-        stream.write_int(self.time_until_treasure_chance)
-
-    def write_treasure_chance_duration(self, stream: core.Data):
-        stream.write_int(self.treasure_chance_duration)
-
-    def write_treasure_chance_value(self, stream: core.Data):
-        stream.write_int(self.treasure_chance_value)
-
-    def write_treasure_chance_stage_id(self, stream: core.Data):
-        stream.write_int(self.treasure_chance_stage_id)
-
-    def write_treasure_festival_type(self, stream: core.Data):
-        stream.write_int(self.treasure_festival_type)
-
-    def write_itf_timed_scores(self, stream: core.Data):
-        for stage in self.stages:
-            stage.write_itf_timed_score(stream)
+    def clear_chapter(self):
+        self.apply_progress(VALID_TREASURE_STAGES)
 
     def serialize(self) -> dict[str, Any]:
         return {
             "selected_stage": self.selected_stage,
             "progress": self.progress,
             "stages": [stage.serialize() for stage in self.stages],
-            "time_until_treasure_chance": self.time_until_treasure_chance,
-            "treasure_chance_duration": self.treasure_chance_duration,
-            "treasure_chance_value": self.treasure_chance_value,
-            "treasure_chance_stage_id": self.treasure_chance_stage_id,
-            "treasure_festival_type": self.treasure_festival_type,
+            **{name: getattr(self, name) for name in _TREASURE_FESTIVAL},
         }
 
     @staticmethod
@@ -190,45 +137,41 @@ class Chapter:
         chapter = Chapter(data.get("selected_stage", 0))
         chapter.progress = data.get("progress", 0)
         chapter.stages = [Stage.deserialize(stage) for stage in data.get("stages", [])]
-        chapter.time_until_treasure_chance = data.get("time_until_treasure_chance", 0)
-        chapter.treasure_chance_duration = data.get("treasure_chance_duration", 0)
-        chapter.treasure_chance_value = data.get("treasure_chance_value", 0)
-        chapter.treasure_chance_stage_id = data.get("treasure_chance_stage_id", 0)
-        chapter.treasure_festival_type = data.get("treasure_festival_type", 0)
+        for name in _TREASURE_FESTIVAL:
+            setattr(chapter, name, data.get(name, 0))
         return chapter
 
-    def __repr__(self):
-        return f"Chapter({self.selected_stage}, {self.progress}, {self.stages}, {self.time_until_treasure_chance}, {self.treasure_chance_duration}, {self.treasure_chance_value}, {self.treasure_chance_stage_id}, {self.treasure_festival_type})"
+    def __repr__(self) -> str:
+        values = ", ".join(str(getattr(self, name)) for name in _TREASURE_FESTIVAL)
+        return (
+            f"Chapter({self.selected_stage}, {self.progress}, {self.stages}, {values})"
+        )
 
-    def __str__(self):
-        return f"Chapter({self.selected_stage}, {self.progress}, {self.stages}, {self.time_until_treasure_chance}, {self.treasure_chance_duration}, {self.treasure_chance_value}, {self.treasure_chance_stage_id}, {self.treasure_festival_type})"
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Chapter) and vars(self) == vars(other)
 
-    def apply_progress(self, progress: int, clear_times: list[int] | None = None):
-        if clear_times is None:
-            clear_times = [1] * progress
 
-        self.progress = progress
-        for i in range(progress + 1, 48):
-            self.stages[i].unclear_stage()
+def _read_column(stream: core.Data, objects: list[Any], attr: str):
+    for obj in objects:
+        setattr(obj, attr, stream.read_int())
 
-        for i in range(progress):
-            self.stages[i].clear_stage(clear_times[i])
 
-    def clear_chapter(self):
-        self.apply_progress(48)
+def _write_column(stream: core.Data, objects: list[Any], attr: str):
+    for obj in objects:
+        stream.write_int(getattr(obj, attr))
 
 
 class StoryChapters:
     def __init__(self, chapters: list[Chapter]):
         self.chapters = chapters
 
+    @staticmethod
+    def init() -> StoryChapters:
+        return StoryChapters([Chapter() for _ in range(TOTAL_CHAPTERS)])
+
     def get_real_chapters(self) -> list[Chapter]:
-        new_chapters: list[Chapter] = []
-        for i, chapter in enumerate(self.chapters):
-            if i == 3:
-                continue
-            new_chapters.append(chapter)
-        return new_chapters
+        """Every chapter except the unused one."""
+        return [chapter for i, chapter in enumerate(self.chapters) if i != 3]
 
     def clear_stage(
         self,
@@ -248,95 +191,55 @@ class StoryChapters:
     def is_stage_clear(self, chapter: int, stage: int) -> bool:
         return self.chapters[chapter].is_stage_clear(stage)
 
-    @staticmethod
-    def init() -> StoryChapters:
-        chapters = [Chapter.init() for _ in range(10)]
-        return StoryChapters(chapters)
+    # --- binary layout -----------------------------------------------------
 
     @staticmethod
     def read(stream: core.Data) -> StoryChapters:
-        total_chapters = 10
-        chapters_l = [
-            Chapter.read_selected_stage(stream) for _ in range(total_chapters)
-        ]
-        chapters = StoryChapters(chapters_l)
-        for chapter in chapters.chapters:
-            chapter.read_progress(stream)
-        for chapter in chapters.chapters:
-            chapter.read_clear_times(stream)
-        for chapter in chapters.chapters:
-            chapter.read_treasure(stream)
-        return chapters
-
-    def read_treasure_festival(self, stream: core.Data):
-        for chapter in self.chapters:
-            chapter.read_time_until_treasure_chance(stream)
-        for chapter in self.chapters:
-            chapter.read_treasure_chance_duration(stream)
-        for chapter in self.chapters:
-            chapter.read_treasure_chance_value(stream)
-        for chapter in self.chapters:
-            chapter.read_treasure_chance_stage_id(stream)
-        for chapter in self.chapters:
-            chapter.read_treasure_festival_type(stream)
+        story = StoryChapters([Chapter() for _ in range(TOTAL_CHAPTERS)])
+        _read_column(stream, story.chapters, "selected_stage")
+        _read_column(stream, story.chapters, "progress")
+        for chapter in story.chapters:
+            chapter.stages = [Stage(stream.read_int()) for _ in range(TOTAL_STAGES)]
+        for chapter in story.chapters:
+            _read_column(stream, chapter.get_treasure_stages(), "treasure")
+        return story
 
     def write(self, stream: core.Data):
+        _write_column(stream, self.chapters, "selected_stage")
+        _write_column(stream, self.chapters, "progress")
         for chapter in self.chapters:
-            chapter.write_selected_stage(stream)
+            _write_column(stream, chapter.stages, "clear_times")
         for chapter in self.chapters:
-            chapter.write_progress(stream)
-        for chapter in self.chapters:
-            chapter.write_clear_times(stream)
-        for chapter in self.chapters:
-            chapter.write_treasure(stream)
+            _write_column(stream, chapter.get_treasure_stages(), "treasure")
+
+    def read_treasure_festival(self, stream: core.Data):
+        for name in _TREASURE_FESTIVAL:
+            _read_column(stream, self.chapters, name)
 
     def write_treasure_festival(self, stream: core.Data):
-        for chapter in self.chapters:
-            chapter.write_time_until_treasure_chance(stream)
-        for chapter in self.chapters:
-            chapter.write_treasure_chance_duration(stream)
-        for chapter in self.chapters:
-            chapter.write_treasure_chance_value(stream)
-        for chapter in self.chapters:
-            chapter.write_treasure_chance_stage_id(stream)
-        for chapter in self.chapters:
-            chapter.write_treasure_festival_type(stream)
+        for name in _TREASURE_FESTIVAL:
+            _write_column(stream, self.chapters, name)
 
     def read_itf_timed_scores(self, stream: core.Data):
-        # 0: eoc 1
-        # 1: eoc 2
-        # 2: eoc 3
-        # 3: _
-        # 4: itf 1
-        # 5: itf 2
-        # 6: itf 3
-        # 7: cotc 1
-        # 8: cotc 2
-        # 9: cotc 3
-
-        for i, chapter in enumerate(self.chapters):
-            if i > 3 and i < 7:
-                chapter.read_itf_timed_scores(stream)
+        for i in ITF_CHAPTERS:
+            _read_column(stream, self.chapters[i].stages, "itf_timed_score")
 
     def write_itf_timed_scores(self, stream: core.Data):
-        for i, chapter in enumerate(self.chapters):
-            if i > 3 and i < 7:
-                chapter.write_itf_timed_scores(stream)
+        for i in ITF_CHAPTERS:
+            _write_column(stream, self.chapters[i].stages, "itf_timed_score")
 
     def serialize(self) -> list[dict[str, Any]]:
-        chapters = [chapter.serialize() for chapter in self.chapters]
-        return chapters
+        return [chapter.serialize() for chapter in self.chapters]
 
     @staticmethod
     def deserialize(data: list[dict[str, Any]]) -> StoryChapters:
-        chapters = StoryChapters([Chapter.deserialize(chapter) for chapter in data])
-        return chapters
+        return StoryChapters([Chapter.deserialize(chapter) for chapter in data])
 
-    def __repr__(self):
-        return f"Chapters({self.chapters})"
+    def __repr__(self) -> str:
+        return f"StoryChapters({self.chapters})"
 
-    def __str__(self):
-        return f"Chapters({self.chapters})"
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, StoryChapters) and self.chapters == other.chapters
 
     @staticmethod
     def clear_tutorial(save_file: core.SaveFile):

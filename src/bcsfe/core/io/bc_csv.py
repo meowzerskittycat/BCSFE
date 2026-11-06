@@ -1,4 +1,3 @@
-from __future__ import annotations
 import csv as csv_module
 import enum
 from typing import Any

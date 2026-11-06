@@ -1,4 +1,3 @@
-from __future__ import annotations
 import enum
 from bcsfe.cli import dialog_creator
 from bcsfe import core
