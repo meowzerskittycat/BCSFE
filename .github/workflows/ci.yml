@@ -31,7 +31,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # macOS runners are scarce and a job left waiting is cancelled, which
+        # marked main red without a test failing, so macOS runs on pull
+        # requests and manual runs only.
+        os: ${{ fromJSON(github.event_name == 'push' && '["ubuntu-latest", "windows-latest"]' || '["ubuntu-latest", "windows-latest", "macos-latest"]') }}
         python-version: ["3.14"]
     steps:
       - uses: actions/checkout@v5

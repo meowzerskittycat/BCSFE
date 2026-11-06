@@ -258,8 +258,8 @@ pyright                                                # strict type checking
 The tests read and write every save in `tests/fixtures/` and check that the output is byte for byte
 identical, drive the menus with typed answers, and check that every message the code shows has
 English text. `pytest --all-answers` also runs every answer set (slower; CI does this on pull
-requests). CI runs lint and type checks, then the tests on Windows, macOS and Linux, for pull
-requests and for pushes to `main`.
+requests). CI runs lint and type checks, then the tests on Windows, macOS and Linux for pull
+requests, and on Windows and Linux for pushes to `main`.
 
 <details>
 <summary><b>Where things live</b></summary>
