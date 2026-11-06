@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from bcsfe import core
 from bcsfe.core.game.map.chapters import Chapters
 from bcsfe.core.io.schema import Bool, Grid, Section, Struct, field
 
@@ -15,8 +14,3 @@ class TowerChapters(Struct):
 
     def get_total_stages(self, chapter_id: int, star: int) -> int:
         return len(self.chapters.chapters[chapter_id].chapters[star].stages)
-
-    @staticmethod
-    def edit_towers(save_file: core.SaveFile):
-        towers = save_file.tower
-        towers.chapters.edit_chapters(save_file, "V", 7000)

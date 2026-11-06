@@ -53,7 +53,3 @@ class LegendQuestChapters(GauntletChapters):
 
     def __repr__(self) -> str:
         return f"LegendQuestChapters({self.chapters}, {self.unknown}, {self.ids})"
-
-    @staticmethod
-    def edit_legend_quest(save_file: core.SaveFile):
-        save_file.legend_quest.edit_chapters(save_file, "D", base_index=16000)

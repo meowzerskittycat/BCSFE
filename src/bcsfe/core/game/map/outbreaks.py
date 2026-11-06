@@ -1,6 +1,5 @@
 from typing import Any
 from bcsfe import core
-from bcsfe.cli import color, prompt
 
 
 class Outbreak:
@@ -206,47 +205,3 @@ class Outbreaks:
                 stage = chapter.outbreaks.get(stage_id)
                 if stage is not None:
                     stage.cleared = False
-
-    @staticmethod
-    def edit_outbreaks(save_file: core.SaveFile):
-        outbreaks = save_file.outbreaks
-        chapters = outbreaks.chapters
-        if not chapters:
-            color.color_print_key("no_valid_outbreaks")
-            return
-
-        options = ["clear", "unclear"]
-        choice = prompt.choose(prompt.keys(options), dialog="clear_unclear_outbreaks")
-        if choice is None:
-            return
-
-        clear = choice == 0
-
-        selected_ids = core.StoryChapters.select_story_chapters(
-            save_file, [chapter.get_true_id() for chapter in chapters.values()]
-        )
-        if not selected_ids:
-            return
-
-        is_per_chapter = core.StoryChapters.is_per_chapter(selected_ids)
-        if is_per_chapter is None:
-            return
-        if is_per_chapter:
-            for chapter_id in selected_ids:
-                stages = core.StoryChapters.select_stages(save_file, chapter_id)
-                if not stages:
-                    continue
-                for stage in stages:
-                    outbreaks.clear_outbreak(chapter_id, stage, clear)
-        else:
-            stages = core.StoryChapters.select_stages(save_file, 0)
-            if not stages:
-                return
-            for stage in stages:
-                for chapter_id in selected_ids:
-                    outbreaks.clear_outbreak(chapter_id, stage, clear)
-
-        if clear:
-            color.color_print_key("clear_outbreaks_success")
-        else:
-            color.color_print_key("unclear_outbreaks_success")

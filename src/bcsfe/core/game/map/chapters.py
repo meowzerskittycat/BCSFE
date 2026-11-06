@@ -3,7 +3,6 @@
 from typing import Any
 
 from bcsfe import core
-from bcsfe.cli import edits
 from bcsfe.core.game.map import stage_grid as grid
 from bcsfe.core.game.map.stage_grid import MapStars, Stage, Star
 from bcsfe.core.io.schema import I32
@@ -100,10 +99,3 @@ class Chapters(grid.Maps):
 
     def __repr__(self) -> str:
         return f"Chapters({self.chapters})"
-
-    def edit_chapters(
-        self, save_file: core.SaveFile, letter_code: str, base_index: int
-    ) -> dict[int, bool] | None:
-        return edits.map.edit_chapters(
-            save_file, self, letter_code, base_index=base_index
-        )

@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 from typing import ClassVar
-from bcsfe import core
-from bcsfe.cli import edits, color
 from bcsfe.core.io.schema import (
     I8,
     I16,
@@ -142,28 +140,6 @@ class ZeroLegendsChapters(Struct):
                     for _ in range(total_stars)
                 ]
                 self.chapters.append(ChaptersStars(0, chapters))
-
-    @staticmethod
-    def edit_zero_legends(save_file: core.SaveFile):
-        color.color_print_key("zero_legends_warning")
-        zero_legends_chapters = save_file.zero_legends
-        zero_legends_chapters.edit_chapters(save_file, "ND", base_index=34000)
-
-    @staticmethod
-    def edit_catclaw_championships(save_file: core.SaveFile):
-        zero_legends_chapters = save_file.dojo_chapters
-        zero_legends_chapters.edit_chapters(save_file, "G", 37000, True)
-
-    def edit_chapters(
-        self,
-        save_file: core.SaveFile,
-        letter_code: str,
-        base_index: int,
-        no_r_prefix: bool = False,
-    ):
-        edits.map.edit_chapters(
-            save_file, self, letter_code, no_r_prefix=no_r_prefix, base_index=base_index
-        )
 
     def unclear_rest(self, stages: list[int], stars: int, id: int):
         if not stages:
