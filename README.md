@@ -256,9 +256,10 @@ pyright                                                # strict type checking
 ```
 
 The tests read and write every save in `tests/fixtures/` and check that the output is byte for byte
-identical, and they drive the menus with typed answers. `pytest --all-answers` also runs every
-answer set (slower; CI does this on pull requests). CI runs lint and type checks, then the tests on
-Windows, macOS and Linux.
+identical, drive the menus with typed answers, and check that every message the code shows has
+English text. `pytest --all-answers` also runs every answer set (slower; CI does this on pull
+requests). CI runs lint and type checks, then the tests on Windows, macOS and Linux, for pull
+requests and for pushes to `main`.
 
 <details>
 <summary><b>Where things live</b></summary>
@@ -268,7 +269,7 @@ Windows, macOS and Linux.
 | Understand the layout | `bcsfe.core` reads, edits and writes saves and never imports the CLI (a test checks this). `bcsfe.cli` is the menu built on top. Core talks to the user only through `core.messages`. |
 | Change the save format | The whole save is declared once, in order, in `core/io/save_layout.py`. |
 | Add a save section | Declare it with `bcsfe.core.io.schema` (see `core/game/catbase/medals.py`). Stage sections share `core/game/map/stage_grid.py`. |
-| Add a menu feature | Put the editor in `cli/edits/` and list it in `cli/feature_handler.py`. Ask questions with `cli/prompt.py`. |
+| Add a menu feature | Put the editor in `cli/edits/` and list it in `cli/feature_handler.py`. Ask questions with `cli/prompt.py`, and add its messages to `files/locales/en/` (`tests/test_locales.py` checks). |
 | Test with real saves | Copy them into `tests/saves/` (gitignored). Real saves contain your account's inquiry code and tokens, so never commit them as they are. |
 | Keep a real save as a fixture | `python tests/tools/sanitize_save.py path/to/save` replaces those details and writes the save to `tests/fixtures/real/`. |
 | Synthetic saves | Made by `tests/tools/gen_fixtures.py`. Regenerate them only on purpose (e.g. for a new game version), never to make a failing test pass. |

@@ -23,6 +23,8 @@
 - LOCALIZATION.md now explains how to translate for this fork and send translations here.
 - `bcsfe export SAVE -` no longer prints a broken pipe error when its output is cut short (e.g.
   piped into `head`).
+- CI runs once per pull request push and on `main` (it used to run twice for every push to a
+  pull request), cancels runs a newer push replaced, and uses current versions of its actions.
 - Removed `.github/FUNDING.yml`, which pointed to upstream's donation page.
 
 ### Changed
