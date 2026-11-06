@@ -2,7 +2,7 @@ from io import BytesIO
 from typing import Any
 from collections.abc import Callable
 
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, prompt
 
 import tarfile
 import json
@@ -102,7 +102,7 @@ class GameDataGetter:
                 and show_alt
             ):
                 alt = "https://gitlab.com/fieryhenry/bcdata/-/raw/main/metadata.json"
-                res = dialog_creator.yes_no_key("use_alternative_repo", repo=alt)
+                res = prompt.confirm("use_alternative_repo", repo=alt)
                 if res:
                     core.core_data.config.set(core.ConfigKey.GAME_DATA_REPO, alt)
                     return GameDataGetter.get_metadata(show_alt=False)

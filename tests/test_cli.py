@@ -5,7 +5,7 @@ from collections.abc import Iterator
 import pytest
 
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, dialog_creator, prompt
 from bcsfe.cli.feature_handler import FeatureHandler
 from bcsfe.cli.save_management import SaveManagement
 
@@ -81,11 +81,11 @@ def test_failed_feature_leaves_the_save_unchanged(
 def test_blank_answers_cancel_or_keep(monkeypatch) -> None:
     monkeypatch.setattr(color, "color_print", lambda *a, **k: None)
     type_answers(monkeypatch, [""])
-    assert dialog_creator.edit_int_raw("x", 7, dialog_creator.MaxValue.i32()) == 7
+    assert dialog_creator.edit_int_raw("x", 7, prompt.MaxValue.i32()) == 7
     type_answers(monkeypatch, [""])
-    assert dialog_creator.basic_pick_raw_index(["a", "b"], "pick") is None
+    assert prompt.choose(["a", "b"], prompt.Raw("pick")) is None
     type_answers(monkeypatch, [""])
-    assert dialog_creator.multi_select_indexes_raw(["a", "b", "c"], "pick") is None
+    assert prompt.choose_many(["a", "b", "c"], prompt.Raw("pick")) is None
 
 
 def test_multi_select_rejects_bad_entries_without_keeping_them(monkeypatch) -> None:
@@ -93,7 +93,7 @@ def test_multi_select_rejects_bad_entries_without_keeping_them(monkeypatch) -> N
     monkeypatch.setattr(color, "color_print", lambda *a, **k: None)
     monkeypatch.setattr(color, "color_print_key", lambda key, **k: printed.append(k))
     type_answers(monkeypatch, ["1 9", "1 3"])
-    assert dialog_creator.multi_select_indexes_raw(["a", "b", "c"], "pick") == [0, 2]
+    assert prompt.choose_many(["a", "b", "c"], prompt.Raw("pick")) == [0, 2]
     assert printed == [{"min": 1, "max": 4}]
 
 

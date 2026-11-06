@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, dialog_creator, prompt
 from bcsfe.core.io.schema import F64, I8, I32, I64, Array, Bool, Struct, field
 
 
@@ -28,10 +28,10 @@ class CatShrine(Struct):
         max_level = data.get_max_level()
         if max_level is None:
             return
-        level = dialog_creator.int_input_key(
+        level = prompt.number(
             "shrine_level_dialog",
             min=1,
-            _max=dialog_creator.MaxValue.i32(max_level),
+            max=prompt.MaxValue.i32(max_level),
             max_level=max_level,
         )
         if level is None:
@@ -47,10 +47,10 @@ class CatShrine(Struct):
         max_xp = data.get_max_xp()
         if max_xp is None:
             return
-        xp = dialog_creator.int_input_key(
+        xp = prompt.number(
             "shrine_xp_dialog",
             min=0,
-            _max=dialog_creator.MaxValue.i32(max_xp),
+            max=prompt.MaxValue.i32(max_xp),
             max_xp=max_xp,
         )
         if xp is None:

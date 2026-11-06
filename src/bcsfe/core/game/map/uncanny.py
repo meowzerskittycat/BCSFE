@@ -1,6 +1,6 @@
 from typing import Any
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, dialog_creator, prompt
 
 
 class UncannyChapters:
@@ -48,8 +48,8 @@ class UncannyChapters:
 
     @staticmethod
     def catamin_clear_count_individual(save_file: core.SaveFile, map_ids: list[int]):
-        clear_amount = dialog_creator.int_input_key(
-            "enter_clear_amount_catamin", dialog_creator.MaxValue.i32()
+        clear_amount = prompt.number(
+            "enter_clear_amount_catamin", max=prompt.MaxValue.i32()
         )
         if clear_amount is None:
             return None
@@ -64,9 +64,9 @@ class UncannyChapters:
     ):
         for map_id in map_ids:
             name = names.map_names.get(map_id) or core.localize("unknown_map")
-            clear_amount = dialog_creator.int_input_key(
+            clear_amount = prompt.number(
                 "enter_clear_amount_catamin_map",
-                dialog_creator.MaxValue.i32(),
+                max=prompt.MaxValue.i32(),
                 name=name,
                 id=map_id,
             )

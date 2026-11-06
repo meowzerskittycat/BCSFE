@@ -9,7 +9,7 @@ import random
 from typing import Any
 
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, dialog_creator, prompt
 
 TOTAL_CHAPTERS = 10
 TOTAL_STAGES = 51
@@ -291,19 +291,16 @@ class StoryChapters:
         if chapter_names is None:
             return None
 
-        selected_chapters = dialog_creator.multi_select_indexes_key(
-            chapter_names, "select_story_chapters"
-        )
+        selected_chapters = prompt.choose_many(chapter_names, "select_story_chapters")
 
         return selected_chapters
 
     @staticmethod
     def get_selected_chapter_progress(max_stages: int = 48) -> int | None:
-        progress = dialog_creator.int_input_key(
+        progress = prompt.number(
+            "edit_chapter_progress_all",
             min=0,
-            _max=dialog_creator.MaxValue.always_cap(max_stages),
-            dialog="edit_chapter_progress_all",
-            max=max_stages,
+            max=prompt.MaxValue.always_cap(max_stages),
         )
         if progress is None:
             return None
@@ -320,11 +317,10 @@ class StoryChapters:
     ) -> bool:
         max_stages = 48
         chapter = save_file.story.get_real_chapters()[chapter_id]
-        progress = dialog_creator.int_input_key(
+        progress = prompt.number(
             "edit_chapter_progress",
             min=0,
-            _max=dialog_creator.MaxValue.always_cap(max_stages),
-            max=max_stages,
+            max=prompt.MaxValue.always_cap(max_stages),
             chapter_name=chapter_name,
         )
         if progress is None:
@@ -359,12 +355,10 @@ class StoryChapters:
 
     @staticmethod
     def ask_clear_count() -> int | None:
-        clear_count = dialog_creator.int_input_key(
+        clear_count = prompt.number(
             "edit_stage_clear_count",
             min=0,
-            _max=dialog_creator.MaxValue.i16(
-                core.core_data.max_value_manager.stage_clear_count
-            ),
+            max=prompt.MaxValue.i16(core.core_data.max_value_manager.stage_clear_count),
         )
 
         return clear_count
@@ -472,14 +466,14 @@ class StoryChapters:
         if not map_choices:
             return
 
-        clear_type_choice = dialog_creator.basic_keys_pick_key_index(
-            ["clear_whole_chapters", "clear_specific_stages"],
+        clear_type_choice = prompt.choose(
+            prompt.keys(["clear_whole_chapters", "clear_specific_stages"]),
             dialog="select_clear_type",
         )
         if clear_type_choice is None:
             return
 
-        modify_clear_amounts = dialog_creator.yes_no_key("modify_clear_amounts")
+        modify_clear_amounts = prompt.confirm("modify_clear_amounts")
         if modify_clear_amounts is None:
             return
         clear_amount = 1
@@ -491,9 +485,8 @@ class StoryChapters:
                 options = ["clear_amount_chapter", "clear_amount_all"]
                 if clear_type_choice == 1:
                     options.append("clear_amount_stages")
-                clear_amount_type = dialog_creator.basic_keys_pick_key_index(
-                    options,
-                    dialog="select_clear_amount_type",
+                clear_amount_type = prompt.choose(
+                    prompt.keys(options), dialog="select_clear_amount_type"
                 )
                 if clear_amount_type is None:
                     return
@@ -540,7 +533,7 @@ class StoryChapters:
                     could_unclear_stages = True
 
             if could_unclear_stages:
-                unclear_other_stages = dialog_creator.yes_no_key("unclear_other_stages")
+                unclear_other_stages = prompt.confirm("unclear_other_stages")
                 if unclear_other_stages is None:
                     return
             else:
@@ -574,10 +567,10 @@ class StoryChapters:
     @staticmethod
     def custom_treasure_level() -> int | None:
         max_treasure_level = core.core_data.max_value_manager.treasure_level
-        treasure_level = dialog_creator.int_input_key(
+        treasure_level = prompt.number(
             "custom_treasure_level_dialog",
             min=0,
-            _max=dialog_creator.MaxValue.i32(max_treasure_level),
+            max=prompt.MaxValue.i32(max_treasure_level),
         )
         if treasure_level is None:
             return None
@@ -647,9 +640,7 @@ class StoryChapters:
 
     @staticmethod
     def select_stages_by_id() -> list[int] | None:
-        stage_ids = dialog_creator.range_multi_input_key(
-            "select_stage_id", dialog_creator.MaxValue.always_cap(48), 1
-        )
+        stage_ids = prompt.numbers("select_stage_id", min=1, max=48)
         if stage_ids is None:
             return None
         stage_ids = [stage_id - 1 for stage_id in stage_ids]
@@ -667,7 +658,7 @@ class StoryChapters:
         for i in range(48):
             index_stage_id = StoryChapters.convert_stage_id(i)
             new_stage_names.append(stage_names[index_stage_id])
-        selected_stages = dialog_creator.multi_select_indexes_key(
+        selected_stages = prompt.choose_many(
             new_stage_names, dialog="select_stages_name"
         )
 
@@ -775,7 +766,7 @@ class StoryChapters:
             for i in range(len(treasure_group_data)):
                 treasure_group_names_new.append(treasure_group_names[i])
 
-            selected_treasure_groups = dialog_creator.multi_select_indexes_key(
+            selected_treasure_groups = prompt.choose_many(
                 treasure_group_names_new, dialog="select_treasure_groups"
             )
 
@@ -868,7 +859,7 @@ class StoryChapters:
 
     @staticmethod
     def itf_timed_score_input() -> tuple[int, int] | None:
-        inp = dialog_creator.str_input_key("itf_timed_score_dialog")
+        inp = prompt.text("itf_timed_score_dialog")
         if inp is None:
             return None
 
@@ -879,9 +870,7 @@ class StoryChapters:
             if not part.isdigit():
                 return StoryChapters.itf_timed_score_input()
             score = int(part)
-            mx = dialog_creator.MaxValue.i32(
-                core.core_data.max_value_manager.itf_timed_score
-            )
+            mx = prompt.MaxValue.i32(core.core_data.max_value_manager.itf_timed_score)
             score = mx.clamp(score)
             parts_i.append(score)
 

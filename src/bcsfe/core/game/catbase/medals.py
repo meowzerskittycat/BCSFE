@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from bcsfe import core
 from bcsfe.core.io.schema import I8, I16, I32, Array, Bool, Map, Struct, field
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, prompt
 
 
 @dataclass
@@ -24,9 +24,7 @@ class Medals(Struct):
         if medal_names.medal_names is None:
             return
         options = ["add_medals", "remove_medals"]
-        choice = dialog_creator.basic_keys_pick_key_index(
-            options, dialog="medal_add_remove_dialog"
-        )
+        choice = prompt.choose(prompt.keys(options), dialog="medal_add_remove_dialog")
         if choice is None:
             return
         add_medals = choice == 0
@@ -45,9 +43,7 @@ class Medals(Struct):
         if len(medals_to_choose_from) == 0:
             return
         options = [medal[1] for medal in medals_to_choose_from]
-        choices = dialog_creator.multi_select_indexes_key(
-            options, dialog="select_medals"
-        )
+        choices = prompt.choose_many(options, dialog="select_medals")
         if choices is None:
             return
         for choice in choices:

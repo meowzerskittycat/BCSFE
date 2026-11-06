@@ -1,5 +1,5 @@
 import enum
-from bcsfe.cli import dialog_creator
+from bcsfe.cli import prompt
 from bcsfe import core
 
 
@@ -60,7 +60,7 @@ class CountryCode:
 
     @staticmethod
     def select() -> CountryCode | None:
-        index = dialog_creator.basic_pick_key_index(
+        index = prompt.choose(
             CountryCode.get_all_str(),
             dialog="country_code_select",
         )
@@ -70,7 +70,7 @@ class CountryCode:
 
     @staticmethod
     def select_from_ccs(ccs: list[CountryCode]) -> CountryCode | None:
-        index = dialog_creator.basic_pick_key_index(
+        index = prompt.choose(
             [cc.get_code() for cc in ccs],
             dialog="country_code_select",
         )

@@ -1,7 +1,7 @@
 from typing import Any
 import json
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, dialog_creator, prompt
 
 
 class TalentOrb:
@@ -546,21 +546,18 @@ class SaveOrbs:
                 orb_count = 0
 
             orb_count = dialog_creator.edit_int_raw(
-                orb.to_colortext(), orb_count, dialog_creator.MaxValue.i16(max_orbs)
+                orb.to_colortext(), orb_count, prompt.MaxValue.i16(max_orbs)
             )
 
             self.orbs[orb_id] = SaveOrb(orb, orb_count)
 
     def edit_many(self, max_orbs: int, orb_selection: list[OrbInfo]):
-        orb_count = dialog_creator.int_input_key(
-            "edit_orbs_all",
-            _max=dialog_creator.MaxValue.i16(max_orbs),
-            max=max_orbs,
-            escape=False,
+        orb_count = prompt.number(
+            "edit_orbs_all", max=prompt.MaxValue.i16(max_orbs), escape=False
         )
         if orb_count is None:
             return
-        orb_count = dialog_creator.MaxValue.specific(max_orbs, 16).clamp(orb_count)
+        orb_count = prompt.MaxValue.specific(max_orbs, 16).clamp(orb_count)
         for orb in orb_selection:
             orb_id = orb.raw_orb_info.orb_id
             self.orbs[orb_id] = SaveOrb(orb, orb_count)

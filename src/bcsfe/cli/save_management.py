@@ -1,7 +1,7 @@
 from bcsfe import core
 import bcsfe
 from bcsfe.core import io
-from bcsfe.cli import main, color, dialog_creator, server_cli
+from bcsfe.cli import main, color, dialog_creator, server_cli, prompt
 from bcsfe.core.country_code import CountryCode
 
 
@@ -270,7 +270,7 @@ class SaveManagement:
         managed_items = core.BackupMetaData(save_file).get_managed_items()
         if not managed_items:
             return
-        should_upload = dialog_creator.yes_no_key("upload_items_checker_confirm")
+        should_upload = prompt.confirm("upload_items_checker_confirm")
         if not should_upload:
             return
 
@@ -480,7 +480,8 @@ class SaveManagement:
 
     @staticmethod
     def select_package_name(package_names: list[str]) -> str | None:
-        return dialog_creator.basic_pick_key(package_names, "select_package_name")
+        picked = prompt.choose(package_names, "select_package_name")
+        return None if picked is None else package_names[picked]
 
     @staticmethod
     def load_save(save_file: core.SaveFile):

@@ -4,7 +4,7 @@ from math import inf
 import math
 from typing import Any
 from bcsfe import core
-from bcsfe.cli import dialog_creator, color
+from bcsfe.cli import dialog_creator, color, prompt
 from bcsfe.core.io.schema import F64, I8, Bool, Struct, field
 
 
@@ -197,7 +197,7 @@ class BattleItems:
             group_name,
             item_names,
             current_values,
-            dialog_creator.MaxValue.i32(core.core_data.max_value_manager.battle_items),
+            prompt.MaxValue.i32(core.core_data.max_value_manager.battle_items),
         )
         for i, value in enumerate(values):
             self.items[i].amount = value
@@ -211,7 +211,7 @@ class BattleItems:
             item.endless_item.get_endless_duration_formatted() for item in self.items
         ]
 
-        options = dialog_creator.multi_select_indexes_key(
+        options = prompt.choose_many(
             [
                 core.localize("endless_item_item", item=item, int=val, escape=False)
                 for item, val in zip(item_names, current_values, strict=False)
@@ -222,8 +222,8 @@ class BattleItems:
         if options is None:
             return
 
-        individual = dialog_creator.basic_keys_pick_key_index(
-            ["individual", "all_at_once"], "edit_endless_q"
+        individual = prompt.choose(
+            prompt.keys(["individual", "all_at_once"]), "edit_endless_q"
         )
         if individual is None:
             return
@@ -233,7 +233,7 @@ class BattleItems:
         infinity_str = core.localize("infinity")
 
         if all_at_once:
-            val = dialog_creator.str_input_key("enter_duration_minutes")
+            val = prompt.text("enter_duration_minutes")
             if val is None:
                 return
 
@@ -249,9 +249,7 @@ class BattleItems:
                 item.endless_item.set_duration_mins(val, 0)
         else:
             for opt in options:
-                val = dialog_creator.str_input_key(
-                    "enter_duration_minutes_item", item=item_names[opt]
-                )
+                val = prompt.text("enter_duration_minutes_item", item=item_names[opt])
                 if val is None:
                     return
 

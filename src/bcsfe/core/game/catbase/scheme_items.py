@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from bcsfe import core
 from bcsfe.core.io.schema import I32, Array, Struct, field
-from bcsfe.cli import dialog_creator, color
+from bcsfe.cli import dialog_creator, color, prompt
 
 
 class SchemeDataItem:
@@ -119,7 +119,7 @@ class SchemeItems(Struct):
         options: list[str],
         scheme_items: dict[int, SchemeDataItem],
     ):
-        scheme_ids = dialog_creator.multi_select_indexes_key(
+        scheme_ids = prompt.choose_many(
             options,
             dialog="scheme_items_select_gain",
         )
@@ -139,7 +139,7 @@ class SchemeItems(Struct):
         options: list[str],
         scheme_items: dict[int, SchemeDataItem],
     ):
-        scheme_ids = dialog_creator.multi_select_indexes_key(
+        scheme_ids = prompt.choose_many(
             options,
             dialog="scheme_items_select_remove",
         )

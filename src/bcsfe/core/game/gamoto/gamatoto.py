@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import ClassVar
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, dialog_creator, prompt
 from bcsfe.core.io.schema import F64, I32, Array, Bool, Map, Nested, Struct, field
 
 
@@ -205,7 +205,7 @@ class Gamatoto(Struct):
 
     def edit_raw_xp(self, gamatoto_levels: GamatotoLevels):
         xp = dialog_creator.edit_int_key(
-            "gamatoto_xp", self.xp, dialog_creator.MaxValue.i32().hide_max()
+            "gamatoto_xp", self.xp, prompt.MaxValue.i32().hide_max()
         )
         current_level = gamatoto_levels.get_level_from_xp(xp)
 
@@ -217,9 +217,9 @@ class Gamatoto(Struct):
             "gamatoto_level",
             current_level.level,
             (
-                dialog_creator.MaxValue.i32(max_v)
+                prompt.MaxValue.i32(max_v)
                 if max_v is not None
-                else dialog_creator.MaxValue.i32().hide_max()
+                else prompt.MaxValue.i32().hide_max()
             ),
         )
         xp = gamatoto_levels.get_xp_from_level(value)
@@ -297,9 +297,9 @@ class Gamatoto(Struct):
             rarity_names,
             total_rarity_amounts,
             dialog_creator.CumulativeMax.new(
-                dialog_creator.MaxValue.i32(max_helpers)
+                prompt.MaxValue.i32(max_helpers)
                 if max_helpers is not None
-                else dialog_creator.MaxValue.i32().hide_max()
+                else prompt.MaxValue.i32().hide_max()
             ),
         )
 

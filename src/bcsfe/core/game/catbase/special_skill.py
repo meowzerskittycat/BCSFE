@@ -2,7 +2,7 @@ from bcsfe import core, cli
 
 from typing import Any
 
-from bcsfe.cli import dialog_creator, color
+from bcsfe.cli import dialog_creator, color, prompt
 
 
 class SpecialSkill:
@@ -246,7 +246,7 @@ class SpecialSkills:
             if name is None:
                 return
             names.append(name)
-        ids = dialog_creator.multi_select_indexes_key(names, "special_skills_dialog")
+        ids = prompt.choose_many(names, "special_skills_dialog")
         if not ids:
             return
         if len(ids) == 1:

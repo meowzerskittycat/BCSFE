@@ -1,6 +1,6 @@
 from typing import Any
 from bcsfe import core
-from bcsfe.cli import dialog_creator, color
+from bcsfe.cli import color, prompt
 
 
 class Outbreak:
@@ -216,10 +216,7 @@ class Outbreaks:
             return
 
         options = ["clear", "unclear"]
-        choice = dialog_creator.basic_keys_pick_key_index(
-            options,
-            dialog="clear_unclear_outbreaks",
-        )
+        choice = prompt.choose(prompt.keys(options), dialog="clear_unclear_outbreaks")
         if choice is None:
             return
 

@@ -1,7 +1,7 @@
 from typing import Any
 
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, prompt
 
 
 class Mission:
@@ -219,16 +219,14 @@ class Missions:
                 options.append(name)
                 mssion_ids.append(mission_id)
 
-        re_claim = dialog_creator.basic_keys_pick_key_index(
-            ["complete_reward", "complete_claim", "uncomplete"],
+        re_claim = prompt.choose(
+            prompt.keys(["complete_reward", "complete_claim", "uncomplete"]),
             dialog="select_mission_claim",
         )
         if re_claim is None:
             return
 
-        choices = dialog_creator.multi_select_indexes_key(
-            options, dialog="select_missions"
-        )
+        choices = prompt.choose_many(options, dialog="select_missions")
         if choices is None:
             return
         for choice in choices:

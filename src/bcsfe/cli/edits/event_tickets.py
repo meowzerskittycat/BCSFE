@@ -1,5 +1,5 @@
 from bcsfe import cli, core
-from bcsfe.cli import dialog_creator
+from bcsfe.cli import prompt
 from bcsfe.core.game.catbase.gatya import GatyaEventType
 from bcsfe.core.server.event_data import split_hhmm, split_yyyymmdd
 
@@ -108,9 +108,7 @@ class EventTickets:
             "event_tickets",
             event_names,
             values,
-            max=dialog_creator.MaxValue.i32(
-                core.core_data.max_value_manager.event_tickets
-            ),
+            max=prompt.MaxValue.i32(core.core_data.max_value_manager.event_tickets),
         )
 
         for (_event_item, _gset, gatya_item), value in zip(

@@ -4,7 +4,7 @@ import time
 from dataclasses import dataclass
 
 from bcsfe import core
-from bcsfe.cli import dialog_creator, color
+from bcsfe.cli import color, prompt
 from bcsfe.core.io.schema import F64, I32, Bool, Map, Struct, field
 
 
@@ -105,7 +105,7 @@ class NyankoClub(Struct):
                 officer_id = int(officer_id)
             except ValueError:
                 officer_id = NyankoClub.get_random_officer_id()
-            officer_id = dialog_creator.MaxValue.i32().clamp(officer_id)
+            officer_id = prompt.MaxValue.i32().clamp(officer_id)
 
         if officer_id == -1:
             club.remove_gold_pass(save_file)

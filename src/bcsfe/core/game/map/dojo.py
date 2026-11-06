@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from bcsfe import core
-from bcsfe.cli import dialog_creator
+from bcsfe.cli import dialog_creator, prompt
 from bcsfe.core.io.schema import I32, Map, Nested, Struct, field
 
 
@@ -253,7 +253,7 @@ class Dojo:
         stage.score = dialog_creator.edit_int_key(
             "dojo_score",
             stage.score,
-            dialog_creator.MaxValue.i32().hide_max(),
+            prompt.MaxValue.i32().hide_max(),
         )
 
 

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 from bcsfe import core
-from bcsfe.cli import dialog_creator, color
+from bcsfe.cli import dialog_creator, color, prompt
 
 
 @dataclass
@@ -380,7 +380,7 @@ class Ototo:
         self.engineers = dialog_creator.edit_int_raw(
             name,
             self.engineers,
-            dialog_creator.MaxValue.i32(Ototo.get_max_engineers(save_file)),
+            prompt.MaxValue.i32(Ototo.get_max_engineers(save_file)),
         )
 
     def display_current_cannons(self, save_file: core.SaveFile) -> list[str] | None:
@@ -446,17 +446,15 @@ class Ototo:
         if names is None:
             return
 
-        cannon_ids = dialog_creator.multi_select_indexes_key(
-            names, dialog="select_cannon"
-        )
+        cannon_ids = prompt.choose_many(names, dialog="select_cannon")
         if cannon_ids is None:
             return
 
         all_at_once = False
 
         if len(cannon_ids) > 1:
-            choice = dialog_creator.basic_keys_pick_key_index(
-                ["individual", "edit_all_at_once"],
+            choice = prompt.choose(
+                prompt.keys(["individual", "edit_all_at_once"]),
                 dialog="cannon_edit_type",
             )
             if choice is None:
@@ -467,9 +465,8 @@ class Ototo:
                 all_at_once = True
 
         if len(cannon_ids) > 1 or (len(cannon_ids) == 1 and cannon_ids[0] != 0):
-            choice = dialog_creator.basic_keys_pick_key_index(
-                ["development_o", "level_o"],
-                dialog="cannon_dev_level_q",
+            choice = prompt.choose(
+                prompt.keys(["development_o", "level_o"]), dialog="cannon_dev_level_q"
             )
             if choice is None:
                 return
@@ -485,8 +482,8 @@ class Ototo:
         self.display_current_cannons(save_file)
 
     def select_development(self) -> int | None:
-        return dialog_creator.basic_keys_pick_key_index(
-            ["none", "foundation", "style", "effect"],
+        return prompt.choose(
+            prompt.keys(["none", "foundation", "style", "effect"]),
             dialog="select_development",
         )
 
@@ -552,9 +549,9 @@ class Ototo:
                 [0, 0, 0],
                 max=dialog_creator.MultiMax.new(
                     [
-                        dialog_creator.MaxValue.i32(max_part_level_0),
-                        dialog_creator.MaxValue.i32(max_part_level_1),
-                        dialog_creator.MaxValue.i32(max_part_level_2),
+                        prompt.MaxValue.i32(max_part_level_0),
+                        prompt.MaxValue.i32(max_part_level_1),
+                        prompt.MaxValue.i32(max_part_level_2),
                     ]
                 ),
             )
@@ -608,9 +605,9 @@ class Ototo:
                     levels,
                     max=dialog_creator.MultiMax.new(
                         [
-                            dialog_creator.MaxValue.i32(max_part_level_0),
-                            dialog_creator.MaxValue.i32(max_part_level_1),
-                            dialog_creator.MaxValue.i32(max_part_level_2),
+                            prompt.MaxValue.i32(max_part_level_0),
+                            prompt.MaxValue.i32(max_part_level_1),
+                            prompt.MaxValue.i32(max_part_level_2),
                         ]
                     ),
                 )

@@ -1,7 +1,7 @@
 import enum
 
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, dialog_creator, prompt
 
 
 class SelectMode(enum.Enum):
@@ -112,9 +112,7 @@ class CatEditor:
             return current_cats, False
 
         if current_cats:
-            mode_id = dialog_creator.int_input_key(
-                "and_mode_q", dialog_creator.MaxValue.always_cap(3)
-            )
+            mode_id = prompt.number("and_mode_q", max=prompt.MaxValue.always_cap(3))
             if mode_id is None:
                 mode = SelectMode.OR
             elif mode_id == 1:
@@ -137,10 +135,7 @@ class CatEditor:
         return new_cats, False
 
     def select_id(self) -> list[core.Cat] | None:
-        cat_ids = dialog_creator.range_multi_input_key(
-            "enter_cat_ids",
-            dialog_creator.MaxValue.always_cap(len(self.save_file.cats.cats) - 1),
-        )
+        cat_ids = prompt.numbers("enter_cat_ids", max=len(self.save_file.cats.cats) - 1)
         if cat_ids is None:
             return None
         return self.save_file.cats.get_cats_by_ids(cat_ids)
@@ -178,7 +173,7 @@ class CatEditor:
 
         print()
 
-        usr_input = dialog_creator.str_input_key("select_gv")
+        usr_input = prompt.text("select_gv")
         if usr_input is None:
             return None
         chunks = usr_input.split(" ")
@@ -219,9 +214,7 @@ class CatEditor:
 
     def select_rarity(self) -> list[core.Cat] | None:
         rarity_names = self.save_file.cats.get_rarity_names(self.save_file)
-        rarity_ids = dialog_creator.multi_select_indexes_key(
-            rarity_names, "select_rarity"
-        )
+        rarity_ids = prompt.choose_many(rarity_names, "select_rarity")
         if rarity_ids is None:
             return None
         cats: list[core.Cat] = []
@@ -231,7 +224,7 @@ class CatEditor:
         return cats
 
     def select_name(self) -> list[core.Cat] | None:
-        usr_name = dialog_creator.str_input_key("enter_name")
+        usr_name = prompt.text("enter_name")
         if usr_name is None:
             return []
         cats = self.get_cats_name(usr_name)
@@ -251,9 +244,7 @@ class CatEditor:
                     break
         if len(cat_names) == 1:
             color.color_print(f"<@t>{cat_names[0]}</>")
-        cat_option_ids = dialog_creator.multi_select_indexes_key(
-            cat_names, "select_name"
-        )
+        cat_option_ids = prompt.choose_many(cat_names, "select_name")
         if cat_option_ids is None:
             return None
         cats_selected: list[core.Cat] = []
@@ -265,7 +256,7 @@ class CatEditor:
         return self.get_cats_obtainable()
 
     def select_gatya_banner_name(self) -> list[int] | None:
-        filter_down = dialog_creator.yes_no_key("filter_down_q_gatya")
+        filter_down = prompt.confirm("filter_down_q_gatya")
         if filter_down is None:
             return None
 
@@ -304,7 +295,7 @@ class CatEditor:
             )
             formatted_names.append(formatted_name)
         # TODO: include ids?
-        gatya_option_ids = dialog_creator.multi_select_indexes_key(
+        gatya_option_ids = prompt.choose_many(
             formatted_names,
             dialog="select_gatya_banner",
         )
@@ -326,10 +317,7 @@ class CatEditor:
             .new()
             .add_new_key(
                 "by_id",
-                lambda _: dialog_creator.range_multi_input_key(
-                    "select_gatya_banner",
-                    dialog_creator.MaxValue.always_cap(len(gset) - 1),
-                ),
+                lambda _: prompt.numbers("select_gatya_banner", max=len(gset) - 1),
             )
             .add_new_key("by_name", lambda _: self.select_gatya_banner_name()),
             "gatya_by_id_q",
@@ -508,7 +496,7 @@ class CatEditor:
                 save_version=self.save_file.game_version.to_string(),
                 data_version=data_version,
             )
-            should_stay = dialog_creator.yes_no_key("continue_q")
+            should_stay = prompt.confirm("continue_q")
             if not should_stay:
                 return
 
@@ -573,7 +561,7 @@ class CatEditor:
                 talent_names,
                 current_levels,
                 dialog_creator.MultiMax.new(
-                    [dialog_creator.MaxValue.i32(max_level) for max_level in max_levels]
+                    [prompt.MaxValue.i32(max_level) for max_level in max_levels]
                 ),
             )
             current_levels = values
@@ -752,7 +740,7 @@ class CatEditor:
             if finished:
                 stop = True
                 continue
-            finished = dialog_creator.yes_no_key("finished_cats_selection")
+            finished = prompt.confirm("finished_cats_selection")
             if finished is None:
                 return None, []
             stop = finished

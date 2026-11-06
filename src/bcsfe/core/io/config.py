@@ -2,7 +2,7 @@ import enum
 import re
 from typing import Any
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, dialog_creator, prompt
 import requests
 
 
@@ -195,9 +195,9 @@ class Config:
     def get_desc_key(key: ConfigKey) -> str:
         return key.value + "_desc"
 
-    def edit_int(self, key: ConfigKey, max: dialog_creator.MaxValue | None = None):
+    def edit_int(self, key: ConfigKey, max: prompt.MaxValue | None = None):
         if max is None:
-            max = dialog_creator.MaxValue.i32().hide_max()
+            max = prompt.MaxValue.i32().hide_max()
         text = self.get_full_input_localized(
             key, str(self.get_int(key)), str(self.get_default(key))
         )
@@ -216,7 +216,7 @@ class Config:
             self.get_default(ConfigKey.GAME_DATA_REPO),
         )
         color.color_print_key(text)
-        value = dialog_creator.str_input_key("game_data_repo_dialog")
+        value = prompt.text("game_data_repo_dialog")
         if value is None:
             value = self.get_default(ConfigKey.GAME_DATA_REPO)
         color.color_print_key("validating_game_repo")
@@ -247,7 +247,7 @@ class Config:
 
         str_val = core.core_data.local_manager.get_key(key.value)
 
-        value = dialog_creator.str_input_key("string_config_dialog", val=str_val)
+        value = prompt.text("string_config_dialog", val=str_val)
         if value is None:
             return
 
@@ -270,7 +270,7 @@ class Config:
             return
         locale_name = external_locale.get_full_name()
         if locale_name in all_locales:
-            if not dialog_creator.yes_no_key(
+            if not prompt.confirm(
                 "locale_already_exists",
                 locale_name=locale_name,
             ):
@@ -299,16 +299,10 @@ class Config:
             )
             return
 
-        options.append("cancel")
-
-        choices = dialog_creator.multi_select_entries_key(
-            options, dialog="locale_remove_dialog"
-        )
+        choices = prompt.choose_many(options, "locale_remove_dialog")
         if choices is None:
             return
-        for id, choice in choices:
-            if id == len(options) - 1:
-                return
+        for choice in (options[i] for i in choices):
             core.LocalManager.remove_locale(choice)
             color.color_print_key(
                 "locale_removed",
@@ -316,7 +310,7 @@ class Config:
             )
 
     def new_locale(self) -> str | None:
-        code = dialog_creator.str_input_key("enter_locale_code")
+        code = prompt.text("enter_locale_code")
         if code is None:
             return None
         code = code.strip()
@@ -327,11 +321,11 @@ class Config:
             color.color_print_key("locale_code_taken", code=code)
             return None
 
-        author = dialog_creator.str_input_key("enter_author_name")
+        author = prompt.text("enter_author_name")
         if author is None:
             return None
 
-        lang_name = dialog_creator.str_input_key("enter_language_name_true")
+        lang_name = prompt.text("enter_language_name_true")
 
         if lang_name is None:
             return None
@@ -401,16 +395,10 @@ class Config:
             )
             return
 
-        options.append("cancel")
-
-        choices = dialog_creator.multi_select_entries_key(
-            options, dialog="theme_remove_dialog"
-        )
+        choices = prompt.choose_many(options, "theme_remove_dialog")
         if choices is None:
             return
-        for id, choice in choices:
-            if id == len(options) - 1:
-                return
+        for choice in (options[i] for i in choices):
             core.ThemeHandler.remove_theme(choice)
             color.color_print_key(
                 "theme_removed",
@@ -433,7 +421,7 @@ class Config:
             return
         theme_name = external_theme.get_full_name()
         if theme_name in themes:
-            if not dialog_creator.yes_no_key(
+            if not prompt.confirm(
                 "theme_already_exists",
                 theme_name=theme_name,
             ):
@@ -482,9 +470,8 @@ class Config:
         config = core.core_data.config
         features = list(ConfigKey)
 
-        choice = dialog_creator.basic_keys_pick_key_index(
-            [key.value for key in features],
-            "config_dialog",
+        choice = prompt.choose(
+            prompt.keys([key.value for key in features]), "config_dialog"
         )
         if choice is None:
             return
@@ -494,7 +481,7 @@ class Config:
             core.core_data.config.edit_bool(feature)
         elif isinstance(config.get(feature), int):
             if feature == ConfigKey.MAX_REQUEST_TIMEOUT:
-                max = dialog_creator.MaxValue.always_cap(1000).hide_max()
+                max = prompt.MaxValue.always_cap(1000).hide_max()
             else:
                 max = None
             core.core_data.config.edit_int(feature, max)

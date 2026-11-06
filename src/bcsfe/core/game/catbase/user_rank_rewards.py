@@ -1,5 +1,5 @@
 from bcsfe import core
-from bcsfe.cli import dialog_creator, color
+from bcsfe.cli import color, prompt
 
 
 class RankGift:
@@ -185,8 +185,8 @@ class UserRankRewards:
         self.rewards[index].claimed = claimed
 
     def edit(self, save_file: core.SaveFile):
-        claim_choice = dialog_creator.basic_keys_pick_key_index(
-            ["claim", "unclaim", "fix_claimed"],
+        claim_choice = prompt.choose(
+            prompt.keys(["claim", "unclaim", "fix_claimed"]),
             dialog="claim_or_unclaim_ur",
         )
 
@@ -248,9 +248,7 @@ class UserRankRewards:
                 )
             )
 
-        ids = dialog_creator.multi_select_indexes_key(
-            selected_descriptions, dialog="select_ur"
-        )
+        ids = prompt.choose_many(selected_descriptions, dialog="select_ur")
         if ids is None:
             return
         for id in ids:

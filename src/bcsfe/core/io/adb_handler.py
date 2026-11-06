@@ -1,7 +1,7 @@
 import shlex
 from bcsfe import core
 from bcsfe.core import io
-from bcsfe.cli import dialog_creator, color
+from bcsfe.cli import color, prompt
 
 
 class DeviceIDNotSet(Exception):
@@ -183,10 +183,10 @@ class AdbHandler(io.root_handler.RootHandler):
 
     def select_device(self) -> bool:
         devices = self.get_connected_devices()
-        device = dialog_creator.basic_pick_key(devices, dialog="select_device")
-        if device is None:
+        picked = prompt.choose(devices, "select_device")
+        if picked is None:
             color.color_print_key("no_device_error")
             return False
 
-        self.set_device(device)
+        self.set_device(devices[picked])
         return True

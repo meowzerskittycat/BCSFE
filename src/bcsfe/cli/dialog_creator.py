@@ -3,6 +3,7 @@ from typing import Any
 
 from bcsfe import core
 from bcsfe.cli import color, prompt
+from bcsfe.cli.prompt import MaxValue
 
 
 type ActionFunc[T] = Callable[[int], T]
@@ -120,219 +121,21 @@ class Actions[T]:
         color.color_print(self.to_string())
 
 
-def display_options_key(
-    options: list[str], dialog: str, escape: bool = True, **kwargs: Any
-):
-    display_options_raw(options, core.localize(dialog, escape, **kwargs))
-
-
-def display_options_raw(options: list[str], dialog: str):
-    color.color_print(dialog)
-    prompt.show_options(options)
-
-
-def yes_no_raw(dialog: str) -> bool | None:
-    return prompt.confirm(prompt.Raw(dialog))
-
-
-def range_multi_input_key(
-    dialog: str, max: MaxValue, min: int = 0, escape: bool = True, **kwargs: Any
-) -> list[int] | None:
-    return range_multi_input_raw(core.localize(dialog, escape, **kwargs), max, min)
-
-
-def range_basic_parse(usr_input: str, max: MaxValue, min: int = 0) -> list[int] | None:
-    return prompt.parse_numbers(usr_input, min=min, max=max.max)
-
-
-def range_multi_input_raw(dialog: str, max: MaxValue, min: int = 0) -> list[int] | None:
-    return prompt.numbers(prompt.Raw(dialog), min=min, max=max.max)
-
-
-def yes_no_key(dialog: str, escape: bool = False, **kwargs: Any) -> bool | None:
-    return yes_no_raw(core.localize(dialog, escape, **kwargs))
-
-
-def multi_select_raw(options: list[str], dialog: str) -> list[str] | None:
-    out = multi_select_entries_raw(options, dialog)
-    if out is None:
-        return None
-    return [v[1] for v in out]
-
-
-def multi_select_indexes_raw(options: list[str], dialog: str) -> list[int] | None:
-    out = multi_select_entries_raw(options, dialog)
-    if out is None:
-        return None
-    return [v[0] for v in out]
-
-
-def multi_select_key(
-    options: list[str], dialog: str, escape: bool = True, **kwargs: Any
-) -> list[str] | None:
-    return multi_select_raw(options, core.localize(dialog, escape, **kwargs))
-
-
-def multi_select_indexes_key(
-    options: list[str], dialog: str, escape: bool = True, **kwargs: Any
-) -> list[int] | None:
-    return multi_select_indexes_raw(options, core.localize(dialog, escape, **kwargs))
-
-
-def multi_select_entries_key(
-    options: list[str], dialog: str, escape: bool = True, **kwargs: Any
-) -> list[tuple[int, str]] | None:
-    return multi_select_entries_raw(options, core.localize(dialog, escape, **kwargs))
-
-
-def multi_select_entries_raw(
-    options: list[str], dialog: str
-) -> list[tuple[int, str]] | None:
-    picked = prompt.choose_many(options, prompt.Raw(dialog))
-    if picked is None:
-        return None
-    return [(i, options[i]) for i in picked]
-
-
-def single_select_raw[T](actions: Actions[T], dialog: str) -> T | None:
-    options = [opt for action in actions.actions for opt in action.options]
-    picked = prompt.choose(options, prompt.Raw(dialog))
-    if picked is None:
-        return None
-    action = actions.get_rebase(picked)
-    if action is None:
-        return None
-    return action[0].run(action[1])
-
-
 def single_select_key[T](
     actions: Actions[T],
     dialog_key: str,
     escape: bool = True,
     **kwargs: Any,
 ) -> T | None:
-    return single_select_raw(actions, core.localize(dialog_key, escape, **kwargs))
-
-
-def basic_pick_raw_entry(items: list[str], dialog: str) -> tuple[int, str] | None:
-    return single_select_raw(
-        Actions[tuple[int, str]].new().add_new_raw(items, lambda v: (v, items[v])),
-        dialog,
-    )
-
-
-def basic_pick_raw_index(items: list[str], dialog: str) -> int | None:
-    return single_select_raw(
-        Actions[int].new().add_new_raw(items, lambda v: v),
-        dialog,
-    )
-
-
-def basic_pick_raw(items: list[str], dialog: str) -> str | None:
-    return single_select_raw(
-        Actions[str].new().add_new_raw(items, lambda v: items[v]),
-        dialog,
-    )
-
-
-def basic_pick_key_entry(
-    items: list[str], dialog: str, escape: bool = True, **kwargs: Any
-) -> tuple[int, str] | None:
-    return basic_pick_raw_entry(items, core.localize(dialog, escape, **kwargs))
-
-
-def basic_pick_key_index(
-    items: list[str], dialog: str, escape: bool = True, **kwargs: Any
-) -> int | None:
-    return basic_pick_raw_index(items, core.localize(dialog, escape, **kwargs))
-
-
-def basic_pick_key(
-    items: list[str], dialog: str, escape: bool = True, **kwargs: Any
-) -> str | None:
-    return basic_pick_raw(items, core.localize(dialog, escape, **kwargs))
-
-
-def basic_keys_pick_key(
-    keys: list[str], dialog: str, escape: bool = True, **kwargs: Any
-) -> str | None:
-    return basic_pick_key(
-        [core.localize(key) for key in keys], dialog, escape, **kwargs
-    )
-
-
-def basic_keys_pick_key_index(
-    keys: list[str], dialog: str, escape: bool = True, **kwargs: Any
-) -> int | None:
-    return basic_pick_key_index(
-        [core.localize(key) for key in keys], dialog, escape, **kwargs
-    )
-
-
-def basic_keys_pick_key_entry(
-    keys: list[str], dialog: str, escape: bool = True, **kwargs: Any
-) -> tuple[int, str] | None:
-    return basic_pick_key_entry(
-        [core.localize(key) for key in keys], dialog, escape, **kwargs
-    )
-
-
-class MaxValue:
-    def __init__(self, max: int, bits: int, show: bool = True):
-        self.max = max
-        self.show = show
-        self.bits = bits
-
-    def hide_max(self) -> MaxValue:
-        self.show = False
-        return self
-
-    @staticmethod
-    def always_cap(max: int) -> MaxValue:
-        return MaxValue(max, 32)
-
-    @staticmethod
-    def specific(max: int, bits: int) -> MaxValue:
-        if core.core_data.config.get_bool(core.ConfigKey.DISABLE_MAXES):
-            return MaxValue.none(bits).hide_max()
-        return MaxValue(max, bits)
-
-    @staticmethod
-    def none(bits: int) -> MaxValue:
-        return MaxValue((2**bits) - 1, bits)
-
-    @staticmethod
-    def new_bits(max: int | None, bits: int) -> MaxValue:
-        if max is None:
-            return MaxValue.none(bits)
-        return MaxValue.specific(max, bits)
-
-    @staticmethod
-    def i32(max: int | None = None) -> MaxValue:
-        return MaxValue.new_bits(max, 31)
-
-    @staticmethod
-    def u32(max: int | None = None) -> MaxValue:
-        return MaxValue.new_bits(max, 32)
-
-    @staticmethod
-    def i16(max: int | None = None) -> MaxValue:
-        return MaxValue.new_bits(max, 15)
-
-    @staticmethod
-    def u16(max: int | None = None) -> MaxValue:
-        return MaxValue.new_bits(max, 16)
-
-    @staticmethod
-    def i8(max: int | None = None) -> MaxValue:
-        return MaxValue.new_bits(max, 7)
-
-    @staticmethod
-    def u8(max: int | None = None) -> MaxValue:
-        return MaxValue.new_bits(max, 8)
-
-    def clamp(self, v: int) -> int:
-        return min(self.max, v)
+    """Show every action's options; run the action whose option is picked."""
+    options = [opt for action in actions.actions for opt in action.options]
+    picked = prompt.choose(options, dialog_key, escape, **kwargs)
+    if picked is None:
+        return None
+    action = actions.get_rebase(picked)
+    if action is None:
+        return None
+    return action[0].run(action[1])
 
 
 def edit_int_raw(item_name: str, current_value: int, max: MaxValue) -> int:
@@ -345,7 +148,7 @@ def edit_int_raw(item_name: str, current_value: int, max: MaxValue) -> int:
         key, name=item_name, value=current_value, max=max.max, escape=False
     )
 
-    val = int_input_raw(dialog, max, auto_clamp=True)
+    val = prompt.number(prompt.Raw(dialog), max=max, clamp=True)
     if val is None or val == current_value:
         color.color_print_key(
             "value_unchanged", name=item_name, value=current_value, escape=False
@@ -358,46 +161,12 @@ def edit_int_raw(item_name: str, current_value: int, max: MaxValue) -> int:
 def edit_str_raw(item_name: str, current_value: str) -> str:
     dialog = core.localize("input_no_max", name=item_name, value=current_value)
 
-    val = str_input_raw(dialog)
+    val = prompt.text(prompt.Raw(dialog))
     if not val or val == current_value:
         color.color_print_key("value_unchanged", name=item_name, value=current_value)
         return current_value
     color.color_print_key("value_changed", name=item_name, value=val)
     return val
-
-
-def int_input_key(
-    dialog: str,
-    _max: MaxValue,
-    min: int = 0,
-    default: int | None = None,
-    auto_clamp: bool = False,
-    escape: bool = True,
-    **kwargs: Any,
-) -> int | None:
-    return int_input_raw(
-        core.localize(dialog, escape, **kwargs), _max, min, default, auto_clamp
-    )
-
-
-def str_input_key(dialog: str, escape: bool = True, **kwargs: Any) -> str | None:
-    return str_input_raw(core.localize(dialog, escape, **kwargs))
-
-
-def int_input_raw(
-    dialog: str,
-    _max: MaxValue,
-    _min: int = 0,
-    default: int | None = None,
-    auto_clamp: bool = False,
-) -> int | None:
-    return prompt.number(
-        prompt.Raw(dialog), min=_min, max=_max.max, default=default, clamp=auto_clamp
-    )
-
-
-def str_input_raw(dialog: str) -> str | None:
-    return prompt.text(prompt.Raw(dialog))
 
 
 def edit_int_key(
@@ -486,7 +255,7 @@ def edit_ints_raw(
     current_values: list[int],
     max: MultiMax | CumulativeMax | MaxValue,
 ) -> list[int]:
-    entries = multi_select_indexes_key(
+    entries = prompt.choose_many(
         [
             core.localize("value", name=name, value=value)
             for name, value in zip(item_names, current_values, strict=False)
@@ -557,9 +326,7 @@ def edit_many(
         )
     else:
         _max = max
-    val = int_input_key(
-        "input_generic", _max, name=group_name, auto_clamp=True, max=_max.max
-    )
+    val = prompt.number("input_generic", max=_max, clamp=True, name=group_name)
     if val is None:
         return
 

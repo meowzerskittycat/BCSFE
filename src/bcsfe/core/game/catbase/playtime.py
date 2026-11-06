@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, prompt
 
 
 @dataclass
@@ -69,18 +69,16 @@ def edit(save_file: core.SaveFile):
         seconds=play_time.just_seconds,
         frames=play_time.frames,
     )
-    hours = dialog_creator.int_input_key(
-        "playtime_hours_prompt", dialog_creator.MaxValue.i32().hide_max()
-    )
+    hours = prompt.number("playtime_hours_prompt", max=prompt.MaxValue.i32().hide_max())
     if hours is None:
         return
-    minutes = dialog_creator.int_input_key(
-        "playtime_minutes_prompt", dialog_creator.MaxValue.i32().hide_max()
+    minutes = prompt.number(
+        "playtime_minutes_prompt", max=prompt.MaxValue.i32().hide_max()
     )
     if minutes is None:
         return
-    seconds = dialog_creator.int_input_key(
-        "playtime_seconds_prompt", dialog_creator.MaxValue.i32().hide_max()
+    seconds = prompt.number(
+        "playtime_seconds_prompt", max=prompt.MaxValue.i32().hide_max()
     )
     if seconds is None:
         return

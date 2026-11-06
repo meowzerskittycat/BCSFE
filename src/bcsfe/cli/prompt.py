@@ -72,18 +72,83 @@ def confirm(dialog: str, escape: bool = False, **kwargs: Any) -> bool | None:
 # --- numbers --------------------------------------------------------------
 
 
+class MaxValue:
+    """The largest number a value may take, and its width in bits."""
+
+    def __init__(self, max: int, bits: int, show: bool = True):
+        self.max = max
+        self.show = show
+        self.bits = bits
+
+    def hide_max(self) -> MaxValue:
+        self.show = False
+        return self
+
+    @staticmethod
+    def always_cap(max: int) -> MaxValue:
+        return MaxValue(max, 32)
+
+    @staticmethod
+    def specific(max: int, bits: int) -> MaxValue:
+        if core.core_data.config.get_bool(core.ConfigKey.DISABLE_MAXES):
+            return MaxValue.none(bits).hide_max()
+        return MaxValue(max, bits)
+
+    @staticmethod
+    def none(bits: int) -> MaxValue:
+        return MaxValue((2**bits) - 1, bits)
+
+    @staticmethod
+    def new_bits(max: int | None, bits: int) -> MaxValue:
+        if max is None:
+            return MaxValue.none(bits)
+        return MaxValue.specific(max, bits)
+
+    @staticmethod
+    def i32(max: int | None = None) -> MaxValue:
+        return MaxValue.new_bits(max, 31)
+
+    @staticmethod
+    def u32(max: int | None = None) -> MaxValue:
+        return MaxValue.new_bits(max, 32)
+
+    @staticmethod
+    def i16(max: int | None = None) -> MaxValue:
+        return MaxValue.new_bits(max, 15)
+
+    @staticmethod
+    def u16(max: int | None = None) -> MaxValue:
+        return MaxValue.new_bits(max, 16)
+
+    @staticmethod
+    def i8(max: int | None = None) -> MaxValue:
+        return MaxValue.new_bits(max, 7)
+
+    @staticmethod
+    def u8(max: int | None = None) -> MaxValue:
+        return MaxValue.new_bits(max, 8)
+
+    def clamp(self, v: int) -> int:
+        return min(self.max, v)
+
+
 def number(
     dialog: str,
     *,
     min: int = 0,
-    max: int,
+    max: int | MaxValue,
     default: int | None = None,
     clamp: bool = False,
     escape: bool = True,
     **kwargs: Any,
 ) -> int | None:
-    """A whole number from `min` to `max`. Nothing gives `default`."""
-    question = render(dialog, escape, **kwargs)
+    """A whole number from `min` to `max`. Nothing gives `default`.
+
+    `min` and `max` are also given to the question's text.
+    """
+    if isinstance(max, MaxValue):
+        max = max.max
+    question = render(dialog, escape, **{"min": min, "max": max, **kwargs})
     while True:
         answer = color.color_input(question).strip()
         if not answer:
@@ -151,6 +216,11 @@ def numbers(
 
 
 # --- choosing from options ------------------------------------------------
+
+
+def keys(names: list[str]) -> list[str]:
+    """Locale keys as option text."""
+    return [core.localize(name) for name in names]
 
 
 def show_options(options: list[str], extra: list[str] | None = None) -> None:

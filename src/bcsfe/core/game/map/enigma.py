@@ -1,7 +1,7 @@
 import time
 from dataclasses import dataclass
 from bcsfe import core
-from bcsfe.cli import dialog_creator, color
+from bcsfe.cli import color, prompt
 from bcsfe.core.io.schema import (
     F64,
     I8,
@@ -63,7 +63,7 @@ class Enigma(Struct):
             )
 
         if self.stages:
-            wipe = dialog_creator.yes_no_key("wipe_enigma")
+            wipe = prompt.confirm("wipe_enigma")
             if wipe is None:
                 return
             if wipe:
@@ -72,7 +72,7 @@ class Enigma(Struct):
                     save_file.event_stages.chapter_completion_count[id] = 0
                 self.stages = []
 
-        ids = dialog_creator.multi_select_indexes_key(
+        ids = prompt.choose_many(
             names_list,
             "enigma_select",
         )

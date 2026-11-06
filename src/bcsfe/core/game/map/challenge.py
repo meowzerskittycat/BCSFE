@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from bcsfe import core
 from bcsfe.core.game.map.chapters import Chapters
 from bcsfe.core.io.schema import I32, Array, Bool, Section, Struct, field
-from bcsfe.cli import dialog_creator
+from bcsfe.cli import dialog_creator, prompt
 
 
 @dataclass
@@ -18,7 +18,7 @@ class ChallengeChapters(Struct):
         self.scores[0] = dialog_creator.edit_int_key(
             "challenge_score",
             self.scores[0],
-            dialog_creator.MaxValue.i32().hide_max(),
+            prompt.MaxValue.i32().hide_max(),
         )
         self.shown_popup = True
         self.chapters.clear_stage(0, 0, 0, False)

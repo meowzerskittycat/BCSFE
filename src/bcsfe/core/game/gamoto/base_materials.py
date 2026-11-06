@@ -3,7 +3,7 @@ from typing import ClassVar
 
 from bcsfe.core.io.schema import I32, Array, Nested, Struct, field
 from bcsfe import core
-from bcsfe.cli import dialog_creator
+from bcsfe.cli import dialog_creator, prompt
 
 
 @dataclass
@@ -30,8 +30,6 @@ class BaseMaterials(Struct):
             "base_materials",
             names,
             base_materials,
-            dialog_creator.MaxValue.i32(
-                core.core_data.max_value_manager.base_materials
-            ),
+            prompt.MaxValue.i32(core.core_data.max_value_manager.base_materials),
         )
         self.materials = [Material(value) for value in values]

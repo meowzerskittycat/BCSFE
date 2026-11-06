@@ -8,7 +8,7 @@ columns run over every map of every type in turn.
 from typing import Any
 
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator, edits
+from bcsfe.cli import color, edits, prompt
 from bcsfe.core.game.map import stage_grid as grid
 from bcsfe.core.game.map.stage_grid import MapStars, Stage, Star
 from bcsfe.core.io.schema import I8, I16, I32, Codec
@@ -278,30 +278,20 @@ class EventChapters:
 
     @staticmethod
     def ask_stars(
-        max_stars: int, prompt: str = "custom_star_count_per_chapter"
+        max_stars: int, dialog: str = "custom_star_count_per_chapter"
     ) -> int | None:
         if max_stars <= 1:
             return max_stars
-        stars = dialog_creator.int_input_key(
-            prompt,
-            min=1,
-            _max=dialog_creator.MaxValue.always_cap(max_stars),
-            max=max_stars,
-        )
+        stars = prompt.number(dialog, min=1, max=prompt.MaxValue.always_cap(max_stars))
         if stars is None:
             return None
         return stars
 
     @staticmethod
     def ask_stars_unclear(
-        max_stars: int, prompt: str = "custom_star_count_per_chapter"
+        max_stars: int, dialog: str = "custom_star_count_per_chapter"
     ) -> int | None:
-        stars = dialog_creator.int_input_key(
-            prompt,
-            _max=dialog_creator.MaxValue.always_cap(max_stars),
-            min=0,
-            max=max_stars,
-        )
+        stars = prompt.number(dialog, min=0, max=prompt.MaxValue.always_cap(max_stars))
         if stars is None:
             return None
         return stars
@@ -324,11 +314,10 @@ class EventChapters:
         if stage_names is None:
             return None
 
-        dialog_creator.display_options_key(stage_names, "select_stage")
+        color.color_print_key("select_stage")
+        prompt.show_options(stage_names)
 
-        choices = dialog_creator.range_multi_input_key(
-            "stages_select", dialog_creator.MaxValue.always_cap(len(stage_names)), 1
-        )
+        choices = prompt.numbers("stages_select", min=1, max=len(stage_names))
         if choices is None:
             return None
         return [c - 1 for c in choices]
@@ -348,7 +337,7 @@ class EventChapters:
                 continue
             new_stage_names.append(stage)
         stage_names = new_stage_names
-        choice = dialog_creator.basic_pick_key_index(
+        choice = prompt.choose(
             stage_names,
             dialog="select_stage_progress",
         )
@@ -358,11 +347,9 @@ class EventChapters:
 
     @staticmethod
     def ask_clear_amount() -> int | None:
-        val = dialog_creator.int_input_key(
+        val = prompt.number(
             "clear_amount_enter",
-            dialog_creator.MaxValue.i16(
-                core.core_data.max_value_manager.stage_clear_count
-            ),
+            max=prompt.MaxValue.i16(core.core_data.max_value_manager.stage_clear_count),
         )
 
         return val
@@ -397,7 +384,8 @@ class EventChapters:
             names_list.append(map_name)
 
         while True:
-            dialog_creator.display_options_key(names_list, "select_map")
+            color.color_print_key("select_map")
+            prompt.show_options(names_list)
             if names_list:
                 example_name = names_list[0]
             else:
@@ -416,11 +404,7 @@ class EventChapters:
             elif usr_input.strip(" -0123456789"):
                 usr_ids = None  # a name to search for
             else:
-                usr_ids = dialog_creator.range_basic_parse(
-                    usr_input,
-                    max=dialog_creator.MaxValue.always_cap(len(names_list)),
-                    min=1,
-                )
+                usr_ids = prompt.parse_numbers(usr_input, min=1, max=len(names_list))
             if not usr_ids:
                 found_names: list[tuple[int, str]] = []
                 for i, name in enumerate(names_list):
@@ -438,7 +422,7 @@ class EventChapters:
                     if true_id not in map_ids:
                         map_ids.append(true_id)
                 else:
-                    selected_ids = dialog_creator.multi_select_indexes_key(
+                    selected_ids = prompt.choose_many(
                         [name for _, name in found_names],
                         dialog="select_map_from_names",
                     )
@@ -462,8 +446,8 @@ class EventChapters:
                 name = names_dict[id]
                 EventChapters.print_current_chapter(name, id)
 
-            option = dialog_creator.basic_keys_pick_key_index(
-                ["keep_selecting", "remove_selection", "finish_selection"],
+            option = prompt.choose(
+                prompt.keys(["keep_selecting", "remove_selection", "finish_selection"]),
                 dialog="map_selection_q",
             )
             if option is None:
