@@ -1,67 +1,114 @@
-import sys
-from typing import Any
+"""Updates the editor from this fork's GitHub repository.
+
+`pip install bcsfe` would install upstream's editor, so updates come from the
+repository's main branch instead. A git install records the commit it was
+installed from (PEP 610's direct_url.json), which is compared with the latest
+commit on main; other installs fall back to comparing version numbers.
+"""
+
 import json
-from bcsfe import core, __app_name__
+import sys
+from importlib import metadata
+from typing import Any
+
 import bcsfe
+from bcsfe import __app_name__, core
+
+REPO = "meowzerskittycat/BCSFE"
+BRANCH = "main"
+REPO_URL = f"https://github.com/{REPO}"
 
 
 class Updater:
     def __init__(self):
-        pass
+        self._latest: tuple[str, str] | None = None
+
+    @staticmethod
+    def installed_commit() -> str | None:
+        """The commit a git install was made from, if known."""
+        try:
+            text = metadata.distribution(__app_name__).read_text("direct_url.json")
+        except metadata.PackageNotFoundError:
+            return None
+        if not text:
+            return None
+        try:
+            commit = json.loads(text).get("vcs_info", {}).get("commit_id")
+        except json.JSONDecodeError, AttributeError:
+            return None
+        return commit if isinstance(commit, str) and commit else None
 
     def get_local_version(self) -> str:
-        return bcsfe.__version__
+        return self.describe(bcsfe.__version__, self.installed_commit())
 
-    def get_pypi_json(self) -> dict[str, Any] | None:
-        url = f"https://pypi.org/pypi/{__app_name__}/json"
-        # add a User-Agent since pypi started to block the default requests user-agent
-        # this probably won't be needed in the future as i assume this block is temporary
+    @staticmethod
+    def describe(version: str, commit: str | None) -> str:
+        return f"{version} ({commit[:7]})" if commit else version
+
+    @staticmethod
+    def get_json(url: str) -> Any:
         response = core.RequestHandler(
             url, headers={"User-Agent": "BCSFE-Updater"}
         ).get()
-        if response is None:
+        if response is None or response.status_code != 200:
             return None
         try:
             return response.json()
         except json.JSONDecodeError:
             return None
 
-    def get_releases(self) -> list[str] | None:
-        pypi_json = self.get_pypi_json()
-        if pypi_json is None:
-            return None
-        releases = pypi_json.get("releases")
-        if releases is None:
-            return None
-        return list(releases.keys())
+    @staticmethod
+    def parse_version(source: str) -> str | None:
+        for line in source.splitlines():
+            if line.startswith("__version__"):
+                return line.split("=", 1)[1].strip().strip("\"'")
+        return None
 
-    def get_latest_version(self, prereleases: bool = False) -> str | None:
-        releases = self.get_releases()
-        if releases is None:
+    def get_latest(self) -> tuple[str, str] | None:
+        """(version, commit) of the latest commit on main."""
+        if self._latest is not None:
+            return self._latest
+        commit: dict[str, Any] | None = self.get_json(
+            f"https://api.github.com/repos/{REPO}/commits/{BRANCH}"
+        )
+        sha = commit.get("sha") if isinstance(commit, dict) else None
+        if not isinstance(sha, str):
             return None
-
-        releases.reverse()
-        if prereleases:
-            return releases[0]
-        else:
-            for release in releases:
-                if "b" not in release:
-                    return release
-            return releases[0]
-
-    def get_latest_version_info(
-        self, prereleases: bool = False
-    ) -> dict[str, Any] | None:
-        pypi_json = self.get_pypi_json()
-        if pypi_json is None:
+        response = core.RequestHandler(
+            f"https://raw.githubusercontent.com/{REPO}/{sha}/src/bcsfe/__init__.py",
+            headers={"User-Agent": "BCSFE-Updater"},
+        ).get()
+        if response is None or response.status_code != 200:
             return None
-        releases = pypi_json.get("releases")
-        if releases is None:
+        version = self.parse_version(response.text)
+        if version is None:
             return None
-        return releases.get(self.get_latest_version(prereleases))
+        self._latest = (version, sha)
+        return self._latest
 
-    def update(self, target_version: str) -> bool:
-        package = f"{__app_name__}=={target_version}"
+    def get_latest_version(self) -> str | None:
+        latest = self.get_latest()
+        return self.describe(*latest) if latest else None
+
+    def update_available(self) -> bool:
+        latest = self.get_latest()
+        if latest is None:
+            return False
+        version, sha = latest
+        if self.version_check(version, bcsfe.__version__):
+            return True
+        installed = self.installed_commit()
+        return (
+            installed is not None
+            and installed != sha
+            and not self.version_check(bcsfe.__version__, version)
+        )
+
+    def update(self) -> bool:
+        latest = self.get_latest()
+        if latest is None:
+            return False
+        package = f"git+{REPO_URL}@{latest[1]}"
         candidates = [
             [python, "-m", "pip", "install", "--upgrade", package]
             for python in [sys.executable, "py", "python", "python3"]
@@ -75,52 +122,16 @@ class Updater:
                 return True
         return False
 
-    def has_enabled_pre_release(self) -> bool:
-        return core.core_data.config.get_bool(core.ConfigKey.UPDATE_TO_BETA)
-
     @staticmethod
     def version_check(v1: str, v2: str) -> bool:
+        """Whether version `v1` is newer than `v2`."""
         v1_p = v1.split(".")
         v2_p = v2.split(".")
 
         for p1, p2 in zip(v1_p, v2_p, strict=False):
-            if p1.isdigit():
-                p1 = int(p1)
-            else:
+            if not p1.isdigit() or not p2.isdigit():
                 continue
-            if p2.isdigit():
-                p2 = int(p2)
-            else:
-                continue
-            if p1 > p2:
-                return True
-            if p1 < p2:
-                return False
+            if int(p1) != int(p2):
+                return int(p1) > int(p2)
 
         return len(v1_p) > len(v2_p)
-
-    @staticmethod
-    def beta_version_check(v1: str, v2: str) -> bool:
-        is_local_beta = "b" in v2
-        is_latest_beta = "b" in v1
-
-        local_no_beta = v2.split("b")[0]
-        latest_no_beta = v1.split("b")[0]
-
-        if Updater.version_check(latest_no_beta, local_no_beta):
-            return True
-        elif Updater.version_check(local_no_beta, latest_no_beta):
-            return False
-        else:
-            if v1 == v2:
-                return False
-            else:
-                if is_local_beta and is_latest_beta:
-                    return Updater.version_check(
-                        v1.replace("b", "."),
-                        v2.replace("b", "."),
-                    )
-                elif is_local_beta:
-                    return True
-                else:
-                    return False

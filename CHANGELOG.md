@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Links and updates
+
+- The welcome banner and bug-report messages now point to this fork's GitHub repository and
+  issues instead of upstream's Discord and donation links (English, Vietnamese and Traditional
+  Chinese).
+- **Check for updates** now follows this fork's `main` branch on GitHub. It used to check PyPI's
+  `bcsfe`, which is upstream's package, so updating could replace this fork with upstream's
+  editor. The unused "Update to Beta Versions" option is gone.
+- Removed `.github/FUNDING.yml`, which pointed to upstream's donation page.
+
 ### Changed
 
 - Python 3.14 or later is now required (the version Termux ships)

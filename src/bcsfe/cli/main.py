@@ -53,9 +53,8 @@ class Main:
         """Check for updates."""
 
         updater = core.Updater()
-        has_pre_release = updater.has_enabled_pre_release()
         local_version = updater.get_local_version()
-        latest_version = updater.get_latest_version(has_pre_release)
+        latest_version = updater.get_latest_version()
 
         if latest_version is None:
             color.color_print_key("update_check_fail")
@@ -67,7 +66,7 @@ class Main:
             latest_version=latest_version,
         )
 
-        if core.Updater.beta_version_check(latest_version, local_version):
+        if updater.update_available():
             update = dialog_creator.yes_no_key(
                 "update_available", latest_version=latest_version
             )
@@ -75,7 +74,7 @@ class Main:
                 return
 
             if update:
-                if updater.update(latest_version):
+                if updater.update():
                     color.color_print_key("update_success")
                 else:
                     color.color_print_key("update_fail")
