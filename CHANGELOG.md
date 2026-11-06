@@ -19,7 +19,8 @@
 - Python 3.14 or later is now required (the version Termux ships)
 
 - Save sections are described once in a declarative schema instead of separately for reading,
-writing, JSON export, JSON import and new saves
+writing, JSON export, JSON import and new saves, and so is the order of every field in the save
+(`core/io/save_layout.py`), replacing about 3,000 lines of hand-written code
 
 - Stage-progress sections (main chapters, gauntlets, legend quest, aku, events, story, item reward
 and timed score stages) share one model and one set of read/write helpers
@@ -49,6 +50,10 @@ reports
 macOS and Linux
 
 ### Fixed
+
+- `ui14` was never saved: `ui13` was written in its place, so it came back as a copy of `ui13`
+
+- Importing JSON dropped `uby21` (game versions 14.1 to 14.4)
 
 - The crash backup was written by a background thread while the editor kept using the save, so it
 could be half-written ("Failed to recover save file from temp file") or corrupt the save in use

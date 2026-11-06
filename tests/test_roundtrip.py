@@ -87,7 +87,11 @@ def test_json_from_v3_6_0_still_imports(path: Path) -> None:
     save_name = path.name.replace(".json.gz", ".sav")
     raw = next(p for p in synthetic_saves() + real_fixtures() if p.name == save_name)
     imported = core.SaveFile.from_dict(exported, warn=False)
-    assert imported.to_data().to_bytes() == raw.read_bytes()
+    expected = core.SaveFile(core.Data(raw.read_bytes()))
+    # 3.6.0 wrote `ui13` in place of `ui14`, so it read `ui14` back as a copy
+    # of `ui13`; that copy is what its JSON holds.
+    expected.ui14 = expected.ui13
+    assert imported.to_data().to_bytes() == expected.to_data().to_bytes()
 
 
 @pytest.mark.skipif(not real_saves(), reason="no real saves in tests/saves")
@@ -198,3 +202,46 @@ def test_per_stage_sections_round_trip(version: int) -> None:
         json.loads(json.dumps(rewards.serialize()))
     )
     assert from_json == rewards
+
+
+@pytest.mark.parametrize("version", [90000, 110000, 140200, 150500])
+def test_every_number_field_survives_a_round_trip(version: int) -> None:
+    """Give each top-level number a value of its own and check it comes back
+    from the binary save and from JSON.
+
+    This caught `ui14`, which used to be written as a second copy of `ui13`,
+    and `uby21`, which JSON import used to drop.
+    """
+    from bcsfe.core.io import save_layout
+    from bcsfe.core.io.schema import Float, Number
+
+    save = core.SaveFile(
+        cc=core.CountryCode("en"), gv=core.GameVersion(version), load=False
+    )
+    expected: dict[str, int | float] = {}
+    for i, e in enumerate(save_layout.fields()):
+        if not isinstance(e, save_layout.F) or not e.binary or not e.when(save):
+            continue
+        if isinstance(e.codec, Number):
+            expected[e.name] = 1 + i % 100
+        elif isinstance(e.codec, Float):
+            expected[e.name] = float(1 + i % 100)
+    for name, value in expected.items():
+        setattr(save, name, value)
+
+    from_binary = core.SaveFile(save.to_data())
+    from_json = core.SaveFile.from_dict(
+        json.loads(json.dumps(save.to_dict())), warn=False
+    )
+    for loaded in (from_binary, from_json):
+        got = {name: getattr(loaded, name) for name in expected}
+        assert got == expected
+
+
+def test_save_file_declares_every_layout_field() -> None:
+    """`SaveFile`'s annotations give the layout's fields their types; a field
+    added to one and not the other would be untyped or never saved."""
+    from bcsfe.core.io import save_layout
+
+    declared = list(core.SaveFile.__annotations__)
+    assert declared == [e.name for e in save_layout.fields()]

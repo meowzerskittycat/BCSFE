@@ -21,6 +21,9 @@ def editor_data_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
     """Point the editor at a throwaway data dir so tests never touch user files."""
     data_dir = tmp_path_factory.mktemp("bcsfe-data")
     core.set_data_dir_path(core.Path(str(data_dir)))
+    # The config normally lives in the user's home; keep tests out of it.
+    core.set_config_path(core.Path(str(data_dir / "config.yaml")))
+    core.set_log_path(core.Path(str(data_dir / "bcsfe.log")))
     files = resources.files(__app_name__).joinpath("files")
     copy_to_data_dir(files, files)
     core.core_data.init_data()
