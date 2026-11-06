@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """ManagedItem class for bcsfe."""
 
 from enum import Enum
@@ -78,12 +76,12 @@ class ManagedItem:
         values = short_form.split("_")
         try:
             amount = int(values[0])
-        except (IndexError, ValueError):
+        except IndexError, ValueError:
             amount = 0
 
         try:
             detail_created_at = int(values[1])
-        except (IndexError, ValueError):
+        except IndexError, ValueError:
             detail_created_at = 0
 
         try:

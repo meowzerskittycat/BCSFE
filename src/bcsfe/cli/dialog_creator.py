@@ -1,13 +1,11 @@
-from __future__ import annotations
 from collections.abc import Callable
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from bcsfe import core
 from bcsfe.cli import color
 
-T = TypeVar("T")
 
-ActionFunc = Callable[[int], T]
+type ActionFunc[T] = Callable[[int], T]
 
 
 class NoAssignedActionException(Exception):
@@ -15,7 +13,7 @@ class NoAssignedActionException(Exception):
         super().__init__(f"No assigned action to index {index}")
 
 
-class Action(Generic[T]):
+class Action[T]:
     def __init__(self, options: list[str], func: ActionFunc[T]):
         self.options = options
         self.func = func
@@ -47,7 +45,7 @@ class Action(Generic[T]):
         return self.func(index)
 
 
-class Actions(Generic[T]):
+class Actions[T]:
     def __init__(self, actions: list[Action[T]]):
         self.actions = actions
 
@@ -302,7 +300,7 @@ def multi_select_entries_raw(
             return ids
 
 
-def single_select_raw(actions: Actions[T], dialog: str) -> T | None:
+def single_select_raw[T](actions: Actions[T], dialog: str) -> T | None:
     if actions.max() == 0:
         return None
     if actions.len() == 1 and actions.actions[0].len() == 1:
@@ -340,7 +338,7 @@ def single_select_raw(actions: Actions[T], dialog: str) -> T | None:
         return action[0].run(action[1])
 
 
-def single_select_key(
+def single_select_key[T](
     actions: Actions[T],
     dialog_key: str,
     escape: bool = True,

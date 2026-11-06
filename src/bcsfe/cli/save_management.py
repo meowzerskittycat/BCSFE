@@ -1,4 +1,3 @@
-from __future__ import annotations
 from bcsfe import core
 import bcsfe
 from bcsfe.core import io

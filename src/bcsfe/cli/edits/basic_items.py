@@ -1,4 +1,3 @@
-from __future__ import annotations
 import random
 from bcsfe import core
 from bcsfe.cli import dialog_creator, color, edits

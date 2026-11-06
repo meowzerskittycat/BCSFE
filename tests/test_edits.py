@@ -1,7 +1,5 @@
 """Tests for editing logic (not just reading/writing)."""
 
-from __future__ import annotations
-
 from bcsfe import core
 from bcsfe.core.game.map.zero_legends import Chapter, ChaptersStars, Stage
 

@@ -1,9 +1,6 @@
-from __future__ import annotations
 import json
-from typing import Any, TypeVar
+from typing import Any
 from bcsfe import core
-
-V = TypeVar("V")
 
 
 class JsonFile:
@@ -32,7 +29,7 @@ class JsonFile:
         return self.obj
 
 
-def int_keys(d: dict[Any, V]) -> dict[int, V]:
+def int_keys[V](d: dict[Any, V]) -> dict[int, V]:
     """Turn the string keys JSON gives back into ints.
 
     JSON object keys are always strings, so a dict[int, ...] written to JSON

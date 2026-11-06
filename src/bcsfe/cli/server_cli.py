@@ -1,4 +1,3 @@
-from __future__ import annotations
 from bcsfe.cli import dialog_creator, main, color, file_dialog
 from bcsfe import core
 

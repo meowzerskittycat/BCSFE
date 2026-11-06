@@ -1,4 +1,3 @@
-from __future__ import annotations
 import enum
 from typing import Any
 from bcsfe import core
@@ -224,7 +223,7 @@ class Config:
         color.color_print_key("validating_game_repo")
         try:
             resp = core.RequestHandler(value).get()
-        except (requests.exceptions.MissingSchema, requests.exceptions.InvalidSchema):
+        except requests.exceptions.MissingSchema, requests.exceptions.InvalidSchema:
             color.color_print_key("invalid_url")
             return
         if resp is None:

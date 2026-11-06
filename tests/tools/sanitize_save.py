@@ -8,8 +8,6 @@ Usage: python tests/tools/sanitize_save.py SAVE_IN
 Writes tests/fixtures/real/{cc}_{game version}.sav
 """
 
-from __future__ import annotations
-
 import sys
 from pathlib import Path
 

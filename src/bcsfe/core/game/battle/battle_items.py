@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import datetime
 from dataclasses import dataclass
 from math import inf
@@ -53,7 +51,7 @@ class EndlessItem(Struct):
         self.active = True
         self.unknown = True
         self.amount = amount
-        self.start = datetime.datetime.now(datetime.timezone.utc).timestamp()
+        self.start = datetime.datetime.now(datetime.UTC).timestamp()
         self.end = self.start + mins * 60
 
 

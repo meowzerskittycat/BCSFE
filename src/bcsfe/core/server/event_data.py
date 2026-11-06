@@ -1,6 +1,4 @@
-from __future__ import annotations
 from collections.abc import Callable
-from typing import TypeVar
 
 from bcsfe import core
 
@@ -308,11 +306,7 @@ class ServerItemDataItem:
         )
 
 
-Item = TypeVar("Item")
-T = TypeVar("T")
-
-
-def read_event_data(
+def read_event_data[Item, T](
     csv: core.CSV,
     read_func: Callable[[core.Row], Item],
     init_func: Callable[[list[Item]], T],

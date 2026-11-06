@@ -1,4 +1,3 @@
-from __future__ import annotations
 from typing import Any
 from bcsfe import core
 from bcsfe.cli import color_hex

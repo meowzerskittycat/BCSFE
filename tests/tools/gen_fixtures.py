@@ -19,8 +19,6 @@ new game version), never to make a failing test pass.
 Usage: python tests/tools/gen_fixtures.py
 """
 
-from __future__ import annotations
-
 import copy
 import hashlib
 import json

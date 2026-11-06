@@ -1,4 +1,3 @@
-from __future__ import annotations
 import base64
 from typing import Any
 from bcsfe import core, __version__, cli
@@ -16,7 +15,7 @@ def to_timestamp(date: datetime.datetime) -> float:
     where the C library rejects local times before the epoch."""
     try:
         return date.timestamp()
-    except (OSError, OverflowError, ValueError):
+    except OSError, OverflowError, ValueError:
         return (date - _EPOCH).total_seconds() + time.timezone
 
 
@@ -24,7 +23,7 @@ def from_timestamp(timestamp: float) -> datetime.datetime:
     """Inverse of to_timestamp (local time, like datetime.fromtimestamp)."""
     try:
         return datetime.datetime.fromtimestamp(timestamp)
-    except (OSError, OverflowError, ValueError):
+    except OSError, OverflowError, ValueError:
         return _EPOCH + datetime.timedelta(seconds=timestamp - time.timezone)
 
 
@@ -118,7 +117,7 @@ class SaveFile:
         self.data.set_pos(-32)
         try:
             hash = self.data.read_string(32)
-        except (UnicodeDecodeError, core.EndOfDataError):
+        except UnicodeDecodeError, core.EndOfDataError:
             return None
         return hash
 

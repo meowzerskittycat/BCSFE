@@ -1,5 +1,38 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Python 3.14 or later is now required (the version Termux ships)
+
+- Save sections are described once in a declarative schema instead of separately for reading,
+writing, JSON export, JSON import and new saves
+
+### Added
+
+- `bcsfe info`, `bcsfe check`, `bcsfe export` and `bcsfe import` commands for scripts and bug
+reports
+
+- A test suite (real saves from several regions and versions, including 15.7) and CI on Windows,
+macOS and Linux
+
+### Fixed
+
+- Editing missions, outbreaks, cannons, dojo scores and other id-keyed data after importing a JSON
+export wrote the same id twice, corrupting the save
+
+- Clearing Zero Legends / Catclaw stages didn't unlock the next stage, and on new maps clearing one
+stage cleared all of them
+
+- Importing JSON with missing keys crashed
+
+- JSON export crashed on Windows for dates near 1970
+
+- Crashes in the cat shrine editor and with a new `--data-dir`
+
+- Parse errors now say what went wrong instead of failing an assert
+
 ## [3.6.0] - 2026-07-24
 
 ### Added

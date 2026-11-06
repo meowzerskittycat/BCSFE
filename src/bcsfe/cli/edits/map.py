@@ -1,15 +1,13 @@
-from __future__ import annotations
 from bcsfe import core
 from bcsfe.cli import color, dialog_creator
-from typing import Union
 
-ChaptersType = Union[
-    "core.EventChapters",
-    "core.GauntletChapters",
-    "core.LegendQuestChapters",
-    "core.ZeroLegendsChapters",
-    "core.Chapters",
-]
+type ChaptersType = (
+    core.EventChapters
+    | core.GauntletChapters
+    | core.LegendQuestChapters
+    | core.ZeroLegendsChapters
+    | core.Chapters
+)
 
 
 def get_total_maps(chapters: ChaptersType) -> int:

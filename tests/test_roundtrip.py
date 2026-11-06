@@ -4,8 +4,6 @@ These are the main safety net for refactoring: if any change alters how a
 field is read or written, at least one fixture stops round-tripping.
 """
 
-from __future__ import annotations
-
 import gzip
 import json
 import sys

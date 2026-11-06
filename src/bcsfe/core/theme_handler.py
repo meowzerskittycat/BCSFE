@@ -1,4 +1,3 @@
-from __future__ import annotations
 import dataclasses
 import tempfile
 from typing import Any
