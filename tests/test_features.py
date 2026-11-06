@@ -25,9 +25,11 @@ from .conftest import real_fixtures
 SKIP_CATEGORIES = {"save_management"}
 SKIP_FEATURES = {"exit"}
 
+# `pytest --all-answers` (CI does this for pull requests) tries every set;
+# otherwise only the first, which exercises the most kinds of prompt.
 ANSWERS = {
-    "ones": ["1"],
     "mixed": ["1", "y", "5", "1 2", "n", "2"],
+    "ones": ["1"],
     "all": ["2", "y", "100", "all", "1", "n"],
 }
 MAX_ANSWERS = 60
@@ -59,7 +61,15 @@ def test_every_feature_is_tested() -> None:
     assert len(features()) > 80
 
 
-@pytest.mark.parametrize("answers", ANSWERS.values(), ids=ANSWERS.keys())
+def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
+    if "answers" not in metafunc.fixturenames:
+        return
+    names = list(ANSWERS)
+    if not metafunc.config.getoption("--all-answers"):
+        names = names[:1]
+    metafunc.parametrize("answers", [ANSWERS[n] for n in names], ids=names)
+
+
 @pytest.mark.parametrize("path", features(), ids="/".join)
 def test_feature_does_not_crash(
     monkeypatch: pytest.MonkeyPatch, path: tuple[str, ...], answers: list[str]

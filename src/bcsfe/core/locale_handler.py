@@ -113,6 +113,8 @@ class LocalManager:
             lc = core.core_data.config.get_str(core.ConfigKey.LOCALE)
         else:
             lc = locale
+        if lc not in LocalManager.get_all_locales():
+            lc = "en"  # e.g. a locale folder that was deleted
 
         self.locale = lc
         self.path = LocalManager.get_locale_folder(lc)

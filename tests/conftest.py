@@ -19,6 +19,14 @@ REAL_FIXTURE_DIR = TESTS_DIR / "fixtures" / "real"
 REAL_SAVES_DIR = TESTS_DIR / "saves"
 
 
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--all-answers",
+        action="store_true",
+        help="run every menu feature with each set of typed answers, not just one",
+    )
+
+
 def pytest_configure(config: pytest.Config) -> None:
     """Point the editor at a throwaway data dir so tests never touch user files.
 

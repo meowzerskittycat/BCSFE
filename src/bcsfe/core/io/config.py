@@ -1,4 +1,5 @@
 import enum
+import re
 from typing import Any
 from bcsfe import core
 from bcsfe.cli import color, dialog_creator
@@ -318,6 +319,13 @@ class Config:
         code = dialog_creator.str_input_key("enter_locale_code")
         if code is None:
             return None
+        code = code.strip()
+        if not Config.valid_locale_code(code):
+            color.color_print_key("invalid_locale_code")
+            return None
+        if code in core.LocalManager.get_all_locales():
+            color.color_print_key("locale_code_taken", code=code)
+            return None
 
         author = dialog_creator.str_input_key("enter_author_name")
         if author is None:
@@ -344,6 +352,13 @@ class Config:
         color.color_print_key("created_locale_at", path=path)
 
         return code
+
+    @staticmethod
+    def valid_locale_code(code: str) -> bool:
+        """A code is used as a folder name, so it must be one plain word."""
+        return re.fullmatch(r"[A-Za-z0-9_-]+", code) is not None and not (
+            code.startswith("ext-")
+        )
 
     def edit_locale(self):
         text = self.get_full_input_localized(

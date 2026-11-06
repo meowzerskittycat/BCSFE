@@ -54,6 +54,10 @@ macOS and Linux
 
 ### Fixed
 
+- Creating a locale accepted any text as its code (e.g. `1 2`), made a folder with that name and
+switched to it; codes must now be one word. A configured locale that no longer exists falls back
+to English
+
 - `ui14` was never saved: `ui13` was written in its place, so it came back as a copy of `ui13`
 
 - Importing JSON dropped `uby21` (game versions 14.1 to 14.4)

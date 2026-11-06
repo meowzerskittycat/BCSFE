@@ -30,4 +30,5 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev]"
-      - run: pytest
+      # Pull requests also run every menu feature with each set of answers.
+      - run: pytest ${{ github.event_name == 'pull_request' && '--all-answers' || '' }}

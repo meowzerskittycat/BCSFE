@@ -202,3 +202,23 @@ def test_updater_installs_from_github(monkeypatch) -> None:
     monkeypatch.setattr(up, "get_latest", lambda: ("3.6.0", "c" * 40))
     assert up.update()
     assert ran[0][-1] == "git+https://github.com/meowzerskittycat/BCSFE@" + "c" * 40
+
+
+@pytest.mark.parametrize(
+    ("code", "ok"),
+    [("de", True), ("pt-BR", True), ("1 2", False), ("../x", False), ("ext-a", False)],
+)
+def test_locale_codes_must_be_one_word(code: str, ok: bool) -> None:
+    assert core.Config.valid_locale_code(code) is ok
+
+
+def test_new_locale_rejects_bad_codes_without_creating_anything(monkeypatch) -> None:
+    before = core.LocalManager.get_all_locales()
+    answers = iter(["1 2"])
+    monkeypatch.setattr(color, "color_input", lambda *_a, **_k: next(answers))
+    assert core.core_data.config.new_locale() is None
+    assert core.LocalManager.get_all_locales() == before
+
+
+def test_missing_locale_falls_back_to_english() -> None:
+    assert core.LocalManager("does-not-exist").locale == "en"
