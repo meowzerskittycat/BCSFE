@@ -366,3 +366,59 @@ def write_stages(
             for i in range(len(map.chapters[0].stages)):
                 for star in map.chapters:
                     tries.write(data, star.stages[i].tries or 0)
+
+
+# --- one value per stage, map by map --------------------------------------
+
+type Cube[T] = list[list[list[T]]]
+"""`cube[map][star][stage]`."""
+
+_FIXED_MAPS = 50
+_FIXED_STAGES = 12
+_FIXED_STARS = 3
+
+
+def new_cube[T](gv: int, value: T) -> Cube[T]:
+    """An empty section for a new save of game version `gv`."""
+    if not 20 <= gv <= 33:
+        return []
+    return [
+        [[value] * _FIXED_STAGES for _ in range(_FIXED_STARS)]
+        for _ in range(_FIXED_MAPS)
+    ]
+
+
+def read_cube[T](data: Data, gv: int, codec: Codec[T]) -> Cube[T]:
+    """Values stored map by map, then star by star.
+
+    Absent before version 20. Up to 33 the size is fixed (50 maps, 3 stars,
+    12 stages); 34 stores the map count; later versions store all three
+    counts (maps, stages, stars).
+    """
+    if gv < 20:
+        return []
+    if gv <= 33:
+        maps, stages, stars = _FIXED_MAPS, _FIXED_STAGES, _FIXED_STARS
+    elif gv <= 34:
+        maps, stages, stars = data.read_int(), _FIXED_STAGES, _FIXED_STARS
+    else:
+        maps, stages, stars = data.read_int(), data.read_int(), data.read_int()
+    return [
+        [[codec.read(data) for _ in range(stages)] for _ in range(stars)]
+        for _ in range(maps)
+    ]
+
+
+def write_cube[T](data: Data, gv: int, cube: Cube[T], codec: Codec[T]):
+    if gv < 20:
+        return
+    if gv > 33:
+        data.write_int(len(cube))
+    if gv > 34:
+        first = cube[0] if cube else []
+        data.write_int(len(first[0]) if first else 0)
+        data.write_int(len(first))
+    for map in cube:
+        for star in map:
+            for value in star:
+                codec.write(data, value)

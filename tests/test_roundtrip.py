@@ -165,3 +165,36 @@ def test_dojo_json_import_restores_int_keys() -> None:
     dojo = core.Dojo.deserialize(json.loads(json.dumps({"chapters": {"0": {"0": 5}}})))
     dojo.chapters.get_stage(0, 0).score = 9
     assert dojo.chapters.serialize() == {0: {0: 9}}
+
+
+@pytest.mark.parametrize("version", [10, 30, 34, 140000])
+def test_per_stage_sections_round_trip(version: int) -> None:
+    """Item reward and timed score sections share one layout whose header
+    depends on the game version."""
+    gv = core.GameVersion(version)
+    rewards = core.ItemRewardChapters.init(gv)
+    scores = core.TimedScoreChapters.init(gv)
+    if version >= 34:
+        rewards.sub_chapters = [[[True, False, True]] * 2] * 3
+        scores.sub_chapters = [[[5, 6, 7]] * 2] * 3
+    if version == 34:  # only the map count is stored; stars and stages are fixed
+        rewards.sub_chapters = [[[True] * 12] * 3]
+        scores.sub_chapters = [[[9] * 12] * 3]
+    rewards.item_obtains.item_obtain_sets = {
+        2: core.game.map.item_reward_stage.ItemObtainSet({7: True})
+    }
+
+    data = core.Data()
+    rewards.write(data, gv)
+    rewards.write_item_obtains(data)
+    scores.write(data, gv)
+    data.reset_pos()
+    read_rewards = core.ItemRewardChapters.read(data, gv)
+    read_rewards.read_item_obtains(data)
+    assert read_rewards == rewards
+    assert core.TimedScoreChapters.read(data, gv) == scores
+
+    from_json = core.ItemRewardChapters.deserialize(
+        json.loads(json.dumps(rewards.serialize()))
+    )
+    assert from_json == rewards
