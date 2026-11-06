@@ -1,3 +1,6 @@
+import os
+import shutil
+import tempfile
 from importlib import resources
 from pathlib import Path
 
@@ -16,18 +19,22 @@ REAL_FIXTURE_DIR = TESTS_DIR / "fixtures" / "real"
 REAL_SAVES_DIR = TESTS_DIR / "saves"
 
 
-@pytest.fixture(scope="session", autouse=True)
-def editor_data_dir(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    """Point the editor at a throwaway data dir so tests never touch user files."""
-    data_dir = tmp_path_factory.mktemp("bcsfe-data")
+def pytest_configure(config: pytest.Config) -> None:
+    """Point the editor at a throwaway data dir so tests never touch user files.
+
+    This runs before collection, so tests can be parametrized over things
+    that need the editor's data (like the feature menu).
+    """
+    data_dir = Path(tempfile.mkdtemp(prefix="bcsfe-data-"))
+    config.add_cleanup(lambda: shutil.rmtree(data_dir, ignore_errors=True))
     core.set_data_dir_path(core.Path(str(data_dir)))
     # The config normally lives in the user's home; keep tests out of it.
+    os.environ["XDG_CONFIG_HOME"] = str(data_dir / "config")
     core.set_config_path(core.Path(str(data_dir / "config.yaml")))
     core.set_log_path(core.Path(str(data_dir / "bcsfe.log")))
     files = resources.files(__app_name__).joinpath("files")
     copy_to_data_dir(files, files)
     core.core_data.init_data()
-    return data_dir
 
 
 def synthetic_saves() -> list[Path]:

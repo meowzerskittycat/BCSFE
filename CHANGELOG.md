@@ -46,6 +46,9 @@ input" forever
 - `bcsfe info`, `bcsfe check`, `bcsfe export` and `bcsfe import` commands for scripts and bug
 reports
 
+- A test that runs every menu feature with several kinds of typed answers, offline and without
+game data, and checks none crash or leave a save that doesn't read back
+
 - A test suite (real saves from several regions and versions, including 15.7) and CI on Windows,
 macOS and Linux
 
