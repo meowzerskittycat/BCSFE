@@ -12,9 +12,23 @@ writing, JSON export, JSON import and new saves
 - Stage-progress sections (main chapters, gauntlets, legend quest, aku, events, story, item reward
 and timed score stages) share one model and one set of read/write helpers
 
+- Rebuilt main menu: after an edit it stays in the same category, `0` goes back (there's no "Go
+back" on the top menu any more), search ranks exact names first and runs an exact match
+directly, and results show their category
+
+- If a feature fails or is cancelled with Ctrl+C, the save is left as it was and the menu carries on;
+Ctrl+C or Ctrl+D at the main menu asks whether to save before exiting
+
+- A blank answer now cancels a prompt or keeps the current value, instead of repeating "Invalid
+input" forever
+
+- Bug reports now go to this fork's GitHub issues
+
 ### Added
 
 - "Undo last edit" in the main menu steps back through the last 10 edits
+
+- `NO_COLOR` turns off colours
 
 - `bcsfe info`, `bcsfe check`, `bcsfe export` and `bcsfe import` commands for scripts and bug
 reports
@@ -23,6 +37,16 @@ reports
 macOS and Linux
 
 ### Fixed
+
+- The crash backup was written by a background thread while the editor kept using the save, so it
+could be half-written ("Failed to recover save file from temp file") or corrupt the save in use
+
+- Updated text and themes weren't copied to the data folder unless the version number changed
+
+- "Convert game version" accepted any number, e.g. `5` set the save to version 0.0.5
+
+- Picking several entries showed `<built-in function min>` in its error and repeated entries typed
+before a mistake
 
 - Editing missions, outbreaks, cannons, dojo scores and other id-keyed data after importing a JSON
 export wrote the same id twice, corrupting the save

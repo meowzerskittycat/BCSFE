@@ -1,18 +1,30 @@
-from typing import Any
-from collections.abc import Callable
-from bcsfe import core
-from bcsfe.cli import dialog_creator, color, edits, save_management, main
+"""The main menu: a tree of feature categories, searchable by name.
 
+Numbers pick an entry (0 goes back), text searches every feature, and an
+empty answer lists all of them. After a feature runs the menu stays in the
+same category. Each feature that changes the save can be undone, and one
+that fails or is cancelled with Ctrl+C leaves the save as it was.
+"""
+
+import os
+import traceback
+from collections.abc import Callable
+from typing import Any
+
+from bcsfe import __version__, core
+from bcsfe.cli import color, edits, main, save_management
 
 # How many edits "Undo last edit" can step back through.
 MAX_UNDO = 10
+
+type Path = tuple[str, ...]
 
 
 class FeatureHandler:
     def __init__(self, save_file: core.SaveFile):
         self.save_file = save_file
-        # (feature name, save bytes before that feature ran), newest last.
-        self.undo_stack: list[tuple[str, bytes]] = []
+        # (feature key, save bytes before it ran, country code), newest last.
+        self.undo_stack: list[tuple[str, bytes, core.CountryCode]] = []
 
     def get_features(self) -> dict[str, Any]:
         cat_features = {"cats": edits.cat_editor.CatEditor.edit_cats}
@@ -152,153 +164,167 @@ class FeatureHandler:
         }
         return features
 
-    def get_feature(self, feature_path: list[str]):
-        feature_dict = self.get_features()
-        feature = feature_dict
-        for path in feature_path:
-            feature = feature[path]
-
+    def get_feature(self, feature_path: list[str] | Path) -> Any:
+        feature: Any = self.get_features()
+        for key in feature_path:
+            feature = feature[key]
         return feature
 
-    def search_features(
-        self,
-        name: str,
-        current_path: list[str],
-        features: dict[str, Any] | None = None,
-        found_features: dict[tuple[str, ...], int] | None = None,
-    ) -> dict[tuple[str, ...], int]:
-        name = name.lower()
-        if features is None:
-            features = self.get_features()
-        if found_features is None:
-            found_features = {}
+    # --- names and search ----------------------------------------------
 
-        for feature_name_key, feature in features.items():
-            feature_name = core.core_data.local_manager.get_key(feature_name_key)
-            path = current_path.copy()
-            path.append(feature_name_key)
-            if isinstance(feature, dict):
-                found_features.update(
-                    self.search_features(
-                        name,
-                        path,
-                        feature,  # type: ignore
-                        found_features,
-                    )
-                )
-            for alias in core.LocalManager.get_all_aliases(feature_name):
-                if not name:
-                    found_features[tuple(path)] = 100
-                    break
-                alias = alias.lower()
+    @staticmethod
+    def aliases(key: str) -> list[str]:
+        return core.core_data.local_manager.get_all_aliases(core.localize(key))
 
-                name = name.replace(" ", "")
-                alias = alias.replace(" ", "")
-                if alias in name or name in alias:
-                    found_features[tuple(path)] = 100
-                    break
+    def name(self, key: str) -> str:
+        if key == "undo_last_edit" and self.undo_stack:
+            return f"{self.aliases(key)[0]} ({len(self.undo_stack)})"
+        return self.aliases(key)[0]
 
-        return found_features
+    def label(self, path: Path) -> str:
+        return ": ".join(self.name(key) for key in path)
 
-    def display_features(self, features: list[list[str]]):
-        feature_names: list[str] = []
-        for feature_name in features:
-            feature_names.append(feature_name[-1])
-        print()
-        dialog_creator.display_options_key(
-            [
-                core.core_data.local_manager.get_all_aliases(core.localize(f))[0]
-                for f in feature_names
-            ],
-            "features",
+    def all_features(self, tree: dict[str, Any] | None = None) -> list[Path]:
+        """Every runnable feature, depth first, in menu order."""
+        if tree is None:
+            tree = self.get_features()
+        paths: list[Path] = []
+        for key, value in tree.items():
+            if isinstance(value, dict):
+                paths.extend((key, *sub) for sub in self.all_features(value))  # type: ignore[arg-type]
+            else:
+                paths.append((key,))
+        return paths
+
+    def search_features(self, query: str) -> list[Path]:
+        """Features whose name (or an alias) matches `query`, best first.
+
+        Spaces and case are ignored. Exact names rank above names starting
+        with the query, which rank above names containing it.
+        """
+        query = query.lower().replace(" ", "")
+        ranked: list[tuple[int, int, Path]] = []
+        for i, path in enumerate(self.all_features()):
+            best = 0
+            for alias in self.aliases(path[-1]):
+                alias = alias.lower().replace(" ", "")
+                if alias == query:
+                    best = max(best, 3)
+                elif alias.startswith(query):
+                    best = max(best, 2)
+                elif query in alias:
+                    best = max(best, 1)
+            if best:
+                ranked.append((-best, i, path))
+        ranked.sort()
+        return [path for *_, path in ranked]
+
+    def is_exact(self, path: Path, query: str) -> bool:
+        query = query.lower().replace(" ", "")
+        return any(
+            alias.lower().replace(" ", "") == query for alias in self.aliases(path[-1])
         )
 
-    def select_features(
-        self, features: list[list[str]], current_path: list[str]
-    ) -> list[list[str]]:
-        if features != list(self.get_features().keys()):
-            features.insert(0, ["go_back"])
-        self.display_features(features)
+    # --- the menu --------------------------------------------------------
+
+    def show(self, title: str, entries: list[str], back: bool):
         print()
-        usr_input = color.color_input_key("select_features").strip()
-        selected_features: list[list[str]] = []
-        if usr_input.isdigit():
-            usr_input = int(usr_input)
-            if usr_input > len(features):
+        color.color_print(f"<@t>{title}</>")
+        if back:
+            color.color_print(f" 0. <@t>{core.localize('go_back')}</>")
+        for i, entry in enumerate(entries, 1):
+            color.color_print(f" {i}. <@t>{entry}</>")
+        print()
+
+    def pick(self, paths: list[Path], title: str) -> Path | None:
+        """Let the user pick one of `paths` by number; blank or 0 cancels."""
+        self.show(title, [self.label(path) for path in paths], back=True)
+        answer = color.color_input_key("select_feature_number").strip()
+        if answer.isdigit() and 1 <= int(answer) <= len(paths):
+            return paths[int(answer) - 1]
+        if answer not in ("", "0"):
+            color.color_print_key("invalid_input")
+        return None
+
+    def ask(self, path: Path) -> tuple[Path, Path | None]:
+        """Show the category at `path` and read one answer.
+
+        Returns the category to show next and a feature to run, if any.
+        """
+        tree: dict[str, Any] = self.get_feature(path) if path else self.get_features()
+        keys = list(tree.keys())
+        title = self.label(path) if path else core.localize("features")
+        self.show(title, [self.name(key) for key in keys], back=bool(path))
+        answer = color.color_input_key("select_features").strip()
+
+        if answer.isdigit():
+            number = int(answer)
+            if number == 0 and path:
+                return path[:-1], None
+            if not 1 <= number <= len(keys):
                 color.color_print_key("invalid_input")
-            elif usr_input < 1:
-                color.color_print_key("invalid_input")
-            else:
-                feature_name_top = features[usr_input - 1]
-                if feature_name_top == ["go_back"]:
-                    return [[k] for k in self.get_features().keys()]
-                feature = self.get_feature(feature_name_top)
-                if isinstance(feature, dict):
-                    for feature_name in feature.keys():  # type: ignore
-                        feature_path: list[str] = current_path.copy()
-                        feature_path.extend(feature_name_top + [feature_name])
-                        selected_features.append(feature_path)
+                return path, None
+            chosen = (*path, keys[number - 1])
+            if isinstance(tree[keys[number - 1]], dict):
+                return chosen, None
+            return path, chosen
 
-                else:
-                    feature_path = current_path.copy()
-                    feature_path.extend(feature_name_top)
-                    selected_features.append(feature_path)
+        if not answer:
+            return path, self.pick(self.all_features(), core.localize("all_features"))
 
-        else:
-            feats = self.search_features(usr_input, [])
-            if not feats:
-                color.color_print_key("no_feature_with_name", name=usr_input)
-            kv_map = list(feats.items())
-            kv_map.sort(key=lambda v: v[1], reverse=True)
-            selected_features = [list(v[0]) for v in kv_map]
-
-        return selected_features
+        found = self.search_features(answer)
+        if not found:
+            color.color_print_key("no_feature_with_name", name=answer)
+            return path, None
+        exact = [p for p in found if self.is_exact(p, answer)]
+        if len(found) == 1 or len(exact) == 1:
+            return path, (exact or found)[0]
+        title = core.localize("feature_search_results", query=answer)
+        return path, self.pick(found, title)
 
     def select_features_run(self):
-        features_dict = self.get_features()
-        features: list[list[str]] = [[k] for k in features_dict.keys()]
-        self.save_file.to_file_thread(self.save_file.get_temp_path())
         edits.clear_tutorial.clear_tutorial(self.save_file, False)
         self.save_file.show_ban_message = False
+        self.write_temp(self.snapshot())
 
+        path: Path = ()
         while True:
-            features = self.select_features(features, [])
+            try:
+                path, feature = self.ask(path)
+            except KeyboardInterrupt:
+                main.Main.exit_editor(self.save_file)
+            if feature is not None:
+                self.run(feature)
 
-            new_features: list[list[str]] = []
-            found_strs: list[str] = []
-            for feature_ in features:
-                if feature_[-1] in found_strs:
-                    continue
-                found_strs.append(feature_[-1])
-                new_features.append(feature_)
+    def run(self, path: Path):
+        feature: Callable[[core.SaveFile], Any] = self.get_feature(path)
+        self.do_save_actions()
+        before = self.snapshot()
+        cc = self.save_file.cc
+        try:
+            feature(self.save_file)
+        except KeyboardInterrupt:
+            print()
+            self.restore(before, cc)
+            color.color_print_key("feature_cancelled")
+        except Exception as e:
+            self.restore(before, cc)
+            color.color_print_key(
+                "feature_failed",
+                error=e,
+                version=__version__,
+                traceback=traceback.format_exc(),
+            )
+        else:
+            after = self.snapshot()
+            if path[-1] != "undo_last_edit" and before is not None and after != before:
+                self.undo_stack.append((path[-1], before, cc))
+                del self.undo_stack[:-MAX_UNDO]
+            self.write_temp(after)
+        # Forget the game data so an updated version is downloaded next time.
+        core.core_data.game_data_getter = None
 
-            features = new_features
-            feature = None
-            if len(features) == 1:
-                feature = features[0]
-            if len(features) == 2 and features[0] == ["go_back"]:
-                feature = features[1]
-
-            if not feature:
-                continue
-
-            feature_name = feature[-1]
-            feature = self.get_feature(feature)
-
-            if isinstance(feature, Callable):
-                self.do_save_actions()
-
-                before = self.snapshot()
-                feature(self.save_file)
-                if feature != self.undo_last_edit:
-                    self.remember(feature_name, before)
-
-                self.save_file.to_file_thread(self.save_file.get_temp_path())
-
-                features_dict = self.get_features()
-                features = [[k] for k in features_dict.keys()]
-
-                core.core_data.game_data_getter = None  # reset game data getter so that if an old version is removed, it will download the new version
+    # --- snapshots, undo and the crash backup ------------------------------
 
     def snapshot(self) -> bytes | None:
         try:
@@ -306,24 +332,35 @@ class FeatureHandler:
         except Exception:
             return None
 
-    def remember(self, feature_name: str, before: bytes | None):
-        """Keep `before` for undo if the feature changed the save."""
-        if before is None or self.snapshot() == before:
+    def restore(self, data: bytes | None, cc: core.CountryCode):
+        if data is not None:
+            self.save_file.load_save_file(core.SaveFile(core.Data(data), cc))
+
+    @staticmethod
+    def write_temp(data: bytes | None):
+        """Keep a copy of the save for recovery if the editor crashes.
+
+        Written to a side file and then renamed, so the copy is never seen
+        half-written.
+        """
+        if data is None:
             return
-        self.undo_stack.append((feature_name, before))
-        del self.undo_stack[:-MAX_UNDO]
+        path = core.SaveFile.get_temp_path().path
+        try:
+            with open(path + ".part", "wb") as f:
+                f.write(data)
+            os.replace(path + ".part", path)
+        except OSError:
+            pass
 
     def undo_last_edit(self, save_file: core.SaveFile):
         if not self.undo_stack:
             color.color_print_key("undo_nothing")
             return
-        feature_name, before = self.undo_stack.pop()
-        restored = core.SaveFile(core.Data(before), save_file.cc)
-        save_file.load_save_file(restored)
+        key, before, cc = self.undo_stack.pop()
+        self.restore(before, cc)
         color.color_print_key(
-            "undo_success",
-            feature=core.localize_no_alias(feature_name),
-            remaining=len(self.undo_stack),
+            "undo_success", feature=self.aliases(key)[0], remaining=len(self.undo_stack)
         )
 
     def do_save_actions(self):

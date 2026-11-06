@@ -267,34 +267,22 @@ def multi_select_entries_raw(
         .add_new_key("all", lambda _: list(enumerate(options)))
     )
 
-    ids: list[tuple[int, str]] = []
-
     quit_key = core.localize("quit_key")
 
     while True:
         actions.display()
-        inp = color.color_input(dialog)
-        if inp == quit_key:
+        inp = color.color_input(dialog).strip()
+        if inp == quit_key or not inp:
             return None
 
-        inps = inp.split(" ")
-
-        for inp in inps:
-            if not inp.isdigit():
-                color.color_print_key("invalid_input_int", min=min, max=actions.max())
-                continue
-
-            inp_i = int(inp)
-            inp_i -= offset
-            if inp_i < 0:
-                color.color_print_key("invalid_input_int", min=min, max=actions.max())
+        ids: list[tuple[int, str]] = []
+        for part in inp.split():
+            action = actions.get_rebase(int(part) - offset) if part.isdigit() else None
+            if action is None or int(part) < offset:
+                color.color_print_key(
+                    "invalid_input_int", min=offset, max=actions.max()
+                )
                 break
-
-            action = actions.get_rebase(inp_i)
-            if action is None:
-                color.color_print_key("invalid_input_int", min=min, max=actions.max())
-                break
-
             ids.extend(action[0].run(action[1]))
         else:
             return ids
@@ -313,8 +301,8 @@ def single_select_raw[T](actions: Actions[T], dialog: str) -> T | None:
 
     while True:
         actions.display()
-        inp = color.color_input(dialog)
-        if inp == quit_key:
+        inp = color.color_input(dialog).strip()
+        if inp == quit_key or not inp:
             return None
         if not inp.isdigit():
             for act in actions.actions:
@@ -479,8 +467,11 @@ def edit_int_raw(item_name: str, current_value: int, max: MaxValue) -> int:
     )
 
     val = int_input_raw(dialog, max, auto_clamp=True)
-    if val is None:
-        val = current_value
+    if val is None or val == current_value:
+        color.color_print_key(
+            "value_unchanged", name=item_name, value=current_value, escape=False
+        )
+        return current_value
     color.color_print_key("value_changed", name=item_name, value=val, escape=False)
     return val
 
@@ -488,7 +479,10 @@ def edit_int_raw(item_name: str, current_value: int, max: MaxValue) -> int:
 def edit_str_raw(item_name: str, current_value: str) -> str:
     dialog = core.localize("input_no_max", name=item_name, value=current_value)
 
-    val = str_input_raw(dialog) or current_value
+    val = str_input_raw(dialog)
+    if not val or val == current_value:
+        color.color_print_key("value_unchanged", name=item_name, value=current_value)
+        return current_value
     color.color_print_key("value_changed", name=item_name, value=val)
     return val
 
@@ -520,8 +514,8 @@ def int_input_raw(
 ) -> int | None:
     quit_key = core.localize("quit_key")
     while True:
-        inp = color.color_input(dialog)
-        if not inp and default is not None:
+        inp = color.color_input(dialog).strip()
+        if not inp:
             return default
         if inp == quit_key:
             return None

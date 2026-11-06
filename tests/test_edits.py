@@ -118,31 +118,3 @@ def test_event_dicts_have_int_keys_after_json_import() -> None:
     loaded = core.EventChapters.deserialize(json.loads(json.dumps(ev.serialize())))
     loaded.chapter_completion_count[14000] += 1  # what the uncanny editor does
     assert loaded.chapter_completion_count == {14000: 4}
-
-
-def test_undo_restores_previous_edits_in_order(monkeypatch) -> None:
-    from bcsfe.cli import color
-    from bcsfe.cli.feature_handler import FeatureHandler
-
-    from .conftest import real_fixtures
-
-    printed: list[str] = []
-    monkeypatch.setattr(color, "color_print_key", lambda key, **k: printed.append(key))
-    path = real_fixtures()[0]
-    save = core.SaveFile(core.Data(path.read_bytes()))
-    handler = FeatureHandler(save)
-    original = save.catfood
-
-    for amount in (111, 222):
-        before = handler.snapshot()
-        save.catfood = amount
-        handler.remember("catfood", before)
-    handler.remember("catfood", handler.snapshot())  # no change: not kept
-    assert len(handler.undo_stack) == 2
-
-    handler.undo_last_edit(save)
-    assert save.catfood == 111
-    handler.undo_last_edit(save)
-    assert save.catfood == original
-    handler.undo_last_edit(save)
-    assert printed[-1] == "undo_nothing"

@@ -511,13 +511,24 @@ class SaveManagement:
         color.color_print_key("country_code_set", cc=cc)
 
     @staticmethod
+    def parse_game_version(text: str) -> core.GameVersion | None:
+        """A version like 12.2.1 or 12.2; None for anything else (e.g. "5")."""
+        parts = text.split(".")
+        if not 2 <= len(parts) <= 3 or not all(p.isdigit() for p in parts):
+            return None
+        numbers = [int(p) for p in parts]
+        if not 1 <= numbers[0] <= 99 or any(n > 99 for n in numbers):
+            return None
+        return core.GameVersion.from_string(text)
+
+    @staticmethod
     def convert_save_gv(save_file: core.SaveFile):
         color.color_print_key("gv_warning", current=save_file.game_version.to_string())
-        try:
-            gv = core.GameVersion.from_string(
-                color.color_input_key("game_version_dialog").strip()
-            )
-        except ValueError:
+        text = color.color_input_key("game_version_dialog").strip()
+        if not text:
+            return
+        gv = SaveManagement.parse_game_version(text)
+        if gv is None:
             color.color_print_key("invalid_game_version")
             return
         save_file.set_gv(gv)
