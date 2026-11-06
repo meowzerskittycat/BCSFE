@@ -1,7 +1,7 @@
 from bcsfe import core
 import bcsfe
 from bcsfe.core import io
-from bcsfe.cli import main, color, dialog_creator, server_cli, prompt
+from bcsfe.cli import color, dialog_creator, edits, main, prompt, server_cli
 from bcsfe.core.country_code import CountryCode
 
 
@@ -130,7 +130,7 @@ class SaveManagement:
         except core.AdbNotInstalled as e:
             core.AdbHandler.display_no_adb_error(e)
             return None
-        success = adb_handler.select_device()
+        success = select_adb_device(adb_handler)
         if not success:
             return adb_handler
         device_id = adb_handler.get_device()
@@ -291,7 +291,7 @@ class SaveManagement:
         except core.AdbNotInstalled as e:
             core.AdbHandler.display_no_adb_error(e)
             return None
-        if not handler.select_device():
+        if not select_adb_device(handler):
             return None
 
         device_id = handler.get_device()
@@ -403,12 +403,15 @@ class SaveManagement:
         if starting_options:
             actions = (
                 actions.add_new_key(
-                    "edit_config", lambda _: core.core_data.config.edit_config()
+                    "edit_config", lambda _: edits.settings.edit_config()
                 )
                 .add_new_key(
-                    "update_external", lambda _: core.update_external_content()
+                    "update_external",
+                    lambda _: edits.settings.update_external_content(),
                 )
-                .add_new_key("manage_game_data", lambda _: core.manage_game_data())
+                .add_new_key(
+                    "manage_game_data", lambda _: edits.settings.manage_game_data()
+                )
                 .add_new_key("exit", lambda _: main.Main.exit_editor(check_temp=False))
             )
 
@@ -439,7 +442,7 @@ class SaveManagement:
             save_file = core.SaveFile(data, cc, package_name=package_name)
         except core.CantDetectSaveCCError:
             color.color_print_key("cant_detect_cc")
-            cc = core.CountryCode.select()
+            cc = edits.settings.select_country()
             if cc is None:
                 return None
             try:
@@ -503,7 +506,7 @@ class SaveManagement:
     def convert_save_cc(save_file: core.SaveFile):
         color.color_print_key("cc_warning", current=save_file.cc)
         ccs_to_select = core.CountryCode.get_all()
-        cc = core.CountryCode.select_from_ccs(ccs_to_select)
+        cc = edits.settings.select_country_from(ccs_to_select)
         if cc is None:
             return
         save_file.set_cc(cc)
@@ -535,3 +538,14 @@ class SaveManagement:
         save_file.set_gv(gv)
         core.core_data.init_data()
         color.color_print_key("game_version_set", version=gv.to_string())
+
+
+def select_adb_device(handler: core.AdbHandler) -> bool:
+    """Ask which connected device to use; False if none was picked."""
+    devices = handler.get_connected_devices()
+    picked = prompt.choose(devices, "select_device")
+    if picked is None:
+        color.color_print_key("no_device_error")
+        return False
+    handler.set_device(devices[picked])
+    return True

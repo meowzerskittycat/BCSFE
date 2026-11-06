@@ -1,4 +1,4 @@
-from bcsfe.cli import main, color, file_dialog, prompt
+from bcsfe.cli import color, edits, file_dialog, main, prompt
 from bcsfe import core
 
 
@@ -15,7 +15,7 @@ class ServerCLI:
         confirmation_code = prompt.text("enter_confirmation_code")
         if confirmation_code is None:
             return None
-        cc = core.CountryCode.select()
+        cc = edits.settings.select_country()
         if cc is None:
             return None
         gv = core.GameVersion(120200)  # not important

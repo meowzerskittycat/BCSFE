@@ -1,5 +1,4 @@
 import enum
-from bcsfe.cli import prompt
 from bcsfe import core
 
 
@@ -57,26 +56,6 @@ class CountryCode:
 
     def copy(self) -> CountryCode:
         return self
-
-    @staticmethod
-    def select() -> CountryCode | None:
-        index = prompt.choose(
-            CountryCode.get_all_str(),
-            dialog="country_code_select",
-        )
-        if index is None:
-            return None
-        return CountryCode.get_all()[index]
-
-    @staticmethod
-    def select_from_ccs(ccs: list[CountryCode]) -> CountryCode | None:
-        index = prompt.choose(
-            [cc.get_code() for cc in ccs],
-            dialog="country_code_select",
-        )
-        if index is None:
-            return None
-        return ccs[index]
 
     def __eq__(self, o: object) -> bool:
         if isinstance(o, CountryCode):

@@ -155,9 +155,9 @@ class FeatureHandler:
                 "missions": edits.other.edit_missions,
             },
             "editor": {
-                "config": core.core_data.config.edit_config,
-                "update_external": core.update_external_content,
-                "manage_game_data": core.manage_game_data,
+                "config": edits.settings.edit_config,
+                "update_external": edits.settings.update_external_content,
+                "manage_game_data": edits.settings.manage_game_data,
             },
             "undo_last_edit": self.undo_last_edit,
             "exit": main.Main.exit_editor,

@@ -5,7 +5,7 @@ from collections.abc import Iterator
 import pytest
 
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator, prompt
+from bcsfe.cli import color, dialog_creator, edits, prompt
 from bcsfe.cli.feature_handler import FeatureHandler
 from bcsfe.cli.save_management import SaveManagement
 
@@ -216,7 +216,7 @@ def test_new_locale_rejects_bad_codes_without_creating_anything(monkeypatch) -> 
     before = core.LocalManager.get_all_locales()
     answers = iter(["1 2"])
     monkeypatch.setattr(color, "color_input", lambda *_a, **_k: next(answers))
-    assert core.core_data.config.new_locale() is None
+    assert edits.settings.new_locale(core.core_data.config) is None
     assert core.LocalManager.get_all_locales() == before
 
 

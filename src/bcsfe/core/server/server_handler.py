@@ -284,7 +284,7 @@ class ServerHandler:
     def log_no_internet(self, result: RequestResult):
         ServerHandler.log_error("no_internet", result)
         if self.print:
-            core.print_no_internet()
+            messages.show("no_internet")
 
     def get_save_key_new(self, auth_token: str) -> dict[str, Any] | None:
         self.print_key("getting_save_key")
@@ -543,7 +543,7 @@ class ServerHandler:
         response = core.RequestHandler(url, headers, core.Data(data_str)).post()
         if response is None:
             if print:
-                core.print_no_internet()
+                messages.show("no_internet")
             return None, None
         resp_headers = response.headers
         content_type = resp_headers.get("content-type", "")
