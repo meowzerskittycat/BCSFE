@@ -10,6 +10,7 @@ from bcsfe.cli.edits import (
     event_tickets,
     max_all,
     storage,
+    talent_orbs,
 )
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     "event_tickets",
     "max_all",
     "storage",
+    "talent_orbs",
 ]

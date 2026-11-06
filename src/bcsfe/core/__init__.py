@@ -87,7 +87,6 @@ from bcsfe.core.game.catbase.talent_orbs import (
     OrbInfoList,
     RawOrbInfo,
     SaveOrb,
-    SaveOrbs,
 )
 from bcsfe.core.game.catbase.unlock_popups import (
     UnlockPopups,
@@ -518,7 +517,6 @@ __all__ = [
     "OrbInfoList",
     "RawOrbInfo",
     "SaveOrb",
-    "SaveOrbs",
     "ConfigKey",
     "SpecialSkill",
     "WayDroidHandler",
