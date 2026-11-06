@@ -517,12 +517,12 @@ class LocalManager:
         Returns:
             list[str]: List of locales.
         """
-        locales: list[str] = []
-        for folder in LocalManager.get_locales_folder().get_dirs():
-            locales.append(folder.basename())
-        for folder in LocalManager.get_external_locales_folder().get_dirs():
-            locales.append(folder.basename())
-        return locales
+        # Sorted, so the menu lists them in the same order on every system.
+        bundled = LocalManager.get_locales_folder().get_dirs()
+        external = LocalManager.get_external_locales_folder().get_dirs()
+        return sorted(f.basename() for f in bundled) + sorted(
+            f.basename() for f in external
+        )
 
     @staticmethod
     def get_locales_folder() -> core.Path:
