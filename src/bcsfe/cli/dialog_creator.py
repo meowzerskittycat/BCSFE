@@ -2,7 +2,7 @@ from collections.abc import Callable
 from typing import Any
 
 from bcsfe import core
-from bcsfe.cli import color
+from bcsfe.cli import color, prompt
 
 
 type ActionFunc[T] = Callable[[int], T]
@@ -127,20 +127,12 @@ def display_options_key(
 
 
 def display_options_raw(options: list[str], dialog: str):
-    lines: list[str] = []
-
     color.color_print(dialog)
-    for i, opt in enumerate(options):
-        lines.append(f" {i + 1}. <@t>{opt}</>")
-
-    color.color_print("\n".join(lines))
+    prompt.show_options(options)
 
 
 def yes_no_raw(dialog: str) -> bool | None:
-    inp = str_input_raw(dialog)
-    if inp is None:
-        return None
-    return inp.lower().strip() == core.localize("yes_key").strip().lower()
+    return prompt.confirm(prompt.Raw(dialog))
 
 
 def range_multi_input_key(
@@ -150,69 +142,11 @@ def range_multi_input_key(
 
 
 def range_basic_parse(usr_input: str, max: MaxValue, min: int = 0) -> list[int] | None:
-    nums: list[int] = []
-    for part in usr_input.split(" "):
-        if part.isdigit():
-            int_i = int(part)
-            if int_i > max.max or int_i < min:
-                color.color_print_key("invalid_input_int", min=min, max=max.max)
-                return None
-            nums.append(int(part))
-        elif "-" in part:
-            min_v, max_v = part.split("-", 1)
-            if not min_v.isdigit() or not max_v.isdigit():
-                return None
-            min_i = int(min_v)
-            max_i = int(max_v)
-            if max_i < min_i:
-                return None
-            if max_i > max.max or min_i < min:
-                return None
-
-            nums.extend(list(range(min_i, max_i + 1)))
-        else:
-            return None
-
-    return nums
+    return prompt.parse_numbers(usr_input, min=min, max=max.max)
 
 
 def range_multi_input_raw(dialog: str, max: MaxValue, min: int = 0) -> list[int] | None:
-    usr_input = color.color_input(dialog)
-    if usr_input == core.localize("quit_key"):
-        return None
-
-    usr_input = usr_input.strip()
-
-    if usr_input.lower() == core.localize("all").lower():
-        return list(range(min, max.max))
-
-    nums: list[int] = []
-    for part in usr_input.split(" "):
-        if part.isdigit():
-            int_i = int(part)
-            if int_i > max.max or int_i < min:
-                color.color_print_key("invalid_input_int", min=min, max=max.max)
-                continue
-            nums.append(int(part))
-        elif "-" in part:
-            min_v, max_v = part.split("-", 1)
-            if not min_v.isdigit() or not max_v.isdigit():
-                color.color_print_key("invalid_range", val=part)
-                continue
-            min_i = int(min_v)
-            max_i = int(max_v)
-            if max_i < min_i:
-                color.color_print_key("invalid_range", val=part)
-                continue
-            if max_i > max.max or min_i < min:
-                color.color_print_key("invalid_input_int", min=min, max=max.max)
-                continue
-
-            nums.extend(list(range(min_i, max_i + 1)))
-        else:
-            color.color_print_key("invalid_range", val=part)
-
-    return nums
+    return prompt.numbers(prompt.Raw(dialog), min=min, max=max.max)
 
 
 def yes_no_key(dialog: str, escape: bool = False, **kwargs: Any) -> bool | None:
@@ -254,76 +188,21 @@ def multi_select_entries_key(
 def multi_select_entries_raw(
     options: list[str], dialog: str
 ) -> list[tuple[int, str]] | None:
-    if not options:
+    picked = prompt.choose_many(options, prompt.Raw(dialog))
+    if picked is None:
         return None
-    if len(options) == 1:
-        return [(0, options[0])]
-
-    offset = 1
-    actions = (
-        Actions[list[tuple[int, str]]]
-        .new()
-        .add_new_raw(options, lambda v: [(v, options[v])])
-        .add_new_key("all", lambda _: list(enumerate(options)))
-    )
-
-    quit_key = core.localize("quit_key")
-
-    while True:
-        actions.display()
-        inp = color.color_input(dialog).strip()
-        if inp == quit_key or not inp:
-            return None
-
-        ids: list[tuple[int, str]] = []
-        for part in inp.split():
-            action = actions.get_rebase(int(part) - offset) if part.isdigit() else None
-            if action is None or int(part) < offset:
-                color.color_print_key(
-                    "invalid_input_int", min=offset, max=actions.max()
-                )
-                break
-            ids.extend(action[0].run(action[1]))
-        else:
-            return ids
+    return [(i, options[i]) for i in picked]
 
 
 def single_select_raw[T](actions: Actions[T], dialog: str) -> T | None:
-    if actions.max() == 0:
+    options = [opt for action in actions.actions for opt in action.options]
+    picked = prompt.choose(options, prompt.Raw(dialog))
+    if picked is None:
         return None
-    if actions.len() == 1 and actions.actions[0].len() == 1:
-        return actions.actions[0].run(0)
-    offset = 1
-
-    min = offset
-
-    quit_key = core.localize("quit_key")
-
-    while True:
-        actions.display()
-        inp = color.color_input(dialog).strip()
-        if inp == quit_key or not inp:
-            return None
-        if not inp.isdigit():
-            for act in actions.actions:
-                for i, o in enumerate(act.options):
-                    if o.lower().strip() == inp.lower().strip():
-                        return act.run(i)
-            color.color_print_key("invalid_input_int", min=min, max=actions.max())
-            continue
-
-        inp_i = int(inp)
-        inp_i -= offset
-        if inp_i < 0:
-            color.color_print_key("invalid_input_int", min=min, max=actions.max())
-            continue
-
-        action = actions.get_rebase(inp_i)
-        if action is None:
-            color.color_print_key("invalid_input_int", min=min, max=actions.max())
-            continue
-
-        return action[0].run(action[1])
+    action = actions.get_rebase(picked)
+    if action is None:
+        return None
+    return action[0].run(action[1])
 
 
 def single_select_key[T](
@@ -512,37 +391,13 @@ def int_input_raw(
     default: int | None = None,
     auto_clamp: bool = False,
 ) -> int | None:
-    quit_key = core.localize("quit_key")
-    while True:
-        inp = color.color_input(dialog).strip()
-        if not inp:
-            return default
-        if inp == quit_key:
-            return None
-        try:
-            inp_i = int(inp)
-        except ValueError:
-            color.color_print_key("invalid_input_int", max=_max.max, min=_min)
-            continue
-
-        if inp_i < _min or inp_i > _max.max:
-            if auto_clamp:
-                inp_i = min(max(_min, inp_i), _max.max)
-            else:
-                color.color_print_key("invalid_input_int", max=_max.max, min=_min)
-                continue
-
-        return inp_i
+    return prompt.number(
+        prompt.Raw(dialog), min=_min, max=_max.max, default=default, clamp=auto_clamp
+    )
 
 
 def str_input_raw(dialog: str) -> str | None:
-    quit_key = core.localize("quit_key")
-    inp = color.color_input(dialog)
-    if inp == quit_key:
-        return None
-    if inp == f"\\{quit_key}":
-        inp = quit_key
-    return inp
+    return prompt.text(prompt.Raw(dialog))
 
 
 def edit_int_key(

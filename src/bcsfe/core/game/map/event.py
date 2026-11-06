@@ -413,6 +413,8 @@ class EventChapters:
                 return None
             if usr_input.lower() == core.localize("all").lower():
                 usr_ids = list(range(1, len(names_list) + 1))
+            elif usr_input.strip(" -0123456789"):
+                usr_ids = None  # a name to search for
             else:
                 usr_ids = dialog_creator.range_basic_parse(
                     usr_input,

@@ -32,6 +32,10 @@ directly, and results show their category
 - If a feature fails or is cancelled with Ctrl+C, the save is left as it was and the menu carries on;
 Ctrl+C or Ctrl+D at the main menu asks whether to save before exiting
 
+- Every question follows the same rules: nothing or `q` cancels, an answer that can't be used is
+explained and asked again (instead of quietly dropping the bad parts), lists take numbers, ranges
+and `all`, options can be picked by name, and yes/no questions only accept yes or no
+
 - A blank answer now cancels a prompt or keeps the current value, instead of repeating "Invalid
 input" forever
 
@@ -53,6 +57,8 @@ game data, and checks none crash or leave a save that doesn't read back
 macOS and Linux
 
 ### Fixed
+
+- `all` when entering ids (cats, enemies, stages, banners) left out the last one
 
 - Creating a locale accepted any text as its code (e.g. `1 2`), made a folder with that name and
 switched to it; codes must now be one word. A configured locale that no longer exists falls back
