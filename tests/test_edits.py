@@ -41,3 +41,39 @@ def test_zero_legends_clearing_unlocks() -> None:
     zl.write(data)
     data.reset_pos()
     assert core.ZeroLegendsChapters.read(data) == zl
+
+
+def run_chapter_menu(monkeypatch, answers: list[str]) -> tuple[list[str], list[str]]:
+    """Drive the gauntlet/event/legend chapter menu with typed answers.
+
+    Returns the edits that ran and the answers left unread."""
+    from bcsfe.cli import color, edits
+
+    left = list(answers)
+    monkeypatch.setattr(color, "color_input", lambda *a, **k: left.pop(0))
+    monkeypatch.setattr(color, "color_print_key", lambda *a, **k: None)
+    calls: list[str] = []
+    monkeypatch.setattr(
+        edits.map, "edit_chapters2_clear_count", lambda *a, **k: calls.append("counts")
+    )
+    monkeypatch.setattr(
+        edits.map,
+        "edit_chapters2_progress",
+        lambda *a, allow_unclear=False, **k: calls.append(
+            "unclear" if allow_unclear else "clear"
+        ),
+    )
+    edits.map.edit_chapters(None, core.Chapters([]), "A", 0)  # type: ignore[arg-type]
+    return calls, left
+
+
+def test_chapter_menu_finish_does_not_start_an_edit(monkeypatch) -> None:
+    # "Finish" used to fall through to the first entry and start an edit.
+    assert run_chapter_menu(monkeypatch, ["4"]) == ([], [])
+
+
+def test_chapter_menu_returns_after_each_edit(monkeypatch) -> None:
+    # Picking an edit used to run it and then leave the menu.
+    calls, left = run_chapter_menu(monkeypatch, ["3", "2", "1", "4"])
+    assert calls == ["counts", "unclear", "clear"]
+    assert left == []

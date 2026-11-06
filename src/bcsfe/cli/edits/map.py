@@ -557,45 +557,25 @@ def edit_chapters(
     no_r_prefix: bool = False,
 ) -> dict[int, bool] | None:
     while True:
+        # The actions only say which edit was picked; running the edit inside
+        # them as well would run it twice (and made "finish" start an edit).
         choice = dialog_creator.single_select_key(
-            dialog_creator.Actions[bool | None]
+            dialog_creator.Actions[str]
             .new()
-            .add_new_key(
-                "edit_progress_clear",
-                lambda _: edit_chapters2_progress(
-                    save_file, chapters, letter_code, base_index, type, no_r_prefix
-                ),
-            )
-            .add_new_key(
-                "edit_progress_unclear",
-                lambda _: edit_chapters2_progress(
-                    save_file,
-                    chapters,
-                    letter_code,
-                    base_index,
-                    type,
-                    no_r_prefix,
-                    allow_unclear=True,
-                ),
-            )
-            .add_new_key(
-                "edit_clear_counts",
-                lambda _: edit_chapters2_clear_count(
-                    save_file, chapters, letter_code, base_index, type, no_r_prefix
-                ),
-            )
-            .add_new_key("finish", lambda _: True),
+            .add_new_key("edit_progress_clear", lambda _: "clear")
+            .add_new_key("edit_progress_unclear", lambda _: "unclear")
+            .add_new_key("edit_clear_counts", lambda _: "counts")
+            .add_new_key("finish", lambda _: "finish"),
             "edit_chapters_q",
         )
-        if choice is None:
-            return None
-        choice -= 1
+        if choice is None or choice == "finish":
+            break
 
-        if choice == 0:
-            edit_chapters2_progress(
+        if choice == "counts":
+            edit_chapters2_clear_count(
                 save_file, chapters, letter_code, base_index, type, no_r_prefix
             )
-        elif choice == 1:
+        else:
             edit_chapters2_progress(
                 save_file,
                 chapters,
@@ -603,15 +583,8 @@ def edit_chapters(
                 base_index,
                 type,
                 no_r_prefix,
-                allow_unclear=True,
+                allow_unclear=choice == "unclear",
             )
-        elif choice == 2:
-            edit_chapters2_clear_count(
-                save_file, chapters, letter_code, base_index, type, no_r_prefix
-            )
-        else:
-            break
         color.color_print_key("map_chapters_edited")
-    color.color_print_key("map_chapters_edited")
 
     return None
