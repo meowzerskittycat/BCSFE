@@ -4,6 +4,8 @@
 
 ### Links and updates
 
+- The fork is now version 4.0.0, so it no longer shares a version number with upstream's
+  3.6.0. JSON exported by 3.6.0 still imports.
 - The welcome banner and bug-report messages now point to this fork's GitHub repository and
   issues instead of upstream's Discord and donation links (English, Vietnamese and Traditional
   Chinese).
