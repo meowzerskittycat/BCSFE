@@ -4,7 +4,6 @@ import time
 from dataclasses import dataclass
 
 from bcsfe import core
-from bcsfe.cli import color, prompt
 from bcsfe.core.io.schema import F64, I32, Bool, Map, Struct, field
 
 
@@ -89,27 +88,3 @@ class NyankoClub(Struct):
     @staticmethod
     def get_random_officer_id() -> int:
         return random.randint(1, 2**16 - 1)
-
-    @staticmethod
-    def edit_gold_pass(save_file: core.SaveFile):
-        club = save_file.officer_pass.gold_pass
-
-        officer_id = color.color_input_key("gold_pass_dialog").strip()
-        if not officer_id:
-            officer_id = NyankoClub.get_random_officer_id()
-
-        if officer_id == "-1":
-            officer_id = -1
-        else:
-            try:
-                officer_id = int(officer_id)
-            except ValueError:
-                officer_id = NyankoClub.get_random_officer_id()
-            officer_id = prompt.MaxValue.i32().clamp(officer_id)
-
-        if officer_id == -1:
-            club.remove_gold_pass(save_file)
-            color.color_print_key("gold_pass_remove_success")
-        else:
-            club.get_gold_pass(officer_id, 30, save_file)
-            color.color_print_key("gold_pass_get_success", id=officer_id)

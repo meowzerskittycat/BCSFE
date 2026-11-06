@@ -4,7 +4,6 @@ from math import inf
 import math
 from typing import Any
 from bcsfe import core
-from bcsfe.cli import dialog_creator, color, prompt
 from bcsfe.core.io.schema import F64, I8, Bool, Struct, field
 
 
@@ -184,84 +183,3 @@ class BattleItems:
 
         names = [names[item.id] for item in items]
         return names
-
-    def edit(self, save_file: core.SaveFile):
-        group_name = save_file.get_localizable().get("shop_category1")
-        if group_name is None:
-            group_name = core.core_data.local_manager.get_key("battle_items")
-        item_names = self.get_names(save_file)
-        if item_names is None:
-            return
-        current_values = [item.amount for item in self.items]
-        values = dialog_creator.edit_ints_raw(
-            group_name,
-            item_names,
-            current_values,
-            prompt.MaxValue.i32(core.core_data.max_value_manager.battle_items),
-        )
-        for i, value in enumerate(values):
-            self.items[i].amount = value
-
-    def edit_endless_items(self, save_file: core.SaveFile):
-        item_names = self.get_names(save_file)
-        if item_names is None:
-            return
-
-        current_values = [
-            item.endless_item.get_endless_duration_formatted() for item in self.items
-        ]
-
-        options = prompt.choose_many(
-            [
-                core.localize("endless_item_item", item=item, int=val, escape=False)
-                for item, val in zip(item_names, current_values, strict=False)
-            ],
-            "select_option",
-        )
-
-        if options is None:
-            return
-
-        individual = prompt.choose(
-            prompt.keys(["individual", "all_at_once"]), "edit_endless_q"
-        )
-        if individual is None:
-            return
-
-        all_at_once = individual == 1
-
-        infinity_str = core.localize("infinity")
-
-        if all_at_once:
-            val = prompt.text("enter_duration_minutes")
-            if val is None:
-                return
-
-            if val.lower() == infinity_str.lower():
-                val = inf
-            else:
-                try:
-                    val = float(val)
-                except ValueError:
-                    return
-
-            for item in self.items:
-                item.endless_item.set_duration_mins(val, 0)
-        else:
-            for opt in options:
-                val = prompt.text("enter_duration_minutes_item", item=item_names[opt])
-                if val is None:
-                    return
-
-                if val.lower() == infinity_str.lower():
-                    val = inf
-                else:
-                    try:
-                        val = float(val)
-                    except ValueError:
-                        color.color_print_key("invalid_minute_count")
-                        continue
-
-                self.items[opt].endless_item.set_duration_mins(val, 0)
-
-        color.color_print_key("endless_items_success")

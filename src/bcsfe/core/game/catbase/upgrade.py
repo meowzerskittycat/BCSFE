@@ -1,7 +1,6 @@
 import random
 from typing import Any
 from bcsfe import core
-from bcsfe.cli import color
 
 
 class Upgrade:
@@ -84,113 +83,6 @@ class Upgrade:
 
     def __str__(self) -> str:
         return f"Upgrade(plus={self.plus}, base={self.base})"
-
-    @staticmethod
-    def get_user_upgrade(
-        max_pos_base: int,
-        max_pos_plus: int,
-    ) -> tuple[Upgrade | None, bool]:
-        disable_maxes = core.core_data.config.get_bool(core.ConfigKey.DISABLE_MAXES)
-        if disable_maxes:
-            max_pos_base = 50_000
-            max_pos_plus = 50_000
-        color.color_print_key(
-            "max_upgrade", max_base=max_pos_base + 1, max_plus=max_pos_plus
-        )
-        usr_input = color.color_input_key("upgrade_input")
-        if usr_input == core.core_data.local_manager.get_key("quit_key"):
-            return None, True
-        # example:
-        # 10+20 = Upgrade(base=9, plus=20)
-        # 10+ = Upgrade(base=9, plus=-1) # -1 means no change
-        # +20 = Upgrade(base=-1, plus=20) # -1 means no change
-        # 10 = Upgrade(base=9, plus=0)
-        # 5-10+20-30 = Upgrade(base=random.randint(4, 9), plus=random.randint(20, 30))
-        # 5-10+ = Upgrade(base=random.randint(4, 9), plus=-1)
-        # +20-30 = Upgrade(base=-1, plus=random.randint(20, 30))
-        # max+max = Upgrade(base=50000, plus=50000)
-
-        parts = usr_input.split("+")
-        if len(parts) == 1:
-            base = parts[0]
-            plus = "0"
-        else:
-            base = parts[0]
-            plus = parts[1]
-
-        min_base, max_base = None, None
-        min_plus, max_plus = None, None
-
-        max_text = core.core_data.local_manager.get_key("max")
-
-        if not base:
-            base_int = -1
-        else:
-            range_parts = base.split("-")
-            if len(range_parts) == 1:
-                if range_parts[0].strip() == max_text:
-                    min_base = max_pos_base
-                    max_base = max_pos_base
-                else:
-                    try:
-                        min_base = int(range_parts[0]) - 1
-                        max_base = min_base
-                    except ValueError:
-                        color.color_print_key("invalid_upgrade_base", base=base)
-                        return None, False
-            else:
-                try:
-                    min_base = int(range_parts[0]) - 1
-                    max_base = int(range_parts[1]) - 1
-                except ValueError:
-                    color.color_print_key(
-                        "invalid_upgrade_base_random",
-                        min=range_parts[0],
-                        max=range_parts[1],
-                    )
-                    return None, False
-
-            base_int = (min_base + max_base) // 2
-
-        if not plus:
-            plus_int = -1
-        else:
-            range_parts = plus.split("-")
-            if len(range_parts) == 1:
-                if range_parts[0].strip() == max_text:
-                    min_plus = max_pos_plus
-                    max_plus = max_pos_plus
-                else:
-                    try:
-                        min_plus = int(range_parts[0])
-                        max_plus = min_plus
-                    except ValueError:
-                        color.color_print_key("invalid_upgrade_plus", plus=plus)
-                        return None, False
-            else:
-                try:
-                    min_plus = int(range_parts[0])
-                    max_plus = int(range_parts[1])
-                except ValueError:
-                    color.color_print_key(
-                        "invalid_upgrade_plus_random",
-                        min=range_parts[0],
-                        max=range_parts[1],
-                    )
-                    return None, False
-
-            plus_int = (min_plus + max_plus) // 2
-
-        upgrade = Upgrade(plus_int, base_int)
-        upgrade.base_range = (
-            max(0, min(min_base or base_int, max_pos_base)),
-            max(0, min(max_base or base_int, max_pos_base)),
-        )
-        upgrade.plus_range = (
-            max(0, min(min_plus or plus_int, max_pos_plus)),
-            max(0, min(max_plus or plus_int, max_pos_plus)),
-        )
-        return upgrade, False
 
     def copy(self) -> Upgrade:
         upgrade = Upgrade(self.plus, self.base)

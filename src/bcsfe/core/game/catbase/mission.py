@@ -1,7 +1,6 @@
 from typing import Any
 
 from bcsfe import core
-from bcsfe.cli import color, prompt
 
 
 class Mission:
@@ -196,57 +195,6 @@ class Missions:
 
     def __str__(self):
         return self.__repr__()
-
-    @staticmethod
-    def edit_missions(save_file: core.SaveFile):
-        missions = save_file.missions
-
-        names = core.core_data.get_mission_names(save_file)
-        conditions = core.core_data.get_mission_conditions(save_file)
-        if names.names is None or conditions.conditions is None:
-            return
-        options: list[str] = []
-        mssion_ids: list[int] = []
-        for mission_id, name in names.names.items():
-            if mission_id in missions.clear_states:
-                name = name.split("<br>")[0]
-                condition = conditions.conditions.get(mission_id)
-                if not condition:
-                    continue
-                name = name.replace("%d", str(condition.progress_count))
-                if "%@" in name and len(condition.conditions_value) > 2:
-                    name = name.replace("%@", str(condition.conditions_value[2]))
-                options.append(name)
-                mssion_ids.append(mission_id)
-
-        re_claim = prompt.choose(
-            prompt.keys(["complete_reward", "complete_claim", "uncomplete"]),
-            dialog="select_mission_claim",
-        )
-        if re_claim is None:
-            return
-
-        choices = prompt.choose_many(options, dialog="select_missions")
-        if choices is None:
-            return
-        for choice in choices:
-            mission_id = mssion_ids[choice]
-            if re_claim == 0:
-                missions.clear_states[mission_id] = 2
-                condition = conditions.get_condition(mission_id)
-                if condition is not None:
-                    missions.requirements[mission_id] = condition.progress_count
-            elif re_claim == 1:
-                missions.clear_states[mission_id] = 4
-                condition = conditions.get_condition(mission_id)
-                if condition is not None:
-                    missions.requirements[mission_id] = condition.progress_count
-            elif re_claim == 2:
-                missions.clear_states[mission_id] = 0
-                if mission_id in missions.requirements:
-                    missions.requirements[mission_id] = 0
-
-        color.color_print_key("missions_edited")
 
 
 class MissionCondition:

@@ -1,6 +1,5 @@
 from typing import Any
 from bcsfe import core
-from bcsfe.cli import dialog_creator, prompt
 
 
 class EquipSlot:
@@ -188,10 +187,3 @@ class LineUps:
 
     def __str__(self):
         return self.__repr__()
-
-    def edit_unlocked_slots(self):
-        self.unlocked_slots = dialog_creator.edit_int_key(
-            "unlocked_slots",
-            self.unlocked_slots,
-            prompt.MaxValue.i8(self.slot_names_length),
-        )

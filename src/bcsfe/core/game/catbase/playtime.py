@@ -1,8 +1,5 @@
 from dataclasses import dataclass
 
-from bcsfe import core
-from bcsfe.cli import color, prompt
-
 
 @dataclass
 class PlayTime:
@@ -58,37 +55,3 @@ class PlayTime:
 
     def __add__(self, other: PlayTime) -> PlayTime:
         return PlayTime(self.frames + other.frames)
-
-
-def edit(save_file: core.SaveFile):
-    play_time = PlayTime(save_file.officer_pass.play_time)
-    color.color_print_key(
-        "playtime_current",
-        hours=play_time.hours,
-        minutes=play_time.just_minutes,
-        seconds=play_time.just_seconds,
-        frames=play_time.frames,
-    )
-    hours = prompt.number("playtime_hours_prompt", max=prompt.MaxValue.i32().hide_max())
-    if hours is None:
-        return
-    minutes = prompt.number(
-        "playtime_minutes_prompt", max=prompt.MaxValue.i32().hide_max()
-    )
-    if minutes is None:
-        return
-    seconds = prompt.number(
-        "playtime_seconds_prompt", max=prompt.MaxValue.i32().hide_max()
-    )
-    if seconds is None:
-        return
-
-    play_time = PlayTime.from_hours_mins_secs(hours, minutes, seconds)
-    save_file.officer_pass.play_time = play_time.frames
-    color.color_print_key(
-        "playtime_edited",
-        hours=play_time.hours,
-        minutes=play_time.just_minutes,
-        seconds=play_time.just_seconds,
-        frames=play_time.frames,
-    )

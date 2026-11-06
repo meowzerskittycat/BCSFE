@@ -2,7 +2,7 @@ import enum
 from typing import Any
 from collections.abc import Callable
 from bcsfe import core
-from bcsfe.cli import dialog_creator, color, prompt
+from bcsfe.cli import color
 
 
 class Gatya:
@@ -137,25 +137,6 @@ class Gatya:
 
     def __str__(self) -> str:
         return f"Gatya({self.serialize()})"
-
-    def edit_rare_gatya_seed(self):
-        self.rare_seed = dialog_creator.edit_int_key(
-            "rare_gatya_seed", self.rare_seed, prompt.MaxValue.u32().hide_max()
-        )
-
-    def edit_normal_gatya_seed(self):
-        self.normal_seed = dialog_creator.edit_int_key(
-            "normal_gatya_seed",
-            self.normal_seed,
-            prompt.MaxValue.u32().hide_max(),
-        )
-
-    def edit_event_gatya_seed(self):
-        self.event_seed = dialog_creator.edit_int_key(
-            "event_gatya_seed",
-            self.event_seed,
-            prompt.MaxValue.u32().hide_max(),
-        )
 
     def read_gatya_data_set(self, save_file: core.SaveFile) -> GatyaDataSet:
         if self.gatya_data_set is not None:

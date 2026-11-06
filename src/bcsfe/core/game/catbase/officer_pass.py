@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from bcsfe import core
-from bcsfe.cli import color
 from bcsfe.core.game.catbase.nyanko_club import NyankoClub
 from bcsfe.core.io.schema import I16, I32, Nested, Struct, field
 
@@ -24,10 +23,3 @@ class OfficerPass(Struct):
         self.cat_form = 0
         self.play_time = 0
         self.gold_pass.remove_gold_pass(save_file)
-
-    @staticmethod
-    def fix_crash(save_file: core.SaveFile):
-        officer_pass = save_file.officer_pass
-        officer_pass.reset(save_file)
-
-        color.color_print_key("officer_pass_fixed")

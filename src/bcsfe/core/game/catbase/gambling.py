@@ -1,8 +1,6 @@
 from bcsfe import core
 from typing import Any
 
-from bcsfe.cli import color
-
 
 class GamblingEvent:
     def __init__(
@@ -101,10 +99,3 @@ class GamblingEvent:
         self.values = {}
         # TODO: check start times
         self.start_times = {}
-
-    @staticmethod
-    def reset_events(save_file: core.SaveFile):
-        save_file.wildcat_slots.reset()
-        color.color_print_key("reset_wildcat_slots")
-        save_file.cat_scratcher.reset()
-        color.color_print_key("reset_cat_scratcher")
