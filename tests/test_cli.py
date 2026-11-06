@@ -201,7 +201,12 @@ def test_updater_installs_from_github(monkeypatch) -> None:
     up = updater.Updater()
     monkeypatch.setattr(up, "get_latest", lambda: ("3.6.0", "c" * 40))
     assert up.update()
-    assert ran[0][-1] == "git+https://github.com/meowzerskittycat/BCSFE@" + "c" * 40
+    package = "git+https://github.com/meowzerskittycat/BCSFE@" + "c" * 40
+    # pip won't replace an installed copy with the same version number unless
+    # forced, and fork commits often share one.
+    assert ran[0][-4:] == ["install", "--force-reinstall", "--no-deps", package]
+    assert ran[1][-2:] == ["install", package]
+    assert len(ran) == 2
 
 
 @pytest.mark.parametrize(

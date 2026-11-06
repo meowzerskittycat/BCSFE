@@ -10,6 +10,7 @@ Output is plain English text, so it's easy to paste into bug reports.
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -48,6 +49,11 @@ def run(args: argparse.Namespace) -> int:
             return export(args.save, args.out)
         if args.command == "import":
             return import_json(args.json, args.out)
+    except BrokenPipeError:
+        # The reader stopped early (e.g. `bcsfe export SAVE - | head`). Point
+        # stdout at devnull so Python's exit flush doesn't fail again.
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        return 1
     except OSError as e:
         print(f"error: {e}", file=sys.stderr)
         return 2

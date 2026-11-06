@@ -109,17 +109,20 @@ class Updater:
         if latest is None:
             return False
         package = f"git+{REPO_URL}@{latest[1]}"
-        candidates = [
-            [python, "-m", "pip", "install", "--upgrade", package]
+        pips = [
+            [python, "-m", "pip"]
             for python in [sys.executable, "py", "python", "python3"]
             if python
         ]
-        candidates += [
-            [pip, "install", "--upgrade", package] for pip in ["pip", "pip3"]
-        ]
-        for cmd in candidates:
-            if core.Command(cmd).run().exit_code == 0:
-                return True
+        pips += [["pip"], ["pip3"]]
+        for pip in pips:
+            # Commits often share a version number, and pip skips installing
+            # a version that's already installed, even with --upgrade. So
+            # reinstall the editor itself, then install any new dependencies
+            # without rebuilding the existing ones (slow on Termux).
+            reinstall = [*pip, "install", "--force-reinstall", "--no-deps", package]
+            if core.Command(reinstall).run().exit_code == 0:
+                return core.Command([*pip, "install", package]).run().exit_code == 0
         return False
 
     @staticmethod
