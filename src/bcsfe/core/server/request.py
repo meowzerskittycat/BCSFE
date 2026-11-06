@@ -1,6 +1,7 @@
 import requests
 
-from bcsfe import core, cli
+from bcsfe import core
+from bcsfe.core import messages
 
 
 class MultiPartFile:
@@ -66,7 +67,7 @@ class RequestHandler:
     def timeout() -> int:
         tm = core.core_data.config.get_int(core.ConfigKey.MAX_REQUEST_TIMEOUT)
         if tm <= 0:
-            cli.color.color_print_key("timeout_too_small")
+            messages.show("timeout_too_small")
             tm = core.core_data.config.get_default(core.ConfigKey.MAX_REQUEST_TIMEOUT)
         return tm
 
@@ -91,7 +92,7 @@ class RequestHandler:
         except requests.exceptions.ConnectionError, requests.exceptions.Timeout:
             return None
         except OverflowError:
-            cli.color.color_print_key("timeout_too_large")
+            messages.show("timeout_too_large")
             return None
 
     def post(self, no_timeout: bool = False) -> requests.Response | None:
@@ -111,5 +112,5 @@ class RequestHandler:
         except requests.exceptions.ConnectionError, requests.exceptions.Timeout:
             return None
         except OverflowError:
-            cli.color.color_print_key("timeout_too_large")
+            messages.show("timeout_too_large")
             return None

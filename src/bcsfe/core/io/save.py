@@ -1,7 +1,8 @@
 import datetime
 from typing import Any
 
-from bcsfe import __version__, cli, core
+from bcsfe import __version__, core
+from bcsfe.core import messages
 from bcsfe.core.io import save_layout
 from bcsfe.core.io.save_layout import from_timestamp, to_timestamp
 
@@ -475,7 +476,7 @@ class SaveFile:
             else:
                 from traceback import format_exc
 
-                cli.color.color_print_key("parse_ignored_error", error=format_exc())
+                messages.show("parse_ignored_error", error=format_exc())
 
     def set_gv(self, gv: core.GameVersion):
         self.game_version = gv
@@ -549,7 +550,7 @@ class SaveFile:
         """A save from `to_dict` output. Missing fields get new-save values."""
         editor_version = data.get("editor_version", "0.0.0")
         if editor_version != __version__ and warn:
-            cli.color.color_print_key(
+            messages.show(
                 "editor_version_mismatch",
                 json_version=editor_version,
                 editor_version=__version__,

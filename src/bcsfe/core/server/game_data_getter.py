@@ -2,12 +2,12 @@ from io import BytesIO
 from typing import Any
 from collections.abc import Callable
 
-from bcsfe.cli import color, prompt
 
 import tarfile
 import json
 
 from bcsfe import core
+from bcsfe.core import messages
 
 
 class GameDataGetter:
@@ -102,7 +102,7 @@ class GameDataGetter:
                 and show_alt
             ):
                 alt = "https://gitlab.com/fieryhenry/bcdata/-/raw/main/metadata.json"
-                res = prompt.confirm("use_alternative_repo", repo=alt)
+                res = messages.confirm("use_alternative_repo", repo=alt)
                 if res:
                     core.core_data.config.set(core.ConfigKey.GAME_DATA_REPO, alt)
                     return GameDataGetter.get_metadata(show_alt=False)
@@ -149,12 +149,12 @@ class GameDataGetter:
         url = self.url + self.filepath
 
         if self.print:
-            color.color_print_key("downloading_compressed_data", url=url)
+            messages.show("downloading_compressed_data", url=url)
 
         downloaded_data = core.RequestHandler(url).get()
         if downloaded_data is None:
             if self.print:
-                color.color_print_key("no_internet")
+                messages.show("no_internet")
             return None
 
         archive = tarfile.open(
@@ -276,7 +276,7 @@ class GameDataGetter:
             return None
 
         if display_text and not self.has_downloaded():
-            color.color_print_key(
+            messages.show(
                 "downloading",
                 file_name=file_name,
                 pack_name=pack_name,
@@ -366,9 +366,9 @@ class GameDataGetter:
 
     def print_no_file(self, packname: str, file_name: str) -> None:
         if self.version is None:
-            color.color_print_key("failed_to_get_game_versions")
+            messages.show("failed_to_get_game_versions")
         else:
-            color.color_print_key(
+            messages.show(
                 "failed_to_download_game_data",
                 file_name=file_name,
                 pack_name=packname,

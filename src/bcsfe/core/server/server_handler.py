@@ -3,9 +3,9 @@ import time
 from typing import Any
 
 from bcsfe import core
+from bcsfe.core import messages
 import jwt
 
-from bcsfe.cli import color
 import requests
 
 
@@ -379,7 +379,7 @@ class ServerHandler:
 
     def print_key(self, key: str, **kwargs: Any):
         if self.print:
-            color.color_print_key(key, **kwargs)
+            messages.show(key, **kwargs)
 
     def get_codes(
         self, upload_managed_items: bool = True, tries: int = 3
@@ -564,12 +564,10 @@ class ServerHandler:
             try:
                 temp_path.write(core.Data(save_data))
             except Exception as e:
-                color.color_print_key(
-                    "transfer_backup_fail", path=str(temp_path), error=e
-                )
+                messages.show("transfer_backup_fail", path=str(temp_path), error=e)
             else:
                 if print:
-                    color.color_print_key("transfer_backup", path=str(temp_path))
+                    messages.show("transfer_backup", path=str(temp_path))
 
         save_file = core.SaveFile(core.Data(save_data), cc=cc)
 

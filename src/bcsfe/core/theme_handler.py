@@ -2,8 +2,8 @@ import dataclasses
 import tempfile
 from typing import Any
 from bcsfe import core
+from bcsfe.core import messages
 import json
-from bcsfe.cli import color
 
 
 class ThemeHandler:
@@ -231,19 +231,19 @@ class ExternalThemeManager:
         """
         if external_theme.git_repo is None:
             return
-        color.color_print_key(
+        messages.show(
             "checking_for_theme_updates",
             theme_name=external_theme.name,
         )
         updated = external_theme.get_new_version()
         if updated:
-            color.color_print_key(
+            messages.show(
                 "external_theme_updated",
                 theme_name=external_theme.name,
                 version=external_theme.version,
             )
         else:
-            color.color_print_key(
+            messages.show(
                 "external_theme_no_update",
                 theme_name=external_theme.name,
                 version=external_theme.version,
@@ -255,12 +255,12 @@ class ExternalThemeManager:
         """Updates all external themes."""
         files = ThemeHandler.get_external_themes_folder().get_paths_dir()
         if not files:
-            color.color_print_key(
+            messages.show(
                 "no_external_themes",
             )
             return
         if not core.GitHandler.is_git_installed():
-            color.color_print_key(
+            messages.show(
                 "git_not_installed",
             )
             return

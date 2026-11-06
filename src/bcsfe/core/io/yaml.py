@@ -1,6 +1,6 @@
 from typing import Any
 from bcsfe import core
-from bcsfe import cli
+from bcsfe.core import messages
 import yaml
 
 
@@ -32,7 +32,7 @@ class YamlFile:
                 yaml.dump(self.yaml, f)
         except FileNotFoundError:
             if print_err:
-                cli.color.color_print_key("yaml_create_error", path=self.path.path)
+                messages.show("yaml_create_error", path=self.path.path)
 
     def __getitem__(self, key: str) -> Any:
         return self.yaml[key]

@@ -2,7 +2,7 @@ import dataclasses
 import tempfile
 from typing import Any
 from bcsfe import core
-from bcsfe.cli import color
+from bcsfe.core import messages
 
 
 class PropertySet:
@@ -726,19 +726,19 @@ class ExternalLocaleManager:
         """
         if external_locale.git_repo is None:
             return
-        color.color_print_key(
+        messages.show(
             "checking_for_locale_updates",
             locale_name=external_locale.name,
         )
         updated = external_locale.get_new_version()
         if updated:
-            color.color_print_key(
+            messages.show(
                 "external_locale_updated",
                 locale_name=external_locale.name,
                 version=external_locale.version,
             )
         else:
-            color.color_print_key(
+            messages.show(
                 "external_locale_no_update",
                 locale_name=external_locale.name,
                 version=external_locale.version,
@@ -750,12 +750,12 @@ class ExternalLocaleManager:
         """Updates all external locales."""
         dirs = LocalManager.get_external_locales_folder().get_dirs()
         if not dirs:
-            color.color_print_key(
+            messages.show(
                 "no_external_locales",
             )
             return
         if not core.GitHandler.is_git_installed():
-            color.color_print_key(
+            messages.show(
                 "git_not_installed",
             )
             return
