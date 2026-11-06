@@ -274,6 +274,7 @@ requests, and on Windows and Linux for pushes to `main`.
 | Keep a real save as a fixture | `python tests/tools/sanitize_save.py path/to/save` replaces those details and writes the save to `tests/fixtures/real/`. |
 | Synthetic saves | Made by `tests/tools/gen_fixtures.py`. Regenerate them only on purpose (e.g. for a new game version), never to make a failing test pass. |
 | Translate the editor | See [LOCALIZATION.md](LOCALIZATION.md). |
+| Work with an AI coding agent | [AGENTS.md](AGENTS.md) has the setup, checks and rules; `CLAUDE.md`, `GEMINI.md` and `.github/copilot-instructions.md` point to it. |
 
 </details>
 

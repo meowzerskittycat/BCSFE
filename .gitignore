@@ -6,6 +6,8 @@ __pycache__
 !/tests/saves/.gitkeep
 .*
 !.github/
+!.claude/
+.claude/settings.local.json
 !.gitignore
 *.egg*
 src/bcsfe/files/game_data
