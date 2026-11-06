@@ -190,7 +190,9 @@ def catamin_clear_count_many(
     save_file: core.SaveFile, map_ids: list[int], names: core.MapNames
 ):
     for map_id in map_ids:
-        name = names.map_names.get(map_id) or core.localize("unknown_map")
+        name = names.map_names.get(map_id) or core.localize(
+            "unknown_map_name", id=map_id
+        )
         clear_amount = prompt.number(
             "enter_clear_amount_catamin_map",
             max=prompt.MaxValue.i32(),

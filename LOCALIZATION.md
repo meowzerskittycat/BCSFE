@@ -1,50 +1,55 @@
-# Localization
+# Translating the editor
 
-Small tutorial on how to localize the editor into a different language.
+The editor ships in English, Vietnamese (`vi`) and Traditional Chinese (`tw`). Any message that
+isn't translated yet is shown in English, so a partial translation still works.
 
-## Disclaimer
+> [!IMPORTANT]
+> Please don't use machine or AI translation. The Battle Cats and the editor use their own terms,
+> and a translation you can't check yourself will have mistakes you can't catch.
 
-Please do not use machine or AI translated text, they will likely make mistakes, especially since
-there is specific terminology unique to The Battle Cats and the save editor, and if you do not
-know the language you will not be able to correct them. There are also many other ethical and legal
-issues when using AI that I would like to avoid.
+## Start a new language
 
-Thank you for understanding
+1. Run the editor and open **Editor → Config → Language → Create New Locale**.
+2. Enter a language code (like `de` or `pt-BR`), your name, and the language's name.
+3. The editor copies the English files and prints the new folder's path, e.g.
+   `~/.local/share/bcsfe/locales/de`. Open that folder.
 
-## How To
+## Translate
 
-1. Open the editor
+Each `.properties` file holds lines like `key=text`. Translate the text after `=` and leave the key
+alone.
 
-2. Run the Edit config feature
+| In the English text | What to do |
+|---|---|
+| `{name}` | Keep it exactly as it is. The editor puts a value there, like a cat's name or a number. |
+| `{{other_key}}` | Another message is inserted here. You can move or remove it. |
+| `<@s>…</>`, `<@e>…</>`, `<@su>…</>`… | Colours. Keep them around the same words where you can. |
+| `\n` | A line break. |
+| `$(…)` | Text that changes with a value (e.g. plurals). Translate the words, keep the structure. |
 
-3. Select the option to change language
+Restart the editor to see your changes. To list what's still untranslated, turn on
+**Editor → Config → Show missing locale keys** and restart. Keys missing from your files are
+listed (extra keys are fine).
 
-4. Select the option to create a new locale
+## Update an existing translation
 
-5. Enter the required data
+New features add English messages that the other languages don't have yet. To find them, switch the
+editor to that language and turn on **Show missing locale keys** as above. The translations live in
+[`src/bcsfe/files/locales/`](src/bcsfe/files/locales/).
 
-6. Keep a record of the path it gives you e.g:
+## Send it in
 
->>> Successfully created new locale at **/home/henry/.local/share/bcsfe/locales/de**
+Copy your folder to `src/bcsfe/files/locales/<code>/` in a fork of
+[this repository](https://github.com/meowzerskittycat/BCSFE), add yourself to `metadata.json`, and
+open a pull request. If you'd rather not use git, attach a zip of the folder to an
+[issue](https://github.com/meowzerskittycat/BCSFE/issues).
 
-7. Open that folder in file explorer or something.
+The tests check that every translation keeps the `{placeholders}` of its English text and that
+every `{{reference}}` points to a real message:
 
-8. Edit metadata again if you want
+```sh
+pytest tests/test_locales.py
+```
 
-9. Edit each of the .properties file, translating each value, try to keep the colors the same as
-the original text. Anything in `{..}` should stay exactly how it is. Anything in `{{..}}` references
-another key and so can be changed if you want. For more details see [here](https://codeberg.org/fieryhenry/ExampleEditorLocale/).
-
-10. Once done restart the editor and check that it works, you should also see the details you specified
-in the `metadata.json` file in the opening text
-
-11. Enable the config option to display missing locale keys then restart the editor
-
-12. If everything is correct you shouldn't see any missing keys (extra keys are fine).
-
-13. Once done, you can either copy the files to `src/files/locales/<locale>` in a fork of the editor and submit a pull request
-to the codeberg repo. Alternatively you can just zip your locale folder and send it to me or in
-the #localization channel on discord. (or [matrix](https://matrix.to/#/@fieryhenry:matrix.battlecatsmodding.org))
-
-14. Note that if you make changes to anything in `src/files/`, you will need to run the editor with
-the `--force-migrate` flag to copy them to the correct folder
+If you changed files under `src/bcsfe/files/` and the editor doesn't pick them up, run it once with
+`--force-migrate` to copy them into its data folder.

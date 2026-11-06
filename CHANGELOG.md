@@ -15,6 +15,12 @@
 - **Check for updates** now really installs the new commit. Commits often share a version number,
   and pip skips a version that's already installed even with `--upgrade`, so updating used to
   report success while leaving the old code in place.
+- Five messages showed their raw key name instead of text (`theme_cancelled`, `select_item`, an
+  unknown map's name and two unknown-enemy names). A test now checks every key the code uses has
+  English text, and that translations keep each message's `{placeholders}`.
+- Two Traditional Chinese save-location messages now show the folder path, like the English ones.
+- The language list is sorted, so it's in the same order on every system.
+- LOCALIZATION.md now explains how to translate for this fork and send translations here.
 - `bcsfe export SAVE -` no longer prints a broken pipe error when its output is cut short (e.g.
   piped into `head`).
 - Removed `.github/FUNDING.yml`, which pointed to upstream's donation page.
