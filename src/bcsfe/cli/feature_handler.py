@@ -118,10 +118,10 @@ class FeatureHandler:
             "gamototo": {
                 "engineers": edits.basic_items.BasicItems.edit_engineers,
                 "base_materials": edits.basic_items.BasicItems.edit_base_materials,
-                "gamatoto_xp_level": core.game.gamoto.gamatoto.edit_xp,
-                "gamatoto_helpers": core.game.gamoto.gamatoto.edit_helpers,
-                "ototo_cat_cannon": core.game.gamoto.ototo.edit_cannon,
-                "cat_shrine": core.game.gamoto.cat_shrine.CatShrine.edit_catshrine,
+                "gamatoto_xp_level": edits.gamatoto.edit_xp,
+                "gamatoto_helpers": edits.gamatoto.edit_helpers,
+                "ototo_cat_cannon": edits.ototo.edit_cannon,
+                "cat_shrine": edits.cat_shrine.edit_catshrine,
             },
             "account": {
                 "unban_account": save_management.SaveManagement.unban_account,

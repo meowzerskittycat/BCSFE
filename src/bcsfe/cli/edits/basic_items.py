@@ -332,11 +332,11 @@ class BasicItems:
 
     @staticmethod
     def edit_engineers(save_file: core.SaveFile):
-        save_file.ototo.edit_engineers(save_file)
+        edits.ototo.edit_engineers(save_file.ototo, save_file)
 
     @staticmethod
     def edit_base_materials(save_file: core.SaveFile):
-        save_file.ototo.base_materials.edit_base_materials(save_file)
+        edits.ototo.edit_base_materials(save_file.ototo.base_materials, save_file)
 
     @staticmethod
     def edit_rare_gatya_seed(save_file: core.SaveFile):
