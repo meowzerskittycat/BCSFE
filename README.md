@@ -40,7 +40,7 @@ A fork of [BCSFE-Python](https://codeberg.org/fieryhenry/BCSFE-Python) by fieryh
 | **Easier menus** | Stays in the same category after an edit, `0` goes back, and you can type a feature's name to run it. Blank or `q` cancels a question, and wrong input is asked again instead of crashing. |
 | **Command line tools** | `bcsfe info`, `check`, `export` and `import`, for scripts and bug reports. |
 | **Bug fixes** | No more save corruption after a JSON import, crowns and maps unlock properly, and [more](CHANGELOG.md). |
-| **Tested** | Over 550 tests, run on Windows, macOS and Linux, using saves from all four regions (`en`, `jp`, `kr`, `tw`) and game versions 9.0 to 15.7. |
+| **Tested** | Over 600 tests, run on Windows, macOS and Linux, using saves from all four regions (`en`, `jp`, `kr`, `tw`) and game versions 9.0 to 15.7. |
 
 ## Installation
 

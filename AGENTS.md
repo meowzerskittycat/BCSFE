@@ -26,8 +26,8 @@ python tests/tools/get_game_data.py   # game data for the menu tests (gitignored
 ruff check src tests
 ruff format --check src tests
 pyright                    # strict mode, src only
-pytest                     # about 580 tests, a minute or two
-pytest --all-answers       # every menu feature with every answer set (about 940 tests, about five minutes)
+pytest                     # about 610 tests, a minute or two
+pytest --all-answers       # every menu feature with every answer set (about 970 tests, about five minutes)
 pytest --cov               # with coverage; fails below fail_under in pyproject.toml
 pytest tests/test_locales.py   # just the message checks
 ```
