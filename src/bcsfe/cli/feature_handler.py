@@ -65,6 +65,7 @@ class FeatureHandler:
                 "convert_version": save_management.SaveManagement.convert_save_gv,
             },
             "items": {
+                "max_all": edits.max_all.max_all,
                 "catfood": edits.basic_items.BasicItems.edit_catfood,
                 "xp": edits.basic_items.BasicItems.edit_xp,
                 "normal_tickets": edits.basic_items.BasicItems.edit_normal_tickets,
