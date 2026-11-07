@@ -1,9 +1,11 @@
 import dataclasses
 import tempfile
-from typing import Any
+from typing import Any, cast
 from bcsfe import core
 from bcsfe.core import messages
 import json
+
+DEFAULT_THEME = "default"
 
 
 class ThemeHandler:
@@ -30,13 +32,23 @@ class ThemeHandler:
         return ThemeHandler.get_themes_folder().add(theme_code + ".json")
 
     def get_theme_data(self) -> dict[str, Any]:
-        file_path = self.get_theme_path(self.theme_code)
+        data = self.read_theme(self.theme_code)
+        # A theme that was removed or hand-typed wrong in the config would
+        # otherwise turn every colour off.
+        if data is None and self.theme_code != DEFAULT_THEME:
+            data = self.read_theme(DEFAULT_THEME)
+        return data or {}
+
+    @staticmethod
+    def read_theme(theme_code: str) -> dict[str, Any] | None:
+        file_path = ThemeHandler.get_theme_path(theme_code)
         if not file_path.exists():
-            return {}
+            return None
         try:
-            return core.JsonFile.from_data(file_path.read()).as_object()
+            data: Any = core.JsonFile.from_data(file_path.read()).as_object()
         except json.JSONDecodeError:
-            return {}
+            return None
+        return cast(dict[str, Any], data) if isinstance(data, dict) else None
 
     def get_short_name(self) -> str:
         return self.theme_data.get("short_name", "")

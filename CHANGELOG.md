@@ -98,6 +98,12 @@ real 15.7 save) and CI on Windows, macOS and Linux
 ### Fixed
 
 - Picking gacha banners by name showed `{int}` after each name instead of the banner's ID.
+- A negative **Maximum save backups** other than -1 (e.g. typed into `config.yaml`) deleted the
+  newest backups, including the one just made. Any negative number now keeps every backup.
+- A theme that's missing or unreadable now falls back to the default theme instead of turning
+  all colours off.
+- A `config.yaml` that isn't valid YAML is still replaced with defaults, but the old file is kept
+  as `config.yaml.broken` so hand-edited settings can be recovered.
 - `all` when entering ids (cats, enemies, stages, banners) left out the last one
 
 - Creating a locale accepted any text as its code (e.g. `1 2`), made a folder with that name and

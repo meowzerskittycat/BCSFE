@@ -728,7 +728,9 @@ class SaveFile:
     @staticmethod
     def check_backups():
         max_backups = core.core_data.config.get_int(core.ConfigKey.MAX_BACKUPS)
-        if max_backups == -1:
+        # -1 means keep them all. Treat any negative the same: slicing by a
+        # negative number would delete the newest backups instead.
+        if max_backups < 0:
             return
         saves_path = SaveFile.get_saves_path().add("backups")
         saves_path.generate_dirs()
