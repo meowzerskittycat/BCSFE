@@ -289,12 +289,13 @@ class CatEditor:
 
         formatted_names: list[str] = []
 
-        for name in new_names:
+        # The ID is what "by ID" asks for, so showing it here lets users
+        # switch to that next time.
+        for name, id in zip(new_names, ids, strict=True):
             formatted_name = core.core_data.local_manager.get_key(
-                "banner_txt", name=name
+                "banner_txt", name=name, int=id
             )
             formatted_names.append(formatted_name)
-        # TODO: include ids?
         gatya_option_ids = prompt.choose_many(
             formatted_names,
             dialog="select_gatya_banner",

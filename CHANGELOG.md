@@ -25,6 +25,7 @@
   piped into `head`).
 - CI runs once per pull request push and on `main` (it used to run twice for every push to a
   pull request), cancels runs a newer push replaced, and uses current versions of its actions.
+- CI measures test coverage and fails if it drops; Dependabot keeps the actions up to date.
 - Pushes to `main` test on Windows and Linux; pull requests also test on macOS. A macOS job
   that waited too long for a runner was cancelled and turned `main`'s badge red.
 - Removed `.github/FUNDING.yml`, which pointed to upstream's donation page.
@@ -96,6 +97,7 @@ real 15.7 save) and CI on Windows, macOS and Linux
 
 ### Fixed
 
+- Picking gacha banners by name showed `{int}` after each name instead of the banner's ID.
 - `all` when entering ids (cats, enemies, stages, banners) left out the last one
 
 - Creating a locale accepted any text as its code (e.g. `1 2`), made a folder with that name and
