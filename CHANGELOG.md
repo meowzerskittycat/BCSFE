@@ -28,6 +28,10 @@
 - Pushes to `main` test on Windows and Linux; pull requests also test on macOS. A macOS job
   that waited too long for a runner was cancelled and turned `main`'s badge red.
 - Removed `.github/FUNDING.yml`, which pointed to upstream's donation page.
+- **Items → Max All** maxes XP, normal tickets, NP, leadership, battle items, catseyes,
+  catamins, catfruit, labyrinth medals and treasure chests in one go (pick some or all). It
+  leaves out anything that can get an account banned: cat food, rare, platinum and legend tickets
+  and platinum shards. Upstream had started it but never put it in the menu.
 - Game data now comes from the first source that answers: the one set in the config, then
   battlecatsmodding, gitlab and this fork's mirror ([meowzerskittycat/bcdata](https://github.com/meowzerskittycat/bcdata),
   synced daily). The editor no longer asks whether to try another source, and says once if none
