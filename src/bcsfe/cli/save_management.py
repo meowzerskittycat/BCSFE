@@ -4,6 +4,9 @@ from bcsfe.core import io
 from bcsfe.cli import color, dialog_creator, edits, main, prompt, server_cli
 from bcsfe.core.country_code import CountryCode
 
+# How many of the newest backups Restore a backup offers.
+RESTORE_CHOICES = 20
+
 
 class SaveManagement:
     def __init__(self):
@@ -393,6 +396,11 @@ class SaveManagement:
                 path=core.SaveFile.get_save_path(),
             )
 
+        if core.SaveFile.get_backups():
+            actions.add_new_key(
+                "restore_backup", lambda _: SaveManagement.restore_backup()
+            )
+
         actions.add(root_action).add_new_key(
             "load_save_data_json",
             lambda _: core.map_opt(
@@ -434,6 +442,7 @@ class SaveManagement:
         save_path: core.Path,
         cc: CountryCode | None = None,
         package_name: str | None = None,
+        backup: bool = True,
     ) -> tuple[core.SaveFile, core.Path] | None:
         color.color_print_key("save_file_found", path=save_path)
 
@@ -473,6 +482,8 @@ class SaveManagement:
             return None
 
         save_file.save_path = save_path
+        if not backup:
+            return save_file, save_path
         backup_path = save_file.get_default_path()
         try:
             save_file.save_path.copy_thread(backup_path)
@@ -480,6 +491,37 @@ class SaveManagement:
             print(e)
 
         return save_file, backup_path
+
+    @staticmethod
+    def restore_backup() -> tuple[core.SaveFile, core.Path] | None:
+        """Load one of the backups made when a save was loaded. It isn't
+        backed up again, and has no save path, so saving asks where to put it
+        instead of overwriting the backup."""
+        backups = core.SaveFile.get_backups()[:RESTORE_CHOICES]
+        if not backups:
+            color.color_print_key("no_backups")
+            return None
+        options = [
+            core.localize(
+                "backup_option",
+                date=date.strftime("%Y-%m-%d %H:%M:%S"),
+                cc=cc,
+                inquiry=inquiry,
+            )
+            for _, date, cc, inquiry in backups
+        ]
+        picked = prompt.choose(options, "select_backup")
+        if picked is None:
+            return None
+        path, _, cc, _ = backups[picked]
+        loaded = SaveManagement.load_save_file_path(
+            path, CountryCode.from_code(cc), backup=False
+        )
+        if loaded is None:
+            return None
+        loaded[0].save_path = None
+        color.color_print_key("backup_restored")
+        return loaded
 
     @staticmethod
     def select_package_name(package_names: list[str]) -> str | None:

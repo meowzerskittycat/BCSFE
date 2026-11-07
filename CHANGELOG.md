@@ -28,6 +28,10 @@
 - Pushes to `main` test on Windows and Linux; pull requests also test on macOS. A macOS job
   that waited too long for a runner was cancelled and turned `main`'s badge red.
 - Removed `.github/FUNDING.yml`, which pointed to upstream's donation page.
+- **Restore a backup** when loading a save lists the copies the editor keeps each time a save is
+  loaded, newest first, and loads the one you pick. Those backups were always made, but there was
+  no way to get one back without finding the file yourself. Saving a restored backup asks where to
+  put it, so the backup isn't overwritten.
 - The editor picks the right game data for your game version when there's no exact match:
   versions are compared as numbers (15.10 is newer than 15.9, not older), and offline it uses
   the closest version already downloaded instead of none.

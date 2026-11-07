@@ -159,6 +159,9 @@ editor, the pip update command replaces it.
 `en` also covers the Italian, Spanish, French, Thai and German versions. Repeat these steps every
 time you edit: the editor's copy and the game's copy of your save aren't linked.
 
+Each time you load a save, the editor keeps a dated copy of it (the newest 50; change this in
+**Config**). To go back to one, choose **Restore a backup** when loading.
+
 > [!WARNING]
 > **Keep your transfer codes private.** Anyone with them can take your account. Linking a Google or
 > Apple account may limit how often you can transfer, so it's safest not to link one.
