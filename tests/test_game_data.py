@@ -164,3 +164,75 @@ def test_offline_an_older_downloaded_version_is_used(
     )
     g = GameDataGetter(en, gv("15.7.0"), do_print=False)
     assert g.version == "15.6.1"
+
+
+@pytest.fixture
+def data_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> core.Path:
+    folder = core.Path(str(tmp_path))
+    monkeypatch.setattr(
+        GameDataGetter, "get_game_data_dir", staticmethod(lambda: folder)
+    )
+    return folder
+
+
+def downloaded(folder: core.Path, cc: str, *versions: str) -> None:
+    for version in versions:
+        path = folder.add(cc).add(version).generate_dirs()
+        path.add("downloaded").write(core.Data())
+
+
+def test_old_versions_are_trimmed_per_region(data_dir: core.Path) -> None:
+    # No en data: that used to set the number to keep to 0 for every later region.
+    downloaded(data_dir, "jp", "15.4.0", "15.5.0", "15.6.0")
+    downloaded(data_dir, "tw", "15.6.0")
+    GameDataGetter.delete_old_versions(2)
+    versions = GameDataGetter.get_all_downloaded_versions()
+    assert sorted(
+        v.to_string() for v in versions[core.CountryCode.from_code("jp")]
+    ) == [
+        "15.5.0",
+        "15.6.0",
+    ]
+    assert [v.to_string() for v in versions[core.CountryCode.from_code("tw")]] == [
+        "15.6.0"
+    ]
+
+
+def test_a_folder_that_is_not_a_version_is_ignored(data_dir: core.Path) -> None:
+    downloaded(data_dir, "en", "15.6.1", "backup")
+    versions = GameDataGetter.get_downloaded_versions_region(
+        core.CountryCode.from_code("en")
+    )
+    assert [v.to_string() for v in versions] == ["15.6.1"]
+
+
+def escaping_archive() -> bytes:
+    out = io.BytesIO()
+    with tarfile.open(fileobj=out, mode="w:xz") as tar:
+        info = tarfile.TarInfo("../../escaped.txt")
+        info.size = 1
+        tar.addfile(info, io.BytesIO(b"x"))
+    return out.getvalue()
+
+
+def test_an_archive_escaping_its_folder_is_skipped(
+    web: Web, data_dir: core.Path
+) -> None:
+    web[SOURCES[0]] = Response(200, metadata("https://first/"))
+    web[SOURCES[2]] = Response(200, metadata("https://mirror/"))
+    web["https://first/en-15.6.1.tar.xz"] = Response(200, content=escaping_archive())
+    web["https://mirror/en-15.6.1.tar.xz"] = Response(200, content=archive())
+
+    g = getter()
+    assert g.download_version_data() is True
+    assert not data_dir.add("escaped.txt").exists()
+    assert not data_dir.parent().add("escaped.txt").exists()
+    path = g.get_version_path()
+    assert path is not None
+    assert path.add("DataLocal").add("test.csv").read().data == b"hello"
+
+
+@pytest.mark.parametrize("url", ["foo", "", "ftp//nowhere"])
+def test_a_url_that_cannot_be_requested_is_no_answer(url: str) -> None:
+    # requests rejects these before sending anything, so no network is used.
+    assert core.RequestHandler(url).get() is None
