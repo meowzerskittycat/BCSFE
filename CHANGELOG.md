@@ -128,6 +128,9 @@ real 15.7 save) and CI on Windows, macOS and Linux
   reported all of them as added while dropping those that didn't fit.
 - Enter or the quit key in the storage menu now leaves it, as in the other menus; only "Finish"
   did before.
+- If the copy of a loaded save to the documents folder or writing a save failed, the editor
+  printed a bare error (or, for the copy, a traceback over the menu). It now says what it was
+  doing and where.
 - `all` when entering ids (cats, enemies, stages, banners) left out the last one
 
 - Creating a locale accepted any text as its code (e.g. `1 2`), made a folder with that name and

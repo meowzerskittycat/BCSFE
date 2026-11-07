@@ -46,41 +46,13 @@ def color_from_grade(grade_id: int) -> color.ColorHex:
     return color.ColorHex.BLACK
 
 
-def color_from_effect(effect_id: int) -> str:
-    # if effect_id == 0:
-    #     return color.ColorHex.RED
-    # elif effect_id == 1:
-    #     return color.ColorHex.GREEN
-    # elif effect_id == 2:
-    #     return color.ColorHex.DARK_GREY
-    # elif effect_id == 3:
-    #     return color.ColorHex.LIGHT_GREY
-    # elif effect_id == 4:
-    #     return color.ColorHex.YELLOW
-    # elif effect_id == 5:
-    #     return color.ColorHex.BLUE
-    # elif effect_id == 6:
-    #     return color.ColorHex.MAGENTA
-    # elif effect_id == 7:
-    #     return color.ColorHex.DARK_GREEN
-    # elif effect_id == 8:
-    #     return color.ColorHex.WHITE
-    # elif effect_id == 9:
-    #     return color.ColorHex.DARK_MAGENTA
-    # elif effect_id == 10:
-    #     return color.ColorHex.ORANGE
-
-    return "@t"
-
-
 def orb_text(orb: core.OrbInfo) -> str:
     """The orb's description, coloured by target, grade and effect."""
     raw = orb.raw_orb_info
     target_color = color_from_enemy_type(raw.target_id).value
     rank_color = color_from_grade(raw.rank_id).value
-    effect_color = color_from_effect(raw.effect_id)
     effect_text = orb.effect.replace("%@", "{}")
-    effect_text = f"<{effect_color}>{effect_text}</>"
+    effect_text = f"<@t>{effect_text}</>"
     return effect_text.format(
         f"<{rank_color}>{orb.rank}</>",
         f"<{target_color}>{orb.target}</>" if orb.target else "",
@@ -205,8 +177,7 @@ class SaveOrbs:
         )
 
         all_effects_str = ", ".join(
-            f"<{color_from_effect(self.orb_info_list.get_all_effects().index(effect))}>{effect_str}</>"
-            for effect_str, effect in zip(all_effects_str, all_effects, strict=False)
+            f"<@t>{effect_str}</>" for effect_str in all_effects_str
         )
 
         color.color_print_key(

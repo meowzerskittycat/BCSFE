@@ -30,7 +30,7 @@ class SaveManagement:
         try:
             save_file.to_file(save_file.save_path)
         except OSError as e:
-            print(e)
+            color.color_print_key("save_write_fail", path=save_file.save_path, error=e)
             return
 
         color.color_print_key("save_success", path=save_file.save_path)
@@ -459,10 +459,12 @@ class SaveManagement:
         if not backup:
             return save_file, save_path
         backup_path = save_file.get_default_path()
+        # Copied here rather than in a thread: the save is small, and a failure
+        # in a thread could only print a traceback over the menu.
         try:
-            save_file.save_path.copy_thread(backup_path)
-        except Exception as e:
-            print(e)
+            save_path.copy(backup_path)
+        except OSError as e:
+            color.color_print_key("save_copy_fail", path=backup_path, error=e)
 
         return save_file, backup_path
 

@@ -92,3 +92,22 @@ def test_a_file_that_isnt_a_save_is_reported(
     path.write(core.Data(content))
     answer(monkeypatch, "1")  # the first region, when asked
     assert SaveManagement.load_save_file_path(path) is None
+
+
+def test_a_failed_copy_to_documents_is_reported(
+    saves: core.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = saves.add("SAVE_DATA_elsewhere")
+    path.write(core.Data(real_fixtures()[0].read_bytes()))
+    shown: list[str] = []
+    monkeypatch.setattr(
+        color, "color_print_key", lambda key, *_a, **_k: shown.append(key)
+    )
+
+    def refuse(_self: core.Path, _target: core.Path) -> None:
+        raise PermissionError("read-only")
+
+    monkeypatch.setattr(core.Path, "copy", refuse)
+    loaded = SaveManagement.load_save_file_path(path)
+    assert loaded is not None
+    assert "save_copy_fail" in shown
