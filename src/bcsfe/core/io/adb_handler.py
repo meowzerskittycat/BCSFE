@@ -72,9 +72,6 @@ class AdbHandler(io.root_handler.RootHandler):
     def start_server(self) -> core.CommandResult:
         return self.adb_path.run("start-server")
 
-    def kill_server(self) -> core.CommandResult:
-        return self.adb_path.run("kill-server")
-
     def root(self) -> core.CommandResult:
         return self.adb_path.run("-s", self.get_device(), "root")
 
@@ -92,9 +89,6 @@ class AdbHandler(io.root_handler.RootHandler):
         if self.device_id is None:
             raise DeviceIDNotSet("Device ID is not set")
         return self.device_id
-
-    def get_device_name(self) -> str:
-        return self.run_shell("getprop ro.product.model").result.strip()
 
     def run_shell(self, command: str) -> core.CommandResult:
         """Run `command` in the device's shell (a shell string, quote paths)."""
@@ -166,12 +160,6 @@ class AdbHandler(io.root_handler.RootHandler):
                 return result3
 
         return result
-
-    def stat_file(self, device_path: core.Path) -> core.CommandResult:
-        return self.run_shell(f"stat {shlex.quote(device_path.to_str_forwards())}")
-
-    def does_file_exist(self, device_path: core.Path) -> bool:
-        return self.stat_file(device_path).success
 
     def get_battlecats_packages(self) -> list[str]:
         cmd = "find /data/data/ -name SAVE_DATA -mindepth 3 -maxdepth 3"

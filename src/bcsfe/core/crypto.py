@@ -71,19 +71,6 @@ class Random:
         return secrets.token_bytes(length)
 
     @staticmethod
-    def get_alpha_string(length: int) -> str:
-        """Gets a random string of the given length.
-
-        Args:
-            length (int): The length of the string.
-
-        Returns:
-            str: The random string.
-        """
-        characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        return "".join(secrets.choice(characters) for _ in range(length))
-
-    @staticmethod
     def get_hex_string(length: int) -> str:
         """Gets a random hex string of the given length.
 
@@ -94,19 +81,6 @@ class Random:
             str: The random string.
         """
         characters = "0123456789abcdef"
-        return "".join(secrets.choice(characters) for _ in range(length))
-
-    @staticmethod
-    def get_digits_string(length: int) -> str:
-        """Gets a random digits string of the given length.
-
-        Args:
-            length (int): The length of the string.
-
-        Returns:
-            str: The random string.
-        """
-        characters = "0123456789"
         return "".join(secrets.choice(characters) for _ in range(length))
 
 

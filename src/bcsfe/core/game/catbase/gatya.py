@@ -305,11 +305,6 @@ class GatyaInfos:
         self.infos.append(info)
         return info
 
-    def get_info(self, gatya_id: int) -> GatyaInfo | None:
-        if self.infos:
-            return self.infos[gatya_id]
-        return None
-
     def get_all_names(self) -> dict[int, str]:
         if not self.got_all:
             self.get_all(True, max_threads=64)

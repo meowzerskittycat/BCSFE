@@ -30,12 +30,6 @@ class CountryCode:
         return code
 
     @staticmethod
-    def from_patching_code(code: str) -> CountryCode:
-        if code == "":
-            return CountryCode(CountryCodeType.JP)
-        return CountryCode(code)
-
-    @staticmethod
     def from_code(code: str) -> CountryCode:
         return CountryCode(code)
 

@@ -194,14 +194,8 @@ class ServerGatyaDataSet:
             collab_message,
         )
 
-    def is_visible_silhouette(self) -> bool:
-        return (self.flags & 1) != 0
-
     def is_required_user_rank_1600(self) -> bool:
         return (self.flags & 2) != 0
-
-    def has_stepup_gatya(self) -> bool:
-        return (self.flags & 4) != 0
 
 
 class ServerGatyaDataItem:
@@ -232,12 +226,6 @@ class ServerGatyaDataItem:
     def get_collab_flag(self) -> bool:
         return self.flags == 4
 
-    def get_first_rare_flag(self) -> bool:
-        return self.flags == 2
-
-    def get_first_rare_10_flag(self) -> bool:
-        return self.flags == 3
-
 
 class ServerItemDataItem:
     def __init__(
@@ -263,9 +251,6 @@ class ServerItemDataItem:
         self.stage_progress_flag = stage_progress_flag
         self.flags = flags
         self.locales = locales
-
-    def is_every_day(self) -> bool:
-        return (self.flags & 1) != 0
 
     def is_required_user_rank_1600(self) -> bool:
         return (self.flags & 2) != 0

@@ -23,10 +23,6 @@ class CatEditor:
     def get_non_gacha_cats(self):
         return self.save_file.cats.get_non_gacha_cats(self.save_file)
 
-    def filter_cats(self, cats: list[core.Cat]) -> list[core.Cat]:
-        unlocked_cats = self.get_current_cats()
-        return [cat for cat in cats if cat in unlocked_cats]
-
     def get_cats_rarity(self, rarity: int) -> list[core.Cat]:
         return self.save_file.cats.get_cats_rarity(self.save_file, rarity)
 
@@ -251,9 +247,6 @@ class CatEditor:
         for cat_option_id in cat_option_ids:
             cats_selected.append(cat_list[cat_option_id])
         return cats_selected
-
-    def select_obtainable(self) -> list[core.Cat] | None:
-        return self.get_cats_obtainable()
 
     def select_gatya_banner_name(self) -> list[int] | None:
         filter_down = prompt.confirm("filter_down_q_gatya")

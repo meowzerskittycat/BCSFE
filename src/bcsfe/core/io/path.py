@@ -21,9 +21,6 @@ class Path:
     def get_root() -> Path:
         return Path(os.sep)
 
-    def strip_trailing_slash(self) -> Path:
-        return Path(self.path.rstrip("/"))
-
     def open(self):
         self.generate_dirs()
         if os.name == "nt":
@@ -43,17 +40,6 @@ class Path:
                 "string:",
             ]
             core.Command(cmd, display_output=False).run_in_thread()
-        else:
-            raise OSError("Unknown OS")
-
-    def open_file(self):
-        os_name = os.name
-        if os_name == "nt":
-            os.startfile(self.path)  # type: ignore
-        elif sys.platform == "darwin":
-            core.Command(["open", self.path], display_output=False).run()
-        elif os_name == "posix":
-            core.Command(["xdg-open", self.path], display_output=False).run_in_thread()
         else:
             raise OSError("Unknown OS")
 
@@ -188,9 +174,6 @@ class Path:
             else:
                 os.remove(self.path)
 
-    def has_files(self) -> bool:
-        return len(os.listdir(self.path)) > 0
-
     def copy(self, target: Path):
         if self.exists():
             if self.is_directory():
@@ -279,14 +262,6 @@ class Path:
     def parent(self) -> Path:
         return Path(os.path.dirname(self.path))
 
-    def change_extension(self, extension: str) -> Path:
-        if extension.startswith("."):
-            extension = extension[1:]
-        return Path(self.path.rsplit(".", 1)[0] + "." + extension)
-
-    def remove_extension(self) -> Path:
-        return Path(self.path.rsplit(".", 1)[0])
-
     def get_extension(self) -> str:
         try:
             return self.path.rsplit(".", 1)[1]
@@ -296,17 +271,8 @@ class Path:
     def get_file_name(self) -> str:
         return os.path.basename(self.path)
 
-    def get_file_name_path(self) -> Path:
-        return Path(self.get_file_name())
-
     def get_file_name_without_extension(self) -> str:
         return self.get_file_name().rsplit(".", 1)[0]
-
-    def get_file_size(self) -> int:
-        return os.path.getsize(self.path)
-
-    def get_absolute_path(self) -> Path:
-        return Path(os.path.abspath(self.path))
 
     def copy_object(self) -> Path:
         return Path(self.path)

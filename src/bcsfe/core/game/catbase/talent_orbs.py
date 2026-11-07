@@ -85,9 +85,6 @@ class TalentOrbs:
     def __str__(self):
         return self.__repr__()
 
-    def set_orb(self, id: int, value: int):
-        self.orbs[id] = TalentOrb(id, value)
-
 
 class RawOrbInfo:
     def __init__(
@@ -238,41 +235,6 @@ class OrbInfoList:
 
             orb_info_list.append(OrbInfo(orb, grade, attribute, effect))
         return orb_info_list
-
-    def get_orb_info(self, orb_id: int) -> OrbInfo | None:
-        """Get the OrbInfo from the id
-
-        Args:
-            orb_id (int): The id of the orb
-
-        Returns:
-            OrbInfo | None: The OrbInfo
-        """
-        try:
-            return self.orb_info_list[orb_id]
-        except IndexError:
-            return None
-
-    def get_orb_from_components(
-        self,
-        grade: str,
-        attribute: str | None,
-        effect: str,
-    ) -> OrbInfo | None:
-        """Get the OrbInfo from the components
-
-        Args:
-            grade (str): The grade of the orb
-            attribute (str | None): The attribute of the orb. None if applies to all attributes
-            effect (str): The effect of the orb
-
-        Returns:
-            OrbInfo | None: The OrbInfo
-        """
-        for orb in self.orb_info_list:
-            if orb.rank == grade and orb.target == attribute and orb.effect == effect:
-                return orb
-        return None
 
     def does_match_orb_str(self, str_1: str | None, str_2: str | None) -> bool:
         if str_2 == "*":

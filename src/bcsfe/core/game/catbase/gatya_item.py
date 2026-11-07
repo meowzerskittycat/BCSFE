@@ -147,12 +147,3 @@ class GatyaItemBuy:
             return None
 
         return self.buy[item_id]
-
-    def get_by_server_id(self, server_id: int) -> GatyaItemBuyItem | None:
-        if self.buy is None:
-            return None
-        for item in self.buy:
-            if item.server_id == server_id:
-                return item
-
-        return None

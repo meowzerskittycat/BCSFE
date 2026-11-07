@@ -347,19 +347,6 @@ def is_clear_all(map_choices_len: int) -> bool | None:
     )
 
 
-def is_unclear_all(map_choices_len: int) -> bool | None:
-    if map_choices_len <= 1:
-        return False
-
-    return dialog_creator.single_select_key(
-        dialog_creator.Actions[bool]
-        .new()
-        .add_new_key("unclear_all", lambda _: True)
-        .add_new_key("handle_individually", lambda _: False),
-        "unclear_chapters_q",
-    )
-
-
 def is_edit_all(map_choices_len: int) -> bool | None:
     if map_choices_len <= 1:
         return False

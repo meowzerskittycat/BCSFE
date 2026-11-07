@@ -289,47 +289,6 @@ class StoryChapters:
         index = 45 - index
         return index
 
-    def clear_previous_chapters(self, chapter_id: int):
-        chapters = self.get_real_chapters()
-        """
-        0: eoc 1
-        1: eoc 2 - requires eoc 1
-        2: eoc 3 - requires eoc 1 + eoc 2
-        3: itf 1 - requires eoc 1
-        4: itf 2 - requires eoc 1 + itf 1
-        5: itf 3 - requires eoc 1 + itf 1 + itf 2
-        6: cotc 1 - requires eoc 1 + itf 1
-        7: cotc 2 - requires eoc 1 + itf 1 + cotc 1
-        8: cotc 3 - requires eoc 1 + itf 1 + cotc 1 + cotc 2
-
-        """
-        if chapter_id == 1:  # eoc 2
-            chapters[0].clear_chapter()
-        elif chapter_id == 2:  # eoc 3
-            chapters[0].clear_chapter()
-            chapters[1].clear_chapter()
-        elif chapter_id == 3:  # itf 1
-            chapters[0].clear_chapter()
-        elif chapter_id == 4:  # itf 2
-            chapters[0].clear_chapter()
-            chapters[3].clear_chapter()
-        elif chapter_id == 5:  # itf 3
-            chapters[0].clear_chapter()
-            chapters[3].clear_chapter()
-            chapters[4].clear_chapter()
-        elif chapter_id == 6:  # cotc 1
-            chapters[0].clear_chapter()
-            chapters[3].clear_chapter()
-        elif chapter_id == 7:  # cotc 2
-            chapters[0].clear_chapter()
-            chapters[3].clear_chapter()
-            chapters[6].clear_chapter()
-        elif chapter_id == 8:  # cotc 3
-            chapters[0].clear_chapter()
-            chapters[3].clear_chapter()
-            chapters[6].clear_chapter()
-            chapters[7].clear_chapter()
-
     @staticmethod
     def get_chapter_type_from_index(index: int) -> int:
         if index < 3:

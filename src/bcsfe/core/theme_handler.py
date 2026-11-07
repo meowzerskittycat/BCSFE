@@ -50,23 +50,14 @@ class ThemeHandler:
             return None
         return cast(dict[str, Any], data) if isinstance(data, dict) else None
 
-    def get_short_name(self) -> str:
-        return self.theme_data.get("short_name", "")
-
     def get_name(self) -> str:
         return self.theme_data.get("name", "")
-
-    def get_description(self) -> str:
-        return self.theme_data.get("description", "")
 
     def get_author(self) -> str:
         return self.theme_data.get("author", "")
 
     def get_version(self) -> str:
         return self.theme_data.get("version", "")
-
-    def get_git_repo(self) -> str | None:
-        return self.theme_data.get("git_repo", None)
 
     def get_theme_colors(self) -> dict[str, Any]:
         return self.theme_data.get("colors", {})

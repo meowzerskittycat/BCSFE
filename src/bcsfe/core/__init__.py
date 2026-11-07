@@ -185,10 +185,6 @@ def consume[T](v1: None, v2: T) -> T:
     return v2
 
 
-def first_tuple[T](v: tuple[T, Any] | None) -> T | None:
-    return map_opt(v, lambda x: x[0])
-
-
 class CoreData:
     def init_data(self):
         self.config = Config(config_path, print_config_err)

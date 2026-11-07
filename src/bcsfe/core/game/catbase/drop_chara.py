@@ -33,15 +33,6 @@ class CharaDrop:
 
         return drops
 
-    def get_drop(self, stage_id: int) -> Drop | None:
-        if self.drops is None:
-            return None
-        for drop in self.drops:
-            if drop.stage_id == stage_id:
-                return drop
-
-        return None
-
     def get_drops_from_chara_id(self, chara_id: int) -> list[Drop] | None:
         if self.drops is None:
             return None

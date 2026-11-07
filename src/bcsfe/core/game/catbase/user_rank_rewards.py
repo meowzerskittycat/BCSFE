@@ -33,39 +33,12 @@ class RankGifts:
             rank_gift.append(RankGift(i, line[0].to_int(), rewards))
         return rank_gift
 
-    def get_rank_gift(self, user_rank: int) -> RankGift | None:
-        if self.rank_gift is None:
-            return None
-        for rank_gift in self.rank_gift:
-            if rank_gift.threshold == user_rank:
-                return rank_gift
-        return None
-
-    def get_all_rank_gifts(self, user_rank: int) -> list[RankGift] | None:
-        if self.rank_gift is None:
-            return None
-        return [
-            rank_gift
-            for rank_gift in self.rank_gift
-            if rank_gift.threshold <= user_rank
-        ]
-
     def get_by_id(self, id: int) -> RankGift | None:
         if self.rank_gift is None:
             return None
         if id >= len(self.rank_gift) or id < 0:
             return None
         return self.rank_gift[id]
-
-    def get_all_unlocked(self, user_rank: int) -> list[RankGift] | None:
-        if self.rank_gift is None:
-            return None
-
-        return [
-            rank_gift
-            for rank_gift in self.rank_gift
-            if rank_gift.threshold <= user_rank
-        ]
 
 
 class RankGiftDescription:

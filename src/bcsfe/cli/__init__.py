@@ -10,7 +10,6 @@ from bcsfe.cli import (
     save_management,
     server_cli,
     edits,
-    recent_saves,
     color_hex,
     commands,
     prompt,
@@ -39,6 +38,5 @@ __all__ = [
     "server_cli",
     "color_hex",
     "edits",
-    "recent_saves",
     "commands",
 ]
