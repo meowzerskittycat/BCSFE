@@ -169,7 +169,7 @@ def edit_int(
     text = config.get_full_input_localized(
         key, str(config.get_int(key)), str(config.get_default(key))
     )
-    color.color_print_key(text)
+    color.color_print(text)
     value = dialog_creator.edit_int_key(key.value, config.get_int(key), max)
     config.set(key, value)
 
@@ -184,7 +184,7 @@ def edit_game_data_repo(config: core.Config):
         config.get_str(core.ConfigKey.GAME_DATA_REPO),
         config.get_default(core.ConfigKey.GAME_DATA_REPO),
     )
-    color.color_print_key(text)
+    color.color_print(text)
     value = prompt.text("game_data_repo_dialog")
     if value is None:
         value = config.get_default(core.ConfigKey.GAME_DATA_REPO)
@@ -213,7 +213,7 @@ def edit_str(config: core.Config, key: core.ConfigKey):
         config.get_default(key),
     )
 
-    color.color_print_key(text)
+    color.color_print(text)
 
     str_val = core.core_data.local_manager.get_key(key.value)
 
@@ -232,7 +232,11 @@ def add_locale(config: core.Config):
             "git_not_installed",
         )
         return
-    git_repo = color.color_input_key("enter_locale_git_repo").strip()
+    git_repo = prompt.text("enter_locale_git_repo")
+    if git_repo is None or not git_repo.strip():
+        color.color_print_key("locale_cancelled")
+        return
+    git_repo = git_repo.strip()
     external_locale = core.ExternalLocale.from_git_repo(git_repo)
     if external_locale is None:
         color.color_print_key(
@@ -327,7 +331,7 @@ def edit_locale(config: core.Config):
         config.get_str(core.ConfigKey.LOCALE),
         config.get_default(core.ConfigKey.LOCALE),
     )
-    color.color_print_key(text)
+    color.color_print(text)
     all_locales = core.LocalManager.get_all_locales()
     value = dialog_creator.single_select_key(
         dialog_creator.Actions[str | None]
@@ -381,7 +385,11 @@ def add_theme(config: core.Config):
             "git_not_installed",
         )
         return
-    git_repo = color.color_input_key("enter_theme_git_repo").strip()
+    git_repo = prompt.text("enter_theme_git_repo")
+    if git_repo is None or not git_repo.strip():
+        color.color_print_key("theme_cancelled")
+        return
+    git_repo = git_repo.strip()
     external_theme = core.ExternalTheme.from_git_repo(git_repo)
     if external_theme is None:
         color.color_print_key(
@@ -418,7 +426,7 @@ def edit_theme(config: core.Config):
         current_theme,
         config.get_default(core.ConfigKey.THEME),
     )
-    color.color_print_key(text)
+    color.color_print(text)
     value = dialog_creator.single_select_key(
         dialog_creator.Actions[str | None]
         .new()

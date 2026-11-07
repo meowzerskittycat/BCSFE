@@ -19,6 +19,10 @@
   unknown map's name and two unknown-enemy names). A test now checks every key the code uses has
   English text, and that translations keep each message's `{placeholders}`.
 - Two Traditional Chinese save-location messages now show the folder path, like the English ones.
+- Vietnamese and Traditional Chinese now have every message (91 were still English), and a test
+  keeps them complete. The main menu prompt was blank in both, and several Traditional Chinese
+  messages were fixed: a broken colour tag when loading a save, download messages that swapped
+  the file and its source, and "Exit" and "infinity" left in English.
 - The language list is sorted, so it's in the same order on every system.
 - LOCALIZATION.md now explains how to translate for this fork and send translations here.
 - `bcsfe export SAVE -` no longer prints a broken pipe error when its output is cut short (e.g.
@@ -97,6 +101,10 @@ real 15.7 save) and CI on Windows, macOS and Linux
 
 ### Fixed
 
+- Adding a locale or theme from git: a blank answer (or `q`) now cancels instead of trying to
+  clone nothing, and a URL ending in `/` uses the repository's name. A URL with no name (`/`, `.`,
+  `..`) used to point at the shared repos folder or the data folder itself, which a failed clone
+  could then delete.
 - Picking gacha banners by name showed `{int}` after each name instead of the banner's ID.
 - A negative **Maximum save backups** other than -1 (e.g. typed into `config.yaml`) deleted the
   newest backups, including the one just made. Any negative number now keeps every backup.

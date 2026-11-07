@@ -3,10 +3,6 @@
 The editor ships in English, Vietnamese (`vi`) and Traditional Chinese (`tw`). Any message that
 isn't translated yet is shown in English, so a partial translation still works.
 
-> [!IMPORTANT]
-> Please don't use machine or AI translation. The Battle Cats and the editor use their own terms,
-> and a translation you can't check yourself will have mistakes you can't catch.
-
 ## Start a new language
 
 1. Run the editor and open **Editor → Config → Language → Create New Locale**.
@@ -44,8 +40,9 @@ Copy your folder to `src/bcsfe/files/locales/<code>/` in a fork of
 open a pull request. If you'd rather not use git, attach a zip of the folder to an
 [issue](https://github.com/meowzerskittycat/BCSFE/issues).
 
-The tests check that every translation keeps the `{placeholders}` of its English text and that
-every `{{reference}}` points to a real message:
+The tests check that every translation keeps the `{placeholders}` of its English text, that
+every `{{reference}}` points to a real message, and that the bundled translations have every
+English message:
 
 ```sh
 pytest tests/test_locales.py
