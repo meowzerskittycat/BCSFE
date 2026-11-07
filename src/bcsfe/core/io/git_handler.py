@@ -1,3 +1,5 @@
+import re
+
 from bcsfe import core
 from bcsfe.core import messages
 
@@ -9,7 +11,12 @@ class Repo:
         self.success = self.clone()
 
     def get_repo_name(self) -> str:
-        return self.url.split("/")[-1]
+        return re.split(r"[\\/]", self.url.strip().rstrip("/\\"))[-1]
+
+    def has_valid_name(self) -> bool:
+        # The name is a folder under the repos folder: an empty name, "." or ".." would
+        # point at that folder or its parent, which a failed clone then deletes.
+        return self.get_repo_name() not in ("", ".", "..")
 
     def get_path(self) -> core.Path:
         path = GitHandler.get_repo_folder().add(self.get_repo_name())
@@ -27,6 +34,8 @@ class Repo:
         return self.run_cmd(["git", "clone", "--", self.url, str(path)])
 
     def clone(self) -> bool:
+        if not self.has_valid_name():
+            return False
         if self.is_cloned():
             return True
         success = self.run_cmd(["git", "clone", "--", self.url, str(self.get_path())])
