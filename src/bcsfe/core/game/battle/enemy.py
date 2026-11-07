@@ -62,40 +62,6 @@ class EnemyDictionary:
         return list(filter(lambda i: i not in valid_enemies, range(total_enemies)))
 
 
-class EnemyDescription:
-    def __init__(self, trait_str: str, description: list[str] | None):
-        self.trait_str = trait_str
-        self.description = description
-
-
-class EnemyDescriptions:
-    def __init__(self, save_file: core.SaveFile):
-        self.save_file = save_file
-        self.descriptions = self.__get_descriptions()
-
-    def __get_descriptions(self) -> list[EnemyDescription] | None:
-        gdg = core.core_data.get_game_data_getter(self.save_file)
-        data = gdg.download(
-            "resLocal",
-            f"EnemyPictureBook_{core.core_data.get_lang(self.save_file)}.csv",
-        )
-        if data is None:
-            return None
-
-        csv = core.CSV(data, core.Delimeter.from_country_code_res(self.save_file.cc))
-        descriptions: list[EnemyDescription] = []
-
-        for _, row in enumerate(csv):
-            if len(row) == 1:
-                descriptions.append(EnemyDescription(row[0].to_str(), None))
-            else:
-                descriptions.append(
-                    EnemyDescription(row[0].to_str(), row[1:].to_str_list())
-                )
-
-        return descriptions
-
-
 class EnemyNames:
     def __init__(self, save_file: core.SaveFile):
         self.save_file = save_file

@@ -1,6 +1,6 @@
 import enum
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
-from collections.abc import Callable
 from bcsfe import core
 from bcsfe.core import messages
 
@@ -278,18 +278,14 @@ class GatyaInfos:
     ):
         if self.gatya_data_set is None:
             return
-        all_ids = len(self.gatya_data_set)
+        ids = range(len(self.gatya_data_set))
         if threaded:
-            funcs: list[Callable[..., Any]] = []
-            args: list[list[Any]] = []
-            for id in range(all_ids):
-                funcs.append(self.get)
-                args.append([id, print_progress])
-            core.thread_run_many(funcs, args, max_threads=max_threads)
-
+            with ThreadPoolExecutor(max_workers=max_threads) as pool:
+                # list() so an exception in a download isn't silently dropped.
+                list(pool.map(self.get, ids, [print_progress] * len(ids)))
         else:
-            for id in range(all_ids):
-                self.infos.append(self.get(id, print_progress=print_progress))
+            for id in ids:
+                self.get(id, print_progress)
 
         self.got_all = True
 

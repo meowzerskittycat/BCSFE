@@ -91,9 +91,9 @@ def get_storage_space(storage: list[core.StorageItem]) -> int:
 
 def edit_storage(save_file: core.SaveFile):
     display_storage(save_file, save_file.cats.storage_items)
-    exit = False
-    while not exit:
-        exit = edit_loop(save_file)
+    # Enter or the quit key (None) leaves the menu too, as in the other menus.
+    while edit_loop(save_file) is False:
+        pass
 
     color.color_print_key("storage_success")
 
@@ -178,13 +178,13 @@ def add_special_skills(save_file: core.SaveFile):
             items.append(item)
 
     space = get_storage_space(storage)
-    if len(options) > len(storage):
+    if len(items) > len(storage):
         color.color_print_key(
-            "too_many_skills_selected", max=len(storage), current=len(options)
+            "too_many_skills_selected", max=len(storage), current=len(items)
         )
         return
 
-    needs = len(options) - space
+    needs = len(items) - space
     if needs > 0:
         color.color_print_key("need_x_more_space", needs=needs)
         return

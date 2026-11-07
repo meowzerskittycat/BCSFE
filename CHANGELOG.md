@@ -121,6 +121,13 @@ real 15.7 save) and CI on Windows, macOS and Linux
 - Leaving the editor accepted only `y` to "Save latest changes before exiting?"; `Y` and `yes`
   are accepted now, like every other question. It also crashed if the save had been moved or
   deleted since it was opened.
+- Event tickets the save has no slot for were left out of the list but not out of the edit, so
+  the amounts typed could be saved to the wrong tickets. With no editable tickets the editor now
+  says so instead of showing an empty list.
+- Adding several copies of a special skill to storage only checked there was room for one, then
+  reported all of them as added while dropping those that didn't fit.
+- Enter or the quit key in the storage menu now leaves it, as in the other menus; only "Finish"
+  did before.
 - `all` when entering ids (cats, enemies, stages, banners) left out the last one
 
 - Creating a locale accepted any text as its code (e.g. `1 2`), made a folder with that name and

@@ -22,7 +22,6 @@ from bcsfe.core.game.battle.slots import LineUps
 from bcsfe.core.game.battle.enemy import (
     Enemy,
     EnemyNames,
-    EnemyDescriptions,
     EnemyDictionary,
 )
 from bcsfe.core.game.catbase.beacon_base import BeaconEventListScene
@@ -86,8 +85,6 @@ from bcsfe.core.game.catbase.talent_orbs import (
 )
 from bcsfe.core.game.catbase.unlock_popups import (
     UnlockPopups,
-    UnlockPopupData,
-    UnlockPopupLine,
 )
 from bcsfe.core.game.catbase.upgrade import Upgrade
 from bcsfe.core.game.catbase.user_rank_rewards import (
@@ -139,7 +136,7 @@ from bcsfe.core.io.data import (
 from bcsfe.core.io.json_file import JsonFile, int_keys
 from bcsfe.core.io.path import Path
 from bcsfe.core.io.save import SaveError, SaveFile, CantDetectSaveCCError
-from bcsfe.core.io.thread_helper import thread_run_many, Thread
+from bcsfe.core.io.thread_helper import Thread
 from bcsfe.core.io.yaml import YamlFile
 from bcsfe.core.io.git_handler import GitHandler, Repo
 from bcsfe.core.io.root_handler import RootHandler
@@ -150,8 +147,6 @@ from bcsfe.core.locale_handler import (
 )
 from bcsfe.core.log import Logger
 from bcsfe.core.server.event_data import (
-    ServerItemData,
-    ServerItemDataItem,
     ServerGatyaData,
     ServerGatyaDataSet,
     ServerGatyaDataItem,
@@ -401,12 +396,9 @@ __all__ = [
     "ConfigKey",
     "SpecialSkill",
     "WayDroidHandler",
-    "EnemyDescriptions",
     "EnemyDictionary",
     "GatyaItemCategory",
-    "ServerItemData",
     "GatyaItemBuyItem",
-    "ServerItemDataItem",
     "ServerGatyaData",
     "ServerGatyaDataSet",
     "ServerGatyaDataItem",
@@ -420,8 +412,6 @@ __all__ = [
     "LocalManager",
     "MapOption",
     "CantDetectSaveCCError",
-    "UnlockPopupData",
-    "UnlockPopupLine",
     "Localizable",
     "Delimeter",
     "Matatabi",
@@ -490,7 +480,6 @@ __all__ = [
     "ZeroLegendsChapters",
     "Row",
     "SaveError",
-    "thread_run_many",
     "Repo",
     "RootHandler",
     "ClientInfo",
