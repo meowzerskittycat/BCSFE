@@ -42,5 +42,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev]"
+      # Game data for the menu tests, from the bcdata mirror. Change the key
+      # when tests/tools/get_game_data.py asks for another version.
+      - uses: actions/cache@v4
+        with:
+          path: tests/game_data
+          key: game-data-en-15.6.1
+      - run: python tests/tools/get_game_data.py
       # Pull requests also run every menu feature with each set of answers.
       - run: pytest ${{ github.event_name == 'pull_request' && '--all-answers' || '' }}

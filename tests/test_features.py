@@ -5,8 +5,9 @@ Each feature gets a cycle of plausible answers (numbers, yes/no, ranges,
 KeyboardInterrupt, as Ctrl+C would. Whatever the feature did must leave a
 save that writes and reads back identically.
 
-There's no game data and no network here, so features that need either
-must fail gracefully rather than crash.
+There's no network here. Each feature runs without game data, where it must
+fail gracefully, and, once tests/tools/get_game_data.py has downloaded it
+(CI does), with game data, so the menus' real work runs too.
 """
 
 import itertools
@@ -20,7 +21,7 @@ from bcsfe import core
 from bcsfe.cli import color
 from bcsfe.cli.feature_handler import FeatureHandler
 
-from .conftest import real_fixtures
+from .conftest import has_game_data, real_fixtures, use_game_data
 
 # Save management uploads, writes files and exits; it's tested separately.
 SKIP_CATEGORIES = {"save_management"}
@@ -76,6 +77,16 @@ def test_every_feature_is_tested() -> None:
     assert len(features()) > 80
 
 
+@pytest.fixture(
+    params=[False, *([True] if has_game_data() else [])],
+    ids=lambda on: "game_data" if on else "no_game_data",
+)
+def game_data(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[bool]:
+    use_game_data(request.param, tmp_path / "no_game_data")
+    yield request.param
+    use_game_data(False, tmp_path / "no_game_data")
+
+
 def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
     if "answers" not in metafunc.fixturenames:
         return
@@ -87,7 +98,10 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
 
 @pytest.mark.parametrize("path", features(), ids="/".join)
 def test_feature_does_not_crash(
-    monkeypatch: pytest.MonkeyPatch, path: tuple[str, ...], answers: list[str]
+    monkeypatch: pytest.MonkeyPatch,
+    path: tuple[str, ...],
+    answers: list[str],
+    game_data: bool,
 ) -> None:
     save = core.SaveFile(core.Data(save_bytes()))
     feature = FeatureHandler(save).get_feature(path)

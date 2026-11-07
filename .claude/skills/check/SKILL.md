@@ -10,6 +10,7 @@ is older, find a 3.14 interpreter or virtualenv first). Run them all even if one
 each as passed or failed with the relevant output.
 
 ```sh
+python tests/tools/get_game_data.py   # once; menu tests also run with game data
 ruff check src tests
 ruff format --check src tests
 pyright

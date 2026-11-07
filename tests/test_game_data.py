@@ -127,3 +127,40 @@ def test_a_download_no_source_has_is_reported(web: Web) -> None:
     g.print = True
     assert g.download_version_data() is None
     assert web.shown[-1] == "game_data_download_failed"
+
+
+def gv(version: str) -> core.GameVersion:
+    return core.GameVersion.from_string(version)
+
+
+@pytest.mark.parametrize(
+    ("save", "expected"),
+    [
+        ("15.6.1", "15.6.1"),  # the same version
+        ("15.6.0", "15.6.1"),  # else the oldest newer one
+        ("15.11.0", "15.11.0"),
+        ("15.9.5", "15.10.0"),  # 15.10 is newer than 15.9, not older
+        ("16.0.0", "15.11.0"),  # else the newest older one
+    ],
+)
+def test_the_closest_game_data_version_is_chosen(save: str, expected: str) -> None:
+    available = ["15.10.0", "15.6.1", "15.11.0", "9.0.0", "15.9.0"]
+    assert GameDataGetter.choose_version(available, gv(save)) == expected
+
+
+def test_no_usable_version_is_none() -> None:
+    assert GameDataGetter.choose_version([], gv("15.6.1")) is None
+    assert GameDataGetter.choose_version(["not a version"], gv("15.6.1")) is None
+
+
+def test_offline_an_older_downloaded_version_is_used(
+    web: Web, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    en = core.CountryCode.from_code("en")
+    monkeypatch.setattr(
+        GameDataGetter,
+        "get_all_downloaded_versions",
+        staticmethod(lambda: {en: [gv("15.5.0"), gv("15.6.1")]}),
+    )
+    g = GameDataGetter(en, gv("15.7.0"), do_print=False)
+    assert g.version == "15.6.1"
