@@ -37,6 +37,10 @@ version = { attr = "bcsfe.__version__" }
 [tool.setuptools]
 package-dir = { "" = "src" }
 
+# Locales and themes ship in the package; game data is downloaded at run time.
+[tool.setuptools.package-data]
+bcsfe = ["py.typed", "files/locales/**/*", "files/themes/*"]
+
 [tool.pyright]
 typeCheckingMode = "strict"
 include = ["src"]
