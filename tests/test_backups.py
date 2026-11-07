@@ -52,6 +52,19 @@ def test_old_backups_are_pruned(saves: core.Path) -> None:
     assert [p.basename() for p, *_ in core.SaveFile.get_backups()] == [DATES[1]]
 
 
+@pytest.mark.parametrize("limit", [-1, -2])
+def test_a_negative_limit_keeps_every_backup(saves: core.Path, limit: int) -> None:
+    make_backups(saves)
+    config = core.core_data.config
+    before = config.get_int(core.ConfigKey.MAX_BACKUPS)
+    config.set(core.ConfigKey.MAX_BACKUPS, limit)
+    try:
+        core.SaveFile.check_backups()
+    finally:
+        config.set(core.ConfigKey.MAX_BACKUPS, before)
+    assert len(core.SaveFile.get_backups()) == len(DATES)
+
+
 def test_a_restored_backup_is_loaded_without_a_save_path(
     saves: core.Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -69,3 +82,32 @@ def test_a_restored_backup_is_loaded_without_a_save_path(
 
 def test_restoring_with_no_backups_says_so(saves: core.Path) -> None:
     assert SaveManagement.restore_backup() is None
+
+
+@pytest.mark.parametrize("content", [b"", b"ab", b"\x00" * 3000])
+def test_a_file_that_isnt_a_save_is_reported(
+    saves: core.Path, monkeypatch: pytest.MonkeyPatch, content: bytes
+) -> None:
+    path = saves.add("not_a_save")
+    path.write(core.Data(content))
+    answer(monkeypatch, "1")  # the first region, when asked
+    assert SaveManagement.load_save_file_path(path) is None
+
+
+def test_a_failed_copy_to_documents_is_reported(
+    saves: core.Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = saves.add("SAVE_DATA_elsewhere")
+    path.write(core.Data(real_fixtures()[0].read_bytes()))
+    shown: list[str] = []
+    monkeypatch.setattr(
+        color, "color_print_key", lambda key, *_a, **_k: shown.append(key)
+    )
+
+    def refuse(_self: core.Path, _target: core.Path) -> None:
+        raise PermissionError("read-only")
+
+    monkeypatch.setattr(core.Path, "copy", refuse)
+    loaded = SaveManagement.load_save_file_path(path)
+    assert loaded is not None
+    assert "save_copy_fail" in shown

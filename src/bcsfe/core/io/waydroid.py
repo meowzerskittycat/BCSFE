@@ -40,7 +40,8 @@ class WayDroidHandler(io.root_handler.RootHandler):
         if waydroid_ip is None:
             return False
 
-        ip, _ = device.split(":", 1)
+        # USB devices are named by serial number, with no ":port".
+        ip, _, _ = device.partition(":")
         return ip == waydroid_ip.strip()
 
     def set_package_name(self, package_name: str):
@@ -85,11 +86,11 @@ class WayDroidHandler(io.root_handler.RootHandler):
         if not result.success:
             return result
 
-        # delete /sdcard file again
-        #
-        return self.adb_handler.run_shell(
+        # The save is already pulled; a leftover copy isn't a failure.
+        self.adb_handler.run_shell(
             f"rm {shlex.quote(f'/sdcard/{device_path.basename()}')}"
         )
+        return result
 
     def push_file(
         self, local_path: core.Path, device_path: core.Path
@@ -126,16 +127,7 @@ class WayDroidHandler(io.root_handler.RootHandler):
         if not result.success:
             return []
 
-        packages: list[str] = []
-
-        for package in result.result.split("\n"):
-            parts = package.split("/")
-            if len(parts) < 4:
-                continue
-
-            packages.append(package.split("/")[3])
-
-        return packages
+        return io.adb_handler.parse_packages(result.result)
 
     def save_battlecats_save(self, local_path: core.Path) -> core.CommandResult:
         return self.pull_file(self.get_battlecats_save_path(), local_path)

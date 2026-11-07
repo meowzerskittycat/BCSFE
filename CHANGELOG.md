@@ -25,6 +25,7 @@
   piped into `head`).
 - CI runs once per pull request push and on `main` (it used to run twice for every push to a
   pull request), cancels runs a newer push replaced, and uses current versions of its actions.
+- CI measures test coverage and fails if it drops; Dependabot keeps the actions up to date.
 - Pushes to `main` test on Windows and Linux; pull requests also test on macOS. A macOS job
   that waited too long for a runner was cancelled and turned `main`'s badge red.
 - Removed `.github/FUNDING.yml`, which pointed to upstream's donation page.
@@ -96,6 +97,40 @@ real 15.7 save) and CI on Windows, macOS and Linux
 
 ### Fixed
 
+- Picking gacha banners by name showed `{int}` after each name instead of the banner's ID.
+- A negative **Maximum save backups** other than -1 (e.g. typed into `config.yaml`) deleted the
+  newest backups, including the one just made. Any negative number now keeps every backup.
+- A theme that's missing or unreadable now falls back to the default theme instead of turning
+  all colours off.
+- A `config.yaml` that isn't valid YAML is still replaced with defaults, but the old file is kept
+  as `config.yaml.broken` so hand-edited settings can be recovered.
+- Picking a USB device over adb crashed when waydroid was running, because USB device IDs have
+  no `:port`.
+- Picking a waydroid device crashed if `waydroid status` worked but `waydroid -V` didn't. The
+  editor now says what failed and carries on with plain adb.
+- Pulling a save over adb or waydroid no longer reports failure when only deleting the temporary
+  copy on `/sdcard` failed.
+- The adb device list no longer drops the last device when adb's output has no trailing blank
+  line, and leaves out unauthorized or offline devices, which can't be used until they're
+  allowed on the device.
+- Game packages found on a device are read correctly when `find` prints a double slash or
+  Windows line endings.
+- Picking a game package and then a region for a save the editor couldn't read forgot the
+  package, so pushing the save back to the device later failed.
+- Opening an empty file, or one only a few bytes long, crashed instead of saying it isn't a save.
+- Leaving the editor accepted only `y` to "Save latest changes before exiting?"; `Y` and `yes`
+  are accepted now, like every other question. It also crashed if the save had been moved or
+  deleted since it was opened.
+- Event tickets the save has no slot for were left out of the list but not out of the edit, so
+  the amounts typed could be saved to the wrong tickets. With no editable tickets the editor now
+  says so instead of showing an empty list.
+- Adding several copies of a special skill to storage only checked there was room for one, then
+  reported all of them as added while dropping those that didn't fit.
+- Enter or the quit key in the storage menu now leaves it, as in the other menus; only "Finish"
+  did before.
+- If the copy of a loaded save to the documents folder or writing a save failed, the editor
+  printed a bare error (or, for the copy, a traceback over the menu). It now says what it was
+  doing and where.
 - `all` when entering ids (cats, enemies, stages, banners) left out the last one
 
 - Creating a locale accepted any text as its code (e.g. `1 2`), made a folder with that name and

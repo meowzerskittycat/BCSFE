@@ -123,12 +123,6 @@ class Row:
             return None
         return val.to_int()
 
-    def next_str_opt(self) -> str | None:
-        val = self.next_opt()
-        if val is None:
-            return None
-        return val.to_str()
-
     def next_bool_opt(self) -> bool | None:
         val = self.next_opt()
         if val is None:
@@ -211,15 +205,6 @@ class CSV:
             new_line.append(core.Data(str(item)))  # type: ignore
         self.lines.append(Row.from_list(new_line))
 
-    def set_line(self, index: int, line: list[Any]):
-        new_line: list[core.Data] = []
-        for item in line:
-            new_line.append(core.Data(item))
-        try:
-            self.lines[index] = Row.from_list(new_line)
-        except IndexError:
-            self.lines.append(Row.from_list(new_line))
-
     def to_data(self) -> core.Data:
         csv: list[str] = []
         for line in self.lines:
@@ -238,12 +223,6 @@ class CSV:
 
         self.index += 1
         return line
-
-    def reset_index(self):
-        self.index = 0
-
-    def has_line(self) -> bool:
-        return self.index < len(self.lines)
 
     def __iter__(self):
         return self

@@ -30,7 +30,7 @@ class SaveManagement:
         try:
             save_file.to_file(save_file.save_path)
         except OSError as e:
-            print(e)
+            color.color_print_key("save_write_fail", path=save_file.save_path, error=e)
             return
 
         color.color_print_key("save_success", path=save_file.save_path)
@@ -136,10 +136,7 @@ class SaveManagement:
         success = select_adb_device(adb_handler)
         if not success:
             return adb_handler
-        device_id = adb_handler.get_device()
-        if core.WayDroidHandler.is_waydroid(device_id):
-            adb_handler = core.WayDroidHandler()
-            adb_handler.adb_handler.set_device(device_id)
+        adb_handler = waydroid_if_needed(adb_handler)
         if save_file.package_name is not None:
             adb_handler.set_package_name(save_file.package_name)
         else:
@@ -297,13 +294,7 @@ class SaveManagement:
         if not select_adb_device(handler):
             return None
 
-        device_id = handler.get_device()
-
-        if core.WayDroidHandler.is_waydroid(device_id):
-            handler = core.WayDroidHandler()
-            handler.adb_handler.set_device(device_id)
-
-        return SaveManagement.pull_root(handler)
+        return SaveManagement.pull_root(waydroid_if_needed(handler))
 
     @staticmethod
     def pull_root(handler: core.RootHandler):
@@ -455,40 +446,25 @@ class SaveManagement:
             if cc is None:
                 return None
             try:
-                save_file = core.SaveFile(data, cc)
+                save_file = core.SaveFile(data, cc, package_name=package_name)
             except Exception:
-                tb = core.core_data.logger.get_traceback()
-                data.reset_pos()
-                color.color_print_key(
-                    "parse_save_error",
-                    error=tb,
-                    version=bcsfe.__version__,
-                    game_version=data.read_int(),
-                    country_code=cc.get_code(),
-                )
+                show_parse_error(data, cc)
                 return None
 
         except Exception:
-            tb = core.core_data.logger.get_traceback()
-            save_file2 = core.SaveFile(data, cc, load=False)
-            data.reset_pos()
-            color.color_print_key(
-                "parse_save_error",
-                error=tb,
-                version=bcsfe.__version__,
-                game_version=data.read_int(),
-                country_code=save_file2.cc,
-            )
+            show_parse_error(data, core.SaveFile(data, cc, load=False).cc)
             return None
 
         save_file.save_path = save_path
         if not backup:
             return save_file, save_path
         backup_path = save_file.get_default_path()
+        # Copied here rather than in a thread: the save is small, and a failure
+        # in a thread could only print a traceback over the menu.
         try:
-            save_file.save_path.copy_thread(backup_path)
-        except Exception as e:
-            print(e)
+            save_path.copy(backup_path)
+        except OSError as e:
+            color.color_print_key("save_copy_fail", path=backup_path, error=e)
 
         return save_file, backup_path
 
@@ -580,6 +556,40 @@ class SaveManagement:
         save_file.set_gv(gv)
         core.core_data.init_data()
         color.color_print_key("game_version_set", version=gv.to_string())
+
+
+def show_parse_error(data: core.Data, cc: core.CountryCode) -> None:
+    """Say the save couldn't be read, with what's needed for a bug report."""
+    tb = core.core_data.logger.get_traceback()
+    # The game version is the first 4 bytes; a file too short to hold it
+    # isn't a save at all.
+    head = core.Data(data.to_bytes()[:4])
+    color.color_print_key(
+        "parse_save_error",
+        error=tb,
+        version=bcsfe.__version__,
+        game_version=head.read_int() if len(head) == 4 else "?",
+        country_code=cc.get_code(),
+    )
+
+
+def waydroid_if_needed(
+    handler: core.AdbHandler,
+) -> core.AdbHandler | core.WayDroidHandler:
+    """A waydroid handler if the picked device is waydroid's, else `handler`.
+
+    Waydroid needs its own shell to reach the save; if that can't be used,
+    say why and carry on with plain adb, which may still work."""
+    device_id = handler.get_device()
+    if not core.WayDroidHandler.is_waydroid(device_id):
+        return handler
+    try:
+        waydroid = core.WayDroidHandler()
+    except core.io.waydroid.WayDroidNotInstalledError as e:
+        core.WayDroidHandler.display_waydroid_not_installed(e)
+        return handler
+    waydroid.adb_handler.set_device(device_id)
+    return waydroid
 
 
 def select_adb_device(handler: core.AdbHandler) -> bool:

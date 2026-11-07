@@ -1,0 +1,14 @@
+# Weekly pull requests that bump the GitHub Actions the workflows use, all in
+# one PR. Python dependencies aren't listed: pyproject.toml has no upper bounds,
+# so CI already installs the latest of each and catches a breaking release.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: CI

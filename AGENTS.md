@@ -26,8 +26,9 @@ python tests/tools/get_game_data.py   # game data for the menu tests (gitignored
 ruff check src tests
 ruff format --check src tests
 pyright                    # strict mode, src only
-pytest                     # about 530 tests, a minute or two
-pytest --all-answers       # every menu feature with every answer set (about 900 tests, about five minutes)
+pytest                     # about 580 tests, a minute or two
+pytest --all-answers       # every menu feature with every answer set (about 940 tests, about five minutes)
+pytest --cov               # with coverage; fails below fail_under in pyproject.toml
 pytest tests/test_locales.py   # just the message checks
 ```
 
@@ -37,7 +38,12 @@ prompt or the config. CI (`.github/workflows/ci.yml`) runs lint and pyright, the
 - pull requests: Linux, Windows and macOS, with `--all-answers`;
 - pushes to `main`: Linux and Windows only (macOS runners queue for a long time and a job left
   waiting is cancelled, which used to turn `main`'s badge red with no test failing);
-- newer pushes to a pull request cancel its older run.
+- newer pushes to a pull request cancel its older run;
+- the Linux job measures branch coverage and fails if it drops below `fail_under`
+  (`pyproject.toml`); the report is in the run's summary. Raise the floor as tests are added;
+  never lower it to get green.
+- Dependabot (`.github/dependabot.yml`) opens one weekly PR bumping the workflows' actions. It
+  doesn't watch Python packages: they have no upper bounds, so CI always tests the latest.
 
 ## Hard rules
 

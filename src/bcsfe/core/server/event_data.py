@@ -194,14 +194,8 @@ class ServerGatyaDataSet:
             collab_message,
         )
 
-    def is_visible_silhouette(self) -> bool:
-        return (self.flags & 1) != 0
-
     def is_required_user_rank_1600(self) -> bool:
         return (self.flags & 2) != 0
-
-    def has_stepup_gatya(self) -> bool:
-        return (self.flags & 4) != 0
 
 
 class ServerGatyaDataItem:
@@ -231,79 +225,6 @@ class ServerGatyaDataItem:
 
     def get_collab_flag(self) -> bool:
         return self.flags == 4
-
-    def get_first_rare_flag(self) -> bool:
-        return self.flags == 2
-
-    def get_first_rare_10_flag(self) -> bool:
-        return self.flags == 3
-
-
-class ServerItemDataItem:
-    def __init__(
-        self,
-        filter: FilterData,
-        event_number: int,  # server item id
-        item_number: int,
-        item_unit: int,  # base quanity, not cat unit (e.g 2 XP+1000s)
-        title: str,
-        message: str,
-        stage_progress: int,
-        stage_progress_flag: int,
-        flags: int,
-        locales: list[Localization] | None,
-    ):
-        self.filter = filter
-        self.event_number = event_number
-        self.item_number = item_number
-        self.item_unit = item_unit
-        self.title = title
-        self.message = message
-        self.stage_progress = stage_progress
-        self.stage_progress_flag = stage_progress_flag
-        self.flags = flags
-        self.locales = locales
-
-    def is_every_day(self) -> bool:
-        return (self.flags & 1) != 0
-
-    def is_required_user_rank_1600(self) -> bool:
-        return (self.flags & 2) != 0
-
-    @staticmethod
-    def from_csv_row(row: core.Row) -> ServerItemDataItem:
-        filter = FilterData.from_csv_row(row)
-
-        event_number = row.next_int()
-        item_number = row.next_int()
-        item_unit = row.next_int()
-        title = row.next_str()
-        message = row.next_str()
-        stage_progress = row.next_int()
-        stage_progress_flag = row.next_bool()
-        flags = row.next_int()
-
-        locales: list[Localization] | None = None
-
-        if not row.done():
-            locales = []
-            total_locales = row.next_int()
-
-            for _ in range(total_locales):
-                locales.append(Localization.from_csv_row(row))
-
-        return ServerItemDataItem(
-            filter,
-            event_number,
-            item_number,
-            item_unit,
-            title,
-            message,
-            stage_progress,
-            stage_progress_flag,
-            flags,
-            locales,
-        )
 
 
 def read_event_data[Item, T](
@@ -339,21 +260,6 @@ def read_event_data[Item, T](
         items.append(item)
 
     return init_func(items)
-
-
-class ServerItemData:
-    def __init__(self, items: list[ServerItemDataItem]):
-        self.items = items
-
-    @staticmethod
-    def from_csv(csv: core.CSV) -> ServerItemData | None:
-        return read_event_data(csv, ServerItemDataItem.from_csv_row, ServerItemData)
-
-    @staticmethod
-    def from_data(data: core.Data) -> ServerItemData | None:
-        csv = core.CSV(data, delimiter="\t", remove_comments=False, remove_empty=False)
-
-        return ServerItemData.from_csv(csv)
 
 
 class ServerGatyaData:

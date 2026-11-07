@@ -1,6 +1,6 @@
 from io import BytesIO
 from typing import Any, ClassVar, cast
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Iterable, Iterator
 
 
 import lzma
@@ -268,17 +268,6 @@ class GameDataGetter:
         data.to_file(path)
         return data
 
-    def save_file_data(
-        self, pack_name: str, file_name: str, data: core.Data
-    ) -> core.Data | None:
-        pack_name = self.get_packname(pack_name)
-
-        path = self.get_file_path(pack_name, file_name)
-        if path is None:
-            return None
-        data.to_file(path)
-        return data
-
     def is_downloaded(self, pack_name: str, file_name: str) -> bool:
         pack_name = self.get_packname(pack_name)
         path = self.get_file_path(pack_name, file_name)
@@ -342,31 +331,6 @@ class GameDataGetter:
                 self.print_no_file(pack_name, file_name)
             return None
         return data
-
-    def download_all(
-        self,
-        pack_name: str,
-        file_names: list[str],
-        display_text: bool = True,
-    ) -> list[tuple[str, core.Data] | None]:
-        pack_name = self.get_packname(pack_name)
-
-        callables: list[Callable[..., Any]] = []
-        args: list[tuple[str, str, int, bool]] = []
-        for file_name in file_names:
-            callables.append(self.download)
-            args.append((pack_name, file_name, 2, display_text))
-        core.thread_run_many(callables, args)
-        data_list: list[tuple[str, core.Data] | None] = []
-        for file_name in file_names:
-            path = self.get_file_path(pack_name, file_name)
-            if path is None:
-                data_list.append(None)
-            elif not path.exists():
-                data_list.append(None)
-            else:
-                data_list.append((file_name, path.read()))
-        return data_list
 
     @staticmethod
     def get_downloaded_versions_region(cc: core.CountryCode) -> list[core.GameVersion]:

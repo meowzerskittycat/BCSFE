@@ -29,10 +29,6 @@ class PlayTime:
     def just_minutes(self) -> int:
         return self.minutes % 60
 
-    @property
-    def just_hours(self) -> int:
-        return self.hours % 60
-
     @staticmethod
     def from_hours(hours: int) -> PlayTime:
         return PlayTime(hours * 60 * 60 * PlayTime.get_fps())

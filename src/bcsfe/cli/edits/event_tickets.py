@@ -81,6 +81,9 @@ class EventTickets:
 
         event_names: list[str] = []
         values: list[int] = []
+        # Only tickets the save has a slot for are shown, so the edited values
+        # line up with these, not with every ticket event.
+        shown: list[core.GatyaItemBuyItem] = []
 
         for event_item, gset, gatya_item in event_ticket_items:
             start_y, start_m, start_d = split_yyyymmdd(event_item.filter.start_yyyymmdd)
@@ -103,6 +106,11 @@ class EventTickets:
             if current_amount is not None:
                 event_names.append(base_msg)
                 values.append(current_amount)
+                shown.append(gatya_item)
+
+        if not shown:
+            cli.color.color_print_key("no_event_tickets")
+            return
 
         values = cli.dialog_creator.edit_ints_key(
             "event_tickets",
@@ -111,9 +119,7 @@ class EventTickets:
             max=prompt.MaxValue.i32(core.core_data.max_value_manager.event_tickets),
         )
 
-        for (_event_item, _gset, gatya_item), value in zip(
-            event_ticket_items, values, strict=False
-        ):
+        for gatya_item, value in zip(shown, values, strict=True):
             event_tickets.edit_ticket(gatya_item.id, value)
 
     def get_ticket(self, item_id: int) -> int | None:

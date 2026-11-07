@@ -23,10 +23,6 @@ class CatEditor:
     def get_non_gacha_cats(self):
         return self.save_file.cats.get_non_gacha_cats(self.save_file)
 
-    def filter_cats(self, cats: list[core.Cat]) -> list[core.Cat]:
-        unlocked_cats = self.get_current_cats()
-        return [cat for cat in cats if cat in unlocked_cats]
-
     def get_cats_rarity(self, rarity: int) -> list[core.Cat]:
         return self.save_file.cats.get_cats_rarity(self.save_file, rarity)
 
@@ -252,9 +248,6 @@ class CatEditor:
             cats_selected.append(cat_list[cat_option_id])
         return cats_selected
 
-    def select_obtainable(self) -> list[core.Cat] | None:
-        return self.get_cats_obtainable()
-
     def select_gatya_banner_name(self) -> list[int] | None:
         filter_down = prompt.confirm("filter_down_q_gatya")
         if filter_down is None:
@@ -289,12 +282,13 @@ class CatEditor:
 
         formatted_names: list[str] = []
 
-        for name in new_names:
+        # The ID is what "by ID" asks for, so showing it here lets users
+        # switch to that next time.
+        for name, id in zip(new_names, ids, strict=True):
             formatted_name = core.core_data.local_manager.get_key(
-                "banner_txt", name=name
+                "banner_txt", name=name, int=id
             )
             formatted_names.append(formatted_name)
-        # TODO: include ids?
         gatya_option_ids = prompt.choose_many(
             formatted_names,
             dialog="select_gatya_banner",

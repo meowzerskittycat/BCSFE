@@ -92,15 +92,10 @@ class RootHandler:
         return local_path, result
 
     def load_locally(self, local_path: core.Path) -> core.CommandResult:
-        success = self.load_battlecats_save(local_path)
-        if not success:
-            return core.CommandResult.create_failure()
-
-        success = self.rerun_game()
-        if not success:
-            return core.CommandResult.create_failure()
-
-        return core.CommandResult.create_success()
+        result = self.load_battlecats_save(local_path)
+        if not result.success:
+            return result
+        return self.rerun_game()
 
     def load_save(
         self, save: core.SaveFile, rerun_game: bool = True

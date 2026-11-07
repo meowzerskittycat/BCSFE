@@ -117,16 +117,8 @@ class MaxValue:
         return MaxValue.new_bits(max, 15)
 
     @staticmethod
-    def u16(max: int | None = None) -> MaxValue:
-        return MaxValue.new_bits(max, 16)
-
-    @staticmethod
     def i8(max: int | None = None) -> MaxValue:
         return MaxValue.new_bits(max, 7)
-
-    @staticmethod
-    def u8(max: int | None = None) -> MaxValue:
-        return MaxValue.new_bits(max, 8)
 
     def clamp(self, v: int) -> int:
         return min(self.max, v)

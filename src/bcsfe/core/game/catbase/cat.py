@@ -11,9 +11,6 @@ class SkillLevel:
         self.id = id
         self.levels = levels
 
-    def get_total_levels(self) -> int:
-        return len(self.levels)
-
     @staticmethod
     def from_row(row: core.Row):
         id = row[0].to_int()
@@ -190,15 +187,6 @@ class TalentData:
     def get_cat_skill(self, cat_id: int) -> CatSkill | None:
         return self.cats.get_cat_skill(cat_id)
 
-    def get_skill_from_cat(self, cat_id: int, skill_id: int) -> Skill | None:
-        cat_skill = self.get_cat_skill(cat_id)
-        if cat_skill is None:
-            return None
-        for skill in cat_skill.skills:
-            if skill.ability_id == skill_id:
-                return skill
-        return None
-
     def get_talent_from_cat_skill(self, cat: core.Cat, skill_id: int) -> Talent | None:
         talents = cat.talents
         if talents is None:
@@ -207,18 +195,6 @@ class TalentData:
             if talent.id == skill_id:
                 return talent
         return None
-
-    def get_cat_skill_name(self, cat_id: int, skill_id: int) -> str | None:
-        skill = self.get_skill_from_cat(cat_id, skill_id)
-        if skill is None:
-            return None
-        return self.get_skill_name(skill.text_id)
-
-    def get_cat_skill_level(self, cat_id: int, skill_id: int) -> SkillLevel | None:
-        skill = self.get_skill_from_cat(cat_id, skill_id)
-        if skill is None:
-            return None
-        return self.get_skill_level(skill.lvid)
 
     def get_cat_talents(
         self, cat: core.Cat
@@ -489,16 +465,6 @@ class UnitBuy:
         if unit_buy is None:
             return -1
         return unit_buy.rarity
-
-    def filter_rarity(self, rarity: int) -> list[int] | None:
-        if self.unit_buy is None:
-            return None
-        ids: list[int] = []
-        for i, cat in enumerate(self.unit_buy):
-            if cat.rarity == rarity:
-                ids.append(i)
-
-        return ids
 
 
 class UnitLimitCatData:

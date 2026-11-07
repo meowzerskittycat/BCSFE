@@ -81,12 +81,6 @@ class SpecialSkills:
     def __init__(self, skills: list[SpecialSkill]):
         self.skills = skills
 
-    def get_upgrade(self, valid_skill_id: int) -> SpecialSkill:
-        if valid_skill_id >= 1:
-            valid_skill_id += 1
-
-        return self.skills[valid_skill_id]
-
     def set_upgrade(
         self,
         valid_skill_id: int,
@@ -165,15 +159,6 @@ class SpecialSkills:
 
     def __str__(self) -> str:
         return f"Skills(skills={self.skills})"
-
-    def get_from_id(self, id: int, only_valid: bool = True) -> SpecialSkill | None:
-        if only_valid:
-            skills = self.get_valid_skills()
-        else:
-            skills = self.skills
-        if id >= len(skills) or id < 0:
-            return None
-        return skills[id]
 
 
 class AbilityDataItem:

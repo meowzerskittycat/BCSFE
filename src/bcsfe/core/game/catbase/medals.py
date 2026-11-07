@@ -45,10 +45,3 @@ class MedalNames:
         for row in csv:
             names.append(row.to_str_list())
         return names
-
-    def get_medal_name(self, medal_id: int) -> list[str] | None:
-        if self.medal_names is None:
-            return None
-        if medal_id < 0 or medal_id >= len(self.medal_names):
-            return []
-        return self.medal_names[medal_id]

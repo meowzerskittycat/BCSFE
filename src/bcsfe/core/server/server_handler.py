@@ -1,4 +1,3 @@
-import base64
 import time
 from typing import Any
 
@@ -63,36 +62,6 @@ class ServerHandler:
 
     def save_save_key_data(self, save_key: dict[str, Any]):
         self.save_file.store_dict(ServerHandler.get_save_key_key(), save_key)
-
-    def get_stored_save_key_data(self) -> dict[str, Any] | None:
-        save_key_data = self.save_file.get_dict(ServerHandler.get_save_key_key())
-        if save_key_data is None:
-            return None
-        if not self.validate_save_key_data(save_key_data):
-            self.remove_stored_save_key_data()
-            return None
-        return save_key_data
-
-    def validate_save_key_data(self, save_key_data: dict[str, Any]) -> bool:
-        key = save_key_data.get("key")
-        if key is None:
-            return False
-        if key.split("/")[2] != self.save_file.inquiry_code:
-            return False
-        policy = save_key_data.get("policy")
-        if policy is None:
-            return False
-        policy = base64.b64decode(policy)
-        json_policy = core.JsonFile.from_data(core.Data(policy)).as_object()
-        expiration = json_policy.get("expiration")
-        if expiration is None:
-            return False
-        expiration = int(
-            time.mktime(time.strptime(expiration, "%Y-%m-%dT%H:%M:%S.%fZ"))
-        )
-        if expiration < time.time():
-            return False
-        return True
 
     def remove_stored_save_key_data(self):
         self.save_file.remove_dict(ServerHandler.get_save_key_key())
@@ -315,15 +284,9 @@ class ServerHandler:
         return payload
 
     def get_save_key(self) -> dict[str, Any] | None:
-        # save_key = self.get_stored_save_key_data()
-        # if save_key and save_key.get("key", None):
-        #    return save_key
         auth_token = self.get_auth_token()
         if auth_token is None:
             return None
-        # save_key = self.get_stored_save_key_data()
-        # if save_key:
-        #    return save_key
         save_key = self.get_save_key_new(auth_token)
         if save_key is not None:
             return save_key
@@ -438,13 +401,6 @@ class ServerHandler:
         if self.print:
             print()
         return (transfer_code, confirmation_code)
-
-    def has_managed_items(self) -> bool:
-        bmd = core.BackupMetaData(self.save_file)
-        managed_items = bmd.get_managed_items()
-        if len(managed_items) == 0:
-            return False
-        return True
 
     def upload_meta_data(self) -> bool:
         auth_token = self.get_auth_token()
@@ -644,9 +600,3 @@ class ServerHandler:
 
     def download_gatya_data(self) -> core.Data | None:
         return self.download_event_data("gatya.tsv")
-
-    def download_item_data(self) -> core.Data | None:
-        return self.download_event_data("item.tsv")
-
-    def download_sale_data(self) -> core.Data | None:
-        return self.download_event_data("sale.tsv")

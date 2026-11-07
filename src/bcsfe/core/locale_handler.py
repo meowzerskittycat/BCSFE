@@ -497,19 +497,6 @@ class LocalManager:
         """
         return LocalManager(core.core_data.config.get_str(core.ConfigKey.LOCALE))
 
-    def check_duplicates(self):
-        """Checks for duplicate keys in all property files.
-
-        Raises:
-            KeyError: If a key is already defined in the property file.
-        """
-        keys: set[str] = set()
-        for property in self.properties.values():
-            for key in property.properties.keys():
-                if key in keys:
-                    raise KeyError(f"Duplicate key {key}")
-                keys.add(key)
-
     @staticmethod
     def get_all_locales() -> list[str]:
         """Gets all locales in the locales folder.

@@ -1,6 +1,3 @@
-import base64
-import enum
-from io import BytesIO
 import struct
 import typing
 from typing import Any, Literal
@@ -19,12 +16,6 @@ class EndOfDataError(DataError, EOFError):
 class UnexpectedValueError(DataError):
     """Raised when a value that must have a fixed value (e.g. a save section
     marker) has some other value. Usually means the save layout changed."""
-
-
-class PaddingType(enum.Enum):
-    PKCS7 = enum.auto()
-    ZERO = enum.auto()
-    NONE = enum.auto()
 
 
 class Data:
@@ -58,10 +49,6 @@ class Data:
     def __buffer__(self, flags: int, /) -> memoryview:
         return memoryview(self.data)
 
-    @staticmethod
-    def from_hex(hex: str) -> Data:
-        return Data(bytes.fromhex(hex))
-
     def enable_buffer(self):
         self.data_buffer: list[bytes] = []
         self.buffer_enabled = True
@@ -76,9 +63,6 @@ class Data:
 
     def set_little_endiness(self):
         self.set_endiness("<")
-
-    def set_big_endiness(self):
-        self.set_endiness(">")
 
     def is_empty(self) -> bool:
         return len(self.data) == 0
@@ -216,28 +200,12 @@ class Data:
             result.append(self.read_bool())
         return result
 
-    def read_string_list(self, length: int | None = None) -> list[str]:
-        if length is None:
-            length = self.read_int()
-        result: list[str] = []
-        for _ in range(length):
-            result.append(self.read_string())
-        return result
-
     def read_byte_list(self, length: int | None = None) -> list[int]:
         if length is None:
             length = self.read_int()
         result: list[int] = []
         for _ in range(length):
             result.append(self.read_byte())
-        return result
-
-    def read_short_list(self, length: int | None = None) -> list[int]:
-        if length is None:
-            length = self.read_int()
-        result: list[int] = []
-        for _ in range(length):
-            result.append(self.read_short())
         return result
 
     def read_uint(self) -> int:
@@ -291,10 +259,6 @@ class Data:
             if len(result_str) == length:
                 break
         return result_str
-
-    def read_long(self) -> int:
-        result = struct.unpack(f"{self.endiness}q", self.read_bytes(8))[0]
-        return result
 
     def read_ulong(self) -> int:
         result = struct.unpack(f"{self.endiness}Q", self.read_bytes(8))[0]
@@ -359,12 +323,6 @@ class Data:
             self.write_int(len(value.encode("utf-8")))
         self.write_bytes(value.encode("utf-8"))
 
-    def write_long(self, value: int):
-        self.write_bytes(struct.pack(f"{self.endiness}q", value))
-
-    def write_ulong(self, value: int):
-        self.write_bytes(struct.pack(f"{self.endiness}Q", value))
-
     def write_list(
         self,
         value: list[Any],
@@ -400,14 +358,6 @@ class Data:
     ):
         self.write_list(value, "bool", False, write_length, length)
 
-    def write_string_list(
-        self,
-        value: list[str],
-        write_length: bool = True,
-        length: int | None = None,
-    ):
-        self.write_list(value, "string", "", write_length, length)
-
     def write_byte_list(
         self,
         value: list[int],
@@ -416,42 +366,11 @@ class Data:
     ):
         self.write_list(value, "byte", 0, write_length, length)
 
-    def write_short_list(
-        self,
-        value: list[int],
-        write_length: bool = True,
-        length: int | None = None,
-    ):
-        self.write_list(value, "short", 0, write_length, length)
-
     def read_bool(self) -> bool:
         return self.read_byte() != 0
 
     def write_bool(self, value: bool):
         self.write_byte(int(value))
-
-    def read_int_tuple(self) -> tuple[int, int]:
-        return self.read_int(), self.read_int()
-
-    def read_int_tuple_list(self, length: int | None = None) -> list[tuple[int, int]]:
-        if length is None:
-            length = self.read_int()
-        result: list[tuple[int, int]] = []
-        for _ in range(length):
-            result.append(self.read_int_tuple())
-        return result
-
-    def write_int_tuple(self, value: tuple[int, int]):
-        self.write_int(value[0])
-        self.write_int(value[1])
-
-    def write_int_tuple_list(
-        self,
-        value: list[tuple[int, int]],
-        write_length: bool = True,
-        length: int | None = None,
-    ):
-        self.write_list(value, "int_tuple", (0, 0), write_length, length)
 
     def read_int_bool_dict(self, length: int | None = None) -> dict[int, bool]:
         if length is None:
@@ -487,33 +406,6 @@ class Data:
             self.write_int(key)
             self.write_int(item)
 
-    def read_int_double_dict(self, length: int | None = None) -> dict[int, float]:
-        if length is None:
-            length = self.read_int()
-        result: dict[int, float] = {}
-        for _ in range(length):
-            key = self.read_int()
-            value = self.read_double()
-            result[key] = value
-        return result
-
-    def write_int_double_dict(self, value: dict[int, float], write_length: bool = True):
-        if write_length:
-            self.write_int(len(value))
-        for key, item in value.items():
-            self.write_int(key)
-            self.write_double(item)
-
-    def read_short_bool_dict(self, length: int | None = None) -> dict[int, bool]:
-        if length is None:
-            length = self.read_int()
-        result: dict[int, bool] = {}
-        for _ in range(length):
-            key = self.read_short()
-            value = self.read_bool()
-            result[key] = value
-        return result
-
     def write_short_bool_dict(self, value: dict[int, bool], write_length: bool = True):
         if write_length:
             self.write_int(len(value))
@@ -544,9 +436,6 @@ class Data:
         except ValueError:
             return 0
 
-    def to_int_little(self) -> int:
-        return int.from_bytes(self.data, "little")
-
     def to_str(self) -> str:
         try:
             return self.data.decode(encoding="utf-8")
@@ -555,34 +444,6 @@ class Data:
 
     def to_bool(self) -> bool:
         return bool(self.to_int())
-
-    @staticmethod
-    def int_list_data_list(int_list: list[int]) -> list[Data]:
-        data_list: list[Data] = []
-        for integer in int_list:
-            data_list.append(Data(str(integer)))
-        return data_list
-
-    @staticmethod
-    def string_list_data_list(string_list: list[Any]) -> list[Data]:
-        data_list: list[Data] = []
-        for string in string_list:
-            data_list.append(Data(str(string)))
-        return data_list
-
-    @staticmethod
-    def data_list_int_list(data_list: list[Data]) -> list[int]:
-        int_list: list[int] = []
-        for data in data_list:
-            int_list.append(data.to_int())
-        return int_list
-
-    @staticmethod
-    def data_list_string_list(data_list: list[Data]) -> list[str]:
-        string_list: list[str] = []
-        for data in data_list:
-            string_list.append(data.to_str())
-        return string_list
 
     def to_bytes(self) -> bytes:
         return self.data
@@ -597,13 +458,6 @@ class Data:
         else:
             return Data(joiner.data.join(data_lst))
 
-    @staticmethod
-    def from_int_list(int_list: list[int], endianess: Literal["little", "big"]) -> Data:
-        bytes_data = b""
-        for integer in int_list:
-            bytes_data += integer.to_bytes(4, endianess)
-        return Data(bytes_data)
-
     def strip(self) -> Data:
         return Data(self.data.strip())
 
@@ -613,24 +467,11 @@ class Data:
     def set(self, value: bytes | str | None | int | bool) -> None:
         self.data = Data(value).data
 
-    def to_bytes_io(self) -> BytesIO:
-        return BytesIO(self.data)
-
     def __repr__(self) -> str:
         return f"Data({self.data!r})"
 
     def __str__(self) -> str:
         return self.to_str()
-
-    def to_base_64(self) -> str:
-        return base64.b64encode(self.data).decode()
-
-    @staticmethod
-    def from_base_64(string: str) -> Data:
-        return Data(base64.b64decode(string))
-
-    def to_csv(self, *args: Any, **kwargs: Any) -> core.CSV:
-        return core.CSV(self, *args, **kwargs)
 
     def search(self, search_data: Data, start: int = 0) -> int:
         return self.data.find(search_data.data, start)

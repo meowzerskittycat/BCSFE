@@ -132,9 +132,6 @@ class GamatotoLevels:
             return None
         return self.levels[level - 1]
 
-    def get_all_levels(self) -> list[GamatotoLevel] | None:
-        return self.levels
-
     def get_level_from_xp(self, xp: int) -> GamatotoLevel | None:
         if self.levels is None or self.limit is None:
             return None

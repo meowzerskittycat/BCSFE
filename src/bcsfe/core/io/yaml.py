@@ -12,12 +12,15 @@ class YamlFile:
             self.data = path.read()
             try:
                 yml = yaml.safe_load(self.data.data)
-                if not isinstance(yml, dict):
-                    self.yaml = {}
-                    self.save(print_err)
-                else:
-                    self.yaml = yml
             except yaml.YAMLError:
+                yml = None
+            if isinstance(yml, dict):
+                self.yaml = yml
+            else:
+                # Starting over loses whatever was in the file, so keep a
+                # copy to recover hand-edited settings from.
+                if self.data.data.strip():
+                    core.Path(self.path.path + ".broken").write(self.data)
                 self.yaml = {}
                 self.save(print_err)
         else:
