@@ -89,7 +89,9 @@ class RequestHandler:
                 stream=stream,
                 files=None if self.form is None else self.form.into_files(),
             )
-        except requests.exceptions.ConnectionError, requests.exceptions.Timeout:
+        except requests.exceptions.RequestException:
+            # Unreachable, timed out, or not a usable URL (e.g. one typed into
+            # the config without https://): callers treat all of these as no answer.
             return None
         except OverflowError:
             messages.show("timeout_too_large")
@@ -109,7 +111,7 @@ class RequestHandler:
                 timeout=(None if no_timeout else self.timeout()),
                 files=None if self.form is None else self.form.into_files(),
             )
-        except requests.exceptions.ConnectionError, requests.exceptions.Timeout:
+        except requests.exceptions.RequestException:
             return None
         except OverflowError:
             messages.show("timeout_too_large")

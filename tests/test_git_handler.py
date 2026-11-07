@@ -58,3 +58,18 @@ def test_a_blank_repo_cancels_adding(
     assert callable(add)
     assert add(core.core_data.config) is None
     assert git_runs == []
+
+
+def test_a_game_data_repo_without_a_scheme_is_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sent: list[str] = []
+    monkeypatch.setattr(
+        core.RequestHandler, "get", lambda self, *_a, **_k: sent.append(self.url)
+    )
+    monkeypatch.setattr(color, "color_input", lambda *_a, **_k: "example.com/bcdata")
+    config = core.core_data.config
+    before = config.get_str(core.ConfigKey.GAME_DATA_REPO)
+    settings.edit_game_data_repo(config)
+    assert sent == []
+    assert config.get_str(core.ConfigKey.GAME_DATA_REPO) == before

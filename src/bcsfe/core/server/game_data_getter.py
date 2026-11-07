@@ -196,20 +196,20 @@ class GameDataGetter:
             response = core.RequestHandler(url).get()
             if response is None or response.status_code != 200:
                 continue
-            try:
-                archive = tarfile.open(
-                    name=None, mode="r:xz", fileobj=BytesIO(response.content)
-                )
-            except tarfile.TarError, lzma.LZMAError, EOFError:
-                continue
-
             outdir = (
                 GameDataGetter.get_game_data_dir()
                 .add(self.cc.get_code())
                 .add(self.version)
             ).generate_dirs()
-
-            archive.extractall(outdir.path)
+            try:
+                with tarfile.open(
+                    name=None, mode="r:xz", fileobj=BytesIO(response.content)
+                ) as archive:
+                    # "data" refuses members that would land outside outdir.
+                    archive.extractall(outdir.path, filter="data")
+            except tarfile.TarError, lzma.LZMAError, EOFError, OSError:
+                outdir.remove()
+                continue
 
             outdir.add("downloaded").write(core.Data())
 
@@ -344,6 +344,8 @@ class GameDataGetter:
                 continue
             if not version.add("downloaded").exists():
                 continue
+            if not GameDataGetter.VERSION.match(version.basename()):
+                continue
             versions.append(core.GameVersion.from_string(version.basename()))
 
         return versions
@@ -371,8 +373,7 @@ class GameDataGetter:
         versions = GameDataGetter.get_all_downloaded_versions()
         for cc, cc_versions in versions.items():
             cc_versions.sort(reverse=True)
-            to_keep = min(to_keep, len(cc_versions))
-            for version in cc_versions[to_keep:]:
+            for version in cc_versions[max(to_keep, 0) :]:
                 GameDataGetter.delete(cc, version)
 
     def print_no_file(self, packname: str, file_name: str) -> None:

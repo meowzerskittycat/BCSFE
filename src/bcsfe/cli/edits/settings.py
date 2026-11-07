@@ -1,6 +1,5 @@
 from typing import Any
 
-import requests
 
 from bcsfe import __app_name__, core
 from bcsfe.cli import color, dialog_creator, main, prompt
@@ -189,18 +188,17 @@ def edit_game_data_repo(config: core.Config):
     if value is None:
         value = config.get_default(core.ConfigKey.GAME_DATA_REPO)
     color.color_print_key("validating_game_repo")
-    try:
-        resp = core.RequestHandler(value).get()
-    except requests.exceptions.MissingSchema, requests.exceptions.InvalidSchema:
+    if not value.strip().lower().startswith(("http://", "https://")):
         color.color_print_key("invalid_url")
         return
+    resp = core.RequestHandler(value.strip()).get()
     if resp is None:
         color.color_print_key("no_internet_or_connection_error")
         return
     if resp.status_code != 200:
         color.color_print_key("invalid_response", response_code=resp.status_code)
         return
-    config.set(core.ConfigKey.GAME_DATA_REPO, value)
+    config.set(core.ConfigKey.GAME_DATA_REPO, value.strip())
     color.color_print_key(
         "config_success",
     )

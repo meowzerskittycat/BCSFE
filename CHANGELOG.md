@@ -101,6 +101,15 @@ real 15.7 save) and CI on Windows, macOS and Linux
 
 ### Fixed
 
+- **Game data for jp, kr and tw was deleted on every start** unless English game data was also
+  downloaded. Keeping the newest five versions per region used the count left over from the
+  previous region, and a region with none set it to zero for the rest.
+- A game data download that fails partway, or whose archive tries to write outside its folder,
+  now falls back to the next source instead of crashing, and leaves no half-extracted folder.
+  A folder in the game data directory that isn't a version no longer crashes the editor.
+- A game data source URL without `https://` (e.g. typed into `config.yaml`) crashed any feature
+  that needs game data; it now counts as a source that didn't answer. The settings editor
+  refuses such a URL before trying it.
 - With **Use file dialog** off, the editor no longer opens a hidden system window anyway. Typing
   `q` at a file or folder prompt now cancels (it used to save to a file called `q`), and quotes
   around a dragged-in folder path are removed too.
