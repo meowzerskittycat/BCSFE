@@ -136,10 +136,7 @@ class SaveManagement:
         success = select_adb_device(adb_handler)
         if not success:
             return adb_handler
-        device_id = adb_handler.get_device()
-        if core.WayDroidHandler.is_waydroid(device_id):
-            adb_handler = core.WayDroidHandler()
-            adb_handler.adb_handler.set_device(device_id)
+        adb_handler = waydroid_if_needed(adb_handler)
         if save_file.package_name is not None:
             adb_handler.set_package_name(save_file.package_name)
         else:
@@ -297,13 +294,7 @@ class SaveManagement:
         if not select_adb_device(handler):
             return None
 
-        device_id = handler.get_device()
-
-        if core.WayDroidHandler.is_waydroid(device_id):
-            handler = core.WayDroidHandler()
-            handler.adb_handler.set_device(device_id)
-
-        return SaveManagement.pull_root(handler)
+        return SaveManagement.pull_root(waydroid_if_needed(handler))
 
     @staticmethod
     def pull_root(handler: core.RootHandler):
@@ -580,6 +571,25 @@ class SaveManagement:
         save_file.set_gv(gv)
         core.core_data.init_data()
         color.color_print_key("game_version_set", version=gv.to_string())
+
+
+def waydroid_if_needed(
+    handler: core.AdbHandler,
+) -> core.AdbHandler | core.WayDroidHandler:
+    """A waydroid handler if the picked device is waydroid's, else `handler`.
+
+    Waydroid needs its own shell to reach the save; if that can't be used,
+    say why and carry on with plain adb, which may still work."""
+    device_id = handler.get_device()
+    if not core.WayDroidHandler.is_waydroid(device_id):
+        return handler
+    try:
+        waydroid = core.WayDroidHandler()
+    except core.io.waydroid.WayDroidNotInstalledError as e:
+        core.WayDroidHandler.display_waydroid_not_installed(e)
+        return handler
+    waydroid.adb_handler.set_device(device_id)
+    return waydroid
 
 
 def select_adb_device(handler: core.AdbHandler) -> bool:

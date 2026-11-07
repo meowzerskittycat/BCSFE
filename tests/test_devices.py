@@ -203,3 +203,28 @@ def test_loading_locally_reports_a_failed_copy(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr(handler, "load_battlecats_save", lambda _p: failure)
     monkeypatch.setattr(handler, "rerun_game", core.CommandResult.create_success)
     assert handler.load_locally(core.Path("x")) is failure
+
+
+def test_a_broken_waydroid_falls_back_to_adb(monkeypatch: pytest.MonkeyPatch) -> None:
+    from bcsfe.cli import save_management
+
+    def responder(args: list[str], input_data: str) -> core.CommandResult | None:
+        if args == ["waydroid", "-V"]:
+            return core.CommandResult("waydroid: command failed", 1)
+        return waydroid_status(args, input_data)
+
+    fake(monkeypatch, responder)
+    handler = core.AdbHandler(root=False)
+    handler.set_device("192.168.240.112:5555")
+    assert save_management.waydroid_if_needed(handler) is handler
+
+
+def test_a_working_waydroid_is_used(monkeypatch: pytest.MonkeyPatch) -> None:
+    from bcsfe.cli import save_management
+
+    fake(monkeypatch, waydroid_status)
+    handler = core.AdbHandler(root=False)
+    handler.set_device("192.168.240.112:5555")
+    waydroid = save_management.waydroid_if_needed(handler)
+    assert isinstance(waydroid, core.WayDroidHandler)
+    assert waydroid.adb_handler.get_device() == "192.168.240.112:5555"

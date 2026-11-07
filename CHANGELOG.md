@@ -106,6 +106,8 @@ real 15.7 save) and CI on Windows, macOS and Linux
   as `config.yaml.broken` so hand-edited settings can be recovered.
 - Picking a USB device over adb crashed when waydroid was running, because USB device IDs have
   no `:port`.
+- Picking a waydroid device crashed if `waydroid status` worked but `waydroid -V` didn't. The
+  editor now says what failed and carries on with plain adb.
 - Pulling a save over adb or waydroid no longer reports failure when only deleting the temporary
   copy on `/sdcard` failed.
 - The adb device list no longer drops the last device when adb's output has no trailing blank
