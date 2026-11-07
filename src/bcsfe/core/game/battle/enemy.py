@@ -5,6 +5,14 @@ class Enemy:
     def __init__(self, id: int):
         self.id = id
 
+    # Selections build new Enemy objects each time, so combining them (and, or)
+    # has to compare ids.
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Enemy) and other.id == self.id
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
     def unlock_enemy_guide(self, save_file: core.SaveFile):
         save_file.enemy_guide[self.id] = 1
 

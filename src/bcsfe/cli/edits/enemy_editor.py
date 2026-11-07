@@ -2,6 +2,8 @@ from bcsfe import core
 from bcsfe.cli import color, dialog_creator, prompt
 from bcsfe.cli.edits.cat_editor import SelectMode
 
+WIKI_OFFSET = 2
+
 
 class EnemyEditor:
     def __init__(self, save_file: core.SaveFile) -> None:
@@ -70,7 +72,7 @@ class EnemyEditor:
         if mode == SelectMode.AND:
             return [enemy for enemy in new_enemies if enemy in current_enemies]
         if mode == SelectMode.OR:
-            return list(set(current_enemies + new_enemies))
+            return list(dict.fromkeys(current_enemies + new_enemies))
         if mode == SelectMode.REPLACE:
             return new_enemies
         return new_enemies
@@ -98,12 +100,15 @@ class EnemyEditor:
         return [core.Enemy(id) for id in invalid_ids]
 
     def select_id(self) -> list[core.Enemy] | None:
+        # The wiki's enemy numbers are the save's index plus 2.
         enemy_ids = prompt.numbers(
-            "enter_enemy_ids", max=len(self.save_file.enemy_guide) - 1
+            "enter_enemy_ids",
+            min=WIKI_OFFSET,
+            max=len(self.save_file.enemy_guide) - 1 + WIKI_OFFSET,
         )
         if enemy_ids is None:
             return None
-        enemy_ids = [enemy_id - 2 for enemy_id in enemy_ids]
+        enemy_ids = [enemy_id - WIKI_OFFSET for enemy_id in enemy_ids]
         return self.get_enemies_by_id(enemy_ids)
 
     def get_enemies_by_id(self, ids: list[int]) -> list[core.Enemy]:

@@ -101,6 +101,22 @@ real 15.7 save) and CI on Windows, macOS and Linux
 
 ### Fixed
 
+- With **Use file dialog** off, the editor no longer opens a hidden system window anyway. Typing
+  `q` at a file or folder prompt now cancels (it used to save to a file called `q`), and quotes
+  around a dragged-in folder path are removed too.
+- Enemy guide: combining selections with **and** always selected nothing, and **or** could list
+  an enemy twice. Selecting by ID couldn't reach the last two enemies.
+- Stage editors that share the map menu (gauntlets, towers, Legend Quest, Uncanny, Zero
+  Legends, events and others):
+  - Searching for a map by name picked a different map or crashed. In **Edit clear counts**,
+    where every crown is listed separately, it almost always failed.
+  - **Same clear count for all chapters** and **Edit each chapter individually** did each
+    other's job.
+  - **Clear to a specific stage** left later stages cleared when you picked the first stage,
+    cleared the top crown when you picked zero crowns, and picked the wrong stage when a map had
+    a blank stage name before it. Zero crowns now unclears the whole map.
+  - Crowns showed one lower than they were when editing chapters one by one, and a blank answer
+    at the map list now goes back instead of matching every map.
 - Adding a locale or theme from git: a blank answer (or `q`) now cancels instead of trying to
   clone nothing, and a URL ending in `/` uses the repository's name. A URL with no name (`/`, `.`,
   `..`) used to point at the shared repos folder or the data folder itself, which a failed clone
