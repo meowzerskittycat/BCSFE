@@ -117,6 +117,11 @@ Main tests: `test_roundtrip.py` (every fixture reads and writes back identically
   commits often share a version number. The updater runs
   `pip install --force-reinstall --no-deps git+...@<sha>`, then `pip install git+...@<sha>` for any
   new dependencies. Keep it that way.
+- **Game data sources.** `core/server/game_data_getter.py` tries the configured source, then
+  every URL in `SOURCES` (battlecatsmodding, gitlab, then `meowzerskittycat/bcdata`, a mirror on
+  GitHub releases that its own workflow syncs daily). Never ask the user which source to use; just
+  fall through. `RequestHandler.get` returns non-200 responses too, so check the status.
+  `tests/test_game_data.py` fakes the network for this.
 - **Unparsed trailing bytes.** Data after the last known field is kept as `remaining_data` and
   written back unchanged. 15.x saves have more there (version markers 140500 ... 150700 with mostly
   zero data between). Upstream doesn't parse it either. Don't guess at fields without real saves

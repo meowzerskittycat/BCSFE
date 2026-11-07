@@ -28,6 +28,11 @@
 - Pushes to `main` test on Windows and Linux; pull requests also test on macOS. A macOS job
   that waited too long for a runner was cancelled and turned `main`'s badge red.
 - Removed `.github/FUNDING.yml`, which pointed to upstream's donation page.
+- Game data now comes from the first source that answers: the one set in the config, then
+  battlecatsmodding, gitlab and this fork's mirror ([meowzerskittycat/bcdata](https://github.com/meowzerskittycat/bcdata),
+  synced daily). The editor no longer asks whether to try another source, and says once if none
+  answer. A download that fails or isn't a valid archive is retried from the next source instead
+  of being written as broken data.
 
 ### Changed
 

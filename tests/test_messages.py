@@ -18,4 +18,4 @@ def test_core_messages_are_shown_by_the_cli(monkeypatch) -> None:
 
 def test_core_questions_are_asked_by_the_cli(monkeypatch) -> None:
     monkeypatch.setattr(color, "color_input", lambda *_a, **_k: "y")
-    assert core.messages.confirm("use_alternative_repo", repo="x") is True
+    assert core.messages.confirm("do_you_want_to_continue") is True
