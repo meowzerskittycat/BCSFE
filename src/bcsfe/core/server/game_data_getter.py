@@ -1,19 +1,39 @@
 from io import BytesIO
-from typing import Any
-from collections.abc import Callable
+from typing import Any, ClassVar, cast
+from collections.abc import Callable, Iterator
 
 
+import lzma
 import tarfile
 import json
 
 from bcsfe import core
 from bcsfe.core import messages
 
+# Where game data comes from, tried in this order after the source set in
+# the config. The last is this fork's mirror (github.com/meowzerskittycat/
+# bcdata), which copies the others daily and keeps working if they go away.
+SOURCES = [
+    "https://git.battlecatsmodding.org/fieryhenry/BCData/raw/branch/main/metadata.json",
+    "https://gitlab.com/fieryhenry/bcdata/-/raw/main/metadata.json",
+    "https://raw.githubusercontent.com/meowzerskittycat/bcdata/main/metadata.json",
+]
+
 
 class GameDataGetter:
+    # Metadata from each source that answered, kept for the session.
+    _metadata: ClassVar[dict[str, dict[str, Any]]] = {}
+    _reported_unreachable: ClassVar[bool] = False
+
     @staticmethod
     def repo_url() -> str:
         return core.core_data.config.get_game_data_repo()
+
+    @staticmethod
+    def sources() -> list[str]:
+        """The configured source first, then the others in order."""
+        first = GameDataGetter.repo_url()
+        return [first, *(url for url in SOURCES if url != first)]
 
     def __init__(
         self, cc: core.CountryCode, gv: core.GameVersion, do_print: bool = True
@@ -93,27 +113,41 @@ class GameDataGetter:
         ]
 
     @staticmethod
-    def get_metadata(show_alt: bool = True) -> dict[str, Any] | None:
-        response = core.RequestHandler(GameDataGetter.repo_url()).get()
-        if response is None:
-            if (
-                GameDataGetter.repo_url()
-                == core.core_data.config.get_default(core.ConfigKey.GAME_DATA_REPO)
-                and show_alt
-            ):
-                alt = "https://gitlab.com/fieryhenry/bcdata/-/raw/main/metadata.json"
-                res = messages.confirm("use_alternative_repo", repo=alt)
-                if res:
-                    core.core_data.config.set(core.ConfigKey.GAME_DATA_REPO, alt)
-                    return GameDataGetter.get_metadata(show_alt=False)
-
+    def fetch_metadata(url: str) -> dict[str, Any] | None:
+        if url in GameDataGetter._metadata:
+            return GameDataGetter._metadata[url]
+        response = core.RequestHandler(url).get()
+        if response is None or response.status_code != 200:
             return None
         try:
-            data = response.json()
-        except json.JSONDecodeError as e:
-            print(e, f"Data:\n{response.text}")
+            data: Any = response.json()
+        except json.JSONDecodeError:
             return None
-        return data
+        if not isinstance(data, dict):
+            return None
+        metadata = cast(dict[str, Any], data)
+        if not isinstance(metadata.get("versions"), dict):
+            return None
+        GameDataGetter._metadata[url] = metadata
+        return metadata
+
+    @staticmethod
+    def all_metadata() -> Iterator[dict[str, Any]]:
+        """Metadata from each source that answers, in order."""
+        for url in GameDataGetter.sources():
+            data = GameDataGetter.fetch_metadata(url)
+            if data is not None:
+                yield data
+
+    @staticmethod
+    def get_metadata() -> dict[str, Any] | None:
+        """Metadata from the first source that answers."""
+        for data in GameDataGetter.all_metadata():
+            return data
+        if not GameDataGetter._reported_unreachable:
+            GameDataGetter._reported_unreachable = True
+            messages.show("game_data_unreachable")
+        return None
 
     @staticmethod
     def get_versions(metdata: dict[str, Any]) -> dict[str, dict[str, str]]:
@@ -143,33 +177,49 @@ class GameDataGetter:
             return None
         return path.add(pack_name).generate_dirs().add(file_name)
 
-    def download_version_data(self):
+    def download_urls(self) -> Iterator[str]:
+        """Where to download this version from: the chosen source first,
+        then any other source that has the same version."""
         if self.url is None or self.filepath is None or self.version is None:
+            return
+        tried = self.url + self.filepath
+        yield tried
+        for data in GameDataGetter.all_metadata():
+            path = data["versions"].get(self.cc.get_code(), {}).get(self.version)
+            base = data.get("base_url")
+            if isinstance(path, str) and isinstance(base, str) and base + path != tried:
+                yield base + path
+
+    def download_version_data(self):
+        if self.version is None:
             return None
-        url = self.url + self.filepath
-
-        if self.print:
-            messages.show("downloading_compressed_data", url=url)
-
-        downloaded_data = core.RequestHandler(url).get()
-        if downloaded_data is None:
+        for url in self.download_urls():
             if self.print:
-                messages.show("no_internet")
-            return None
+                messages.show("downloading_compressed_data", url=url)
+            response = core.RequestHandler(url).get()
+            if response is None or response.status_code != 200:
+                continue
+            try:
+                archive = tarfile.open(
+                    name=None, mode="r:xz", fileobj=BytesIO(response.content)
+                )
+            except tarfile.TarError, lzma.LZMAError, EOFError:
+                continue
 
-        archive = tarfile.open(
-            name=None, mode="r:xz", fileobj=BytesIO(downloaded_data.content)
-        )
+            outdir = (
+                GameDataGetter.get_game_data_dir()
+                .add(self.cc.get_code())
+                .add(self.version)
+            ).generate_dirs()
 
-        outdir = (
-            GameDataGetter.get_game_data_dir().add(self.cc.get_code()).add(self.version)
-        ).generate_dirs()
+            archive.extractall(outdir.path)
 
-        archive.extractall(outdir.path)
+            outdir.add("downloaded").write(core.Data())
 
-        outdir.add("downloaded").write(core.Data())
-
-        return True
+            return True
+        if self.print:
+            messages.show("game_data_download_failed", version=self.version)
+        return None
 
     def get_version_path(self) -> core.Path | None:
         if self.version is None:
