@@ -44,7 +44,7 @@ jobs:
       - run: pip install -e ".[dev]"
       # Game data for the menu tests, from the bcdata mirror. Change the key
       # when tests/tools/get_game_data.py asks for another version.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: tests/game_data
           key: game-data-en-15.6.1
