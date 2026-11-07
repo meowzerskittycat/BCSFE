@@ -28,6 +28,10 @@
 - Pushes to `main` test on Windows and Linux; pull requests also test on macOS. A macOS job
   that waited too long for a runner was cancelled and turned `main`'s badge red.
 - Removed `.github/FUNDING.yml`, which pointed to upstream's donation page.
+- The editor picks the right game data for your game version when there's no exact match:
+  versions are compared as numbers (15.10 is newer than 15.9, not older), and offline it uses
+  the closest version already downloaded instead of none.
+- Every menu is now also tested with real game data, not only without it.
 - **Items → Max All** maxes XP, normal tickets, NP, leadership, battle items, catseyes,
   catamins, catfruit, labyrinth medals and treasure chests in one go (pick some or all). It
   leaves out anything that can get an account banned: cat food, rare, platinum and legend tickets

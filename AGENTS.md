@@ -22,11 +22,12 @@ parentheses), so an older interpreter can't even parse it. Check `python --versi
 
 ```sh
 pip install -e ".[dev]"
+python tests/tools/get_game_data.py   # game data for the menu tests (gitignored)
 ruff check src tests
 ruff format --check src tests
 pyright                    # strict mode, src only
-pytest                     # about 420 tests, a minute or two
-pytest --all-answers       # every menu feature with every answer set (about 600 tests)
+pytest                     # about 530 tests, a minute or two
+pytest --all-answers       # every menu feature with every answer set (about 900 tests, about five minutes)
 pytest tests/test_locales.py   # just the message checks
 ```
 
@@ -82,7 +83,7 @@ prompt or the config. CI (`.github/workflows/ci.yml`) runs lint and pyright, the
 | `src/bcsfe/files/` | Bundled data: `locales/` (`en`, `vi`, `tw`), `themes/`, etc. |
 | `tests/conftest.py` | Points the editor at a temporary data and config folder, so tests never touch the user's files. |
 | `tests/fixtures/` | `synthetic/` (generated saves for every region and many versions), `real/` (sanitized real saves), `json_v3_6_0/` (JSON exported by upstream 3.6.0, which must keep importing). |
-| `tests/tools/` | `gen_fixtures.py`, `sanitize_save.py`. |
+| `tests/tools/` | `gen_fixtures.py`, `sanitize_save.py`, `get_game_data.py`. |
 
 Main tests: `test_roundtrip.py` (every fixture reads and writes back identically),
 `test_features.py` (runs every menu feature with typed answers), `test_locales.py`,
@@ -110,6 +111,10 @@ Main tests: `test_roundtrip.py` (every fixture reads and writes back identically
 - **Bundled files are copied to the data folder** (`~/.local/share/bcsfe` on Linux) on first run,
   and the editor reads them from there. After changing anything under `src/bcsfe/files/`, run the
   editor once with `--force-migrate`, or you'll test the old copy.
+- **Menu tests run with and without game data.** `tests/tools/get_game_data.py` downloads one
+  version (en 15.6.1) into `tests/game_data/`; without it the `game_data` cases just don't run, so
+  run it once. Tests use a throwaway copy, because menus change it (the game data manager deletes
+  versions). Never point a test at the real folder.
 - **Feature tests share one config.** A feature that changes a setting (e.g. the language) would
   leak into later tests; `tests/test_features.py` restores the config after each test. Anything
   that depends on directory order must sort (the locale list is sorted for this reason).

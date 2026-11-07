@@ -1,9 +1,10 @@
 from io import BytesIO
 from typing import Any, ClassVar, cast
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 
 
 import lzma
+import re
 import tarfile
 import json
 
@@ -24,6 +25,7 @@ class GameDataGetter:
     # Metadata from each source that answered, kept for the session.
     _metadata: ClassVar[dict[str, dict[str, Any]]] = {}
     _reported_unreachable: ClassVar[bool] = False
+    VERSION = re.compile(r"^\d{1,2}\.\d{1,2}(\.\d{1,2})?$")
 
     @staticmethod
     def repo_url() -> str:
@@ -44,35 +46,42 @@ class GameDataGetter:
         self.real_cc = cc
         self.gv = gv
         self.cc = self.cc if not self.cc.is_lang() else self.real_cc
-        self.version, exact_match = self.find_gv(self.cc, gv)
+        downloaded = GameDataGetter.get_all_downloaded_versions().get(self.cc, [])
+        self.version = GameDataGetter.choose_version(
+            [v.to_string() for v in downloaded], gv
+        )
 
         self.all_versions = None
         self.url = None
         self.filepath = None
 
-        if exact_match:
+        if self.version == gv.to_string():
             return
 
         self.metadata = GameDataGetter.get_metadata()
         if self.metadata is None:
+            # Offline: the closest version already downloaded will do.
             return
         self.all_versions = GameDataGetter.get_versions(self.metadata)
         self.url = self.metadata.get("base_url")
         self.version, self.filepath = self.get_version(self.all_versions, self.cc)
 
-    def find_gv(
-        self, cc: core.CountryCode, gv: core.GameVersion
-    ) -> tuple[str | None, bool]:
-        versions = GameDataGetter.get_all_downloaded_versions().get(cc)
-        if versions is None:
-            return None, False
-
-        versions.sort()
-
-        for version in versions:
+    @staticmethod
+    def choose_version(versions: Iterable[str], gv: core.GameVersion) -> str | None:
+        """The game data version to use for a save of version `gv`: the same
+        version, else the oldest newer one, else the newest older one.
+        Versions are compared as numbers, so 15.10.0 is newer than 15.9.0."""
+        parsed = sorted(
+            (core.GameVersion.from_string(v), v)
+            for v in versions
+            if GameDataGetter.VERSION.match(v)
+        )
+        if not parsed:
+            return None
+        for version, name in parsed:
             if version >= gv:
-                return version.to_string(), version == gv
-        return None, False
+                return name
+        return parsed[-1][1]
 
     def does_save_version_match(self, save_file: core.SaveFile) -> bool:
         if self.version is None:
@@ -83,23 +92,11 @@ class GameDataGetter:
     def get_version(
         self, versions: dict[str, dict[str, str]], cc: core.CountryCode
     ) -> tuple[str | None, str | None]:
-        cc_versions = versions.get(cc.get_code())
-        if cc_versions is None:
+        cc_versions = versions.get(cc.get_code()) or {}
+        version = GameDataGetter.choose_version(cc_versions, self.gv)
+        if version is None:
             return None, None
-        if not cc_versions:
-            return None, None
-        gv_string = self.gv.to_string()
-        if gv_string not in cc_versions:
-            cc_version_keys = list(cc_versions.keys())
-            cc_version_keys.sort()
-            for version in cc_version_keys:
-                if (
-                    core.GameVersion.from_string(version).game_version
-                    >= self.gv.game_version
-                ):
-                    return version, cc_versions[version]
-            return cc_version_keys[-1], cc_versions[cc_version_keys[-1]]
-        return gv_string, cc_versions[gv_string]
+        return version, cc_versions[version]
 
     @staticmethod
     def possible_versions(cc: core.CountryCode) -> list[str] | None:
