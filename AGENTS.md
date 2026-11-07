@@ -42,6 +42,8 @@ prompt or the config. CI (`.github/workflows/ci.yml`) runs lint and pyright, the
 - the Linux job measures branch coverage and fails if it drops below `fail_under`
   (`pyproject.toml`); the report is in the run's summary. Raise the floor as tests are added;
   never lower it to get green.
+- Dependabot (`.github/dependabot.yml`) opens one weekly PR bumping the workflows' actions. It
+  doesn't watch Python packages: they have no upper bounds, so CI always tests the latest.
 
 ## Hard rules
 
