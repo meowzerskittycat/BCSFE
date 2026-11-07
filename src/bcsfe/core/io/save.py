@@ -705,27 +705,35 @@ class SaveFile:
         return local_path
 
     @staticmethod
+    def get_backups() -> list[tuple[core.Path, datetime.datetime, str, str]]:
+        """Every backup made when a save was loaded, newest first, as (path,
+        when, country code, inquiry code)."""
+        saves_path = SaveFile.get_saves_path().add("backups")
+        if not saves_path.exists():
+            return []
+        backups: list[tuple[core.Path, datetime.datetime, str, str]] = []
+        for cc in saves_path.get_dirs():
+            for inquiry in cc.get_dirs():
+                for save in inquiry.get_paths_dir():
+                    try:
+                        date = datetime.datetime.strptime(
+                            save.basename(), "%Y-%m-%d_%H-%M-%S"
+                        )
+                    except ValueError:
+                        continue
+                    backups.append((save, date, cc.basename(), inquiry.basename()))
+        backups.sort(key=lambda backup: backup[1], reverse=True)
+        return backups
+
+    @staticmethod
     def check_backups():
         max_backups = core.core_data.config.get_int(core.ConfigKey.MAX_BACKUPS)
         if max_backups == -1:
             return
         saves_path = SaveFile.get_saves_path().add("backups")
         saves_path.generate_dirs()
-        all_saves: list[tuple[core.Path, datetime.datetime]] = []
-        for cc in saves_path.get_dirs():
-            for inquiry in cc.get_dirs():
-                for save in inquiry.get_paths_dir():
-                    name = save.basename()
-                    try:
-                        date = datetime.datetime.strptime(name, "%Y-%m-%d_%H-%M-%S")
-                    except ValueError:
-                        continue
-                    all_saves.append((save, date))
-
-        all_saves.sort(key=lambda x: x[1], reverse=True)
-        for i, save_info in enumerate(all_saves):
-            if i >= max_backups:
-                save_info[0].remove()
+        for save, *_ in SaveFile.get_backups()[max_backups:]:
+            save.remove()
 
         for cc in saves_path.get_dirs():
             dirs = cc.get_dirs()
