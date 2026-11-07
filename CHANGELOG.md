@@ -115,6 +115,12 @@ real 15.7 save) and CI on Windows, macOS and Linux
   allowed on the device.
 - Game packages found on a device are read correctly when `find` prints a double slash or
   Windows line endings.
+- Picking a game package and then a region for a save the editor couldn't read forgot the
+  package, so pushing the save back to the device later failed.
+- Opening an empty file, or one only a few bytes long, crashed instead of saying it isn't a save.
+- Leaving the editor accepted only `y` to "Save latest changes before exiting?"; `Y` and `yes`
+  are accepted now, like every other question. It also crashed if the save had been moved or
+  deleted since it was opened.
 - `all` when entering ids (cats, enemies, stages, banners) left out the last one
 
 - Creating a locale accepted any text as its code (e.g. `1 2`), made a folder with that name and

@@ -446,30 +446,13 @@ class SaveManagement:
             if cc is None:
                 return None
             try:
-                save_file = core.SaveFile(data, cc)
+                save_file = core.SaveFile(data, cc, package_name=package_name)
             except Exception:
-                tb = core.core_data.logger.get_traceback()
-                data.reset_pos()
-                color.color_print_key(
-                    "parse_save_error",
-                    error=tb,
-                    version=bcsfe.__version__,
-                    game_version=data.read_int(),
-                    country_code=cc.get_code(),
-                )
+                show_parse_error(data, cc)
                 return None
 
         except Exception:
-            tb = core.core_data.logger.get_traceback()
-            save_file2 = core.SaveFile(data, cc, load=False)
-            data.reset_pos()
-            color.color_print_key(
-                "parse_save_error",
-                error=tb,
-                version=bcsfe.__version__,
-                game_version=data.read_int(),
-                country_code=save_file2.cc,
-            )
+            show_parse_error(data, core.SaveFile(data, cc, load=False).cc)
             return None
 
         save_file.save_path = save_path
@@ -571,6 +554,21 @@ class SaveManagement:
         save_file.set_gv(gv)
         core.core_data.init_data()
         color.color_print_key("game_version_set", version=gv.to_string())
+
+
+def show_parse_error(data: core.Data, cc: core.CountryCode) -> None:
+    """Say the save couldn't be read, with what's needed for a bug report."""
+    tb = core.core_data.logger.get_traceback()
+    # The game version is the first 4 bytes; a file too short to hold it
+    # isn't a save at all.
+    head = core.Data(data.to_bytes()[:4])
+    color.color_print_key(
+        "parse_save_error",
+        error=tb,
+        version=bcsfe.__version__,
+        game_version=head.read_int() if len(head) == 4 else "?",
+        country_code=cc.get_code(),
+    )
 
 
 def waydroid_if_needed(

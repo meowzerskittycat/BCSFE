@@ -285,18 +285,19 @@ class Main:
         try:
             print()
             color.color_print_key("checking_for_changes")
-            if save_file.save_path is None:
+            path = save_file.save_path
+            # The file may have been moved or deleted since it was loaded.
+            if path is None or not path.exists():
                 same = False
             else:
-                same = save_file.save_path.read() == save_file.to_data()
-        except core.SaveError:
+                same = path.read() == save_file.to_data()
+        except core.SaveError, OSError:
             same = False
 
         if not same:
             color.color_print_key("changes_found")
             print()
-            save = color.color_input_key("save_before_exit") == "y"
-            if save:
+            if prompt.confirm("save_before_exit"):
                 save_management.SaveManagement.save_save(save_file)
         else:
             color.color_print_key("no_changes")

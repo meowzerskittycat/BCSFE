@@ -82,3 +82,13 @@ def test_a_restored_backup_is_loaded_without_a_save_path(
 
 def test_restoring_with_no_backups_says_so(saves: core.Path) -> None:
     assert SaveManagement.restore_backup() is None
+
+
+@pytest.mark.parametrize("content", [b"", b"ab", b"\x00" * 3000])
+def test_a_file_that_isnt_a_save_is_reported(
+    saves: core.Path, monkeypatch: pytest.MonkeyPatch, content: bytes
+) -> None:
+    path = saves.add("not_a_save")
+    path.write(core.Data(content))
+    answer(monkeypatch, "1")  # the first region, when asked
+    assert SaveManagement.load_save_file_path(path) is None
