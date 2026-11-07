@@ -14,7 +14,7 @@ python tests/tools/get_game_data.py   # once; menu tests also run with game data
 ruff check src tests
 ruff format --check src tests
 pyright
-pytest --all-answers
+pytest --all-answers --cov   # coverage must stay above fail_under in pyproject.toml
 ```
 
 - If `ruff format --check` fails, `ruff format src tests` fixes it; show the user what changed.
@@ -23,4 +23,5 @@ pytest --all-answers
 - If `tests/test_locales.py` fails, a message key the code uses has no English text, or a
   translation's `{placeholders}` don't match the English. Add the English text in
   `src/bcsfe/files/locales/en/`.
+- If coverage is below `fail_under`, add tests for the new code. Don't lower `fail_under`.
 - Never skip, xfail or loosen a test to get green.

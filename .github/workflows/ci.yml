@@ -50,4 +50,8 @@ jobs:
           key: game-data-en-15.6.1
       - run: python tests/tools/get_game_data.py
       # Pull requests also run every menu feature with each set of answers.
-      - run: pytest ${{ github.event_name == 'pull_request' && '--all-answers' || '' }}
+      # Linux also measures coverage, which fails the job if it drops below
+      # fail_under in pyproject.toml, and puts the report in the run summary.
+      - run: pytest ${{ github.event_name == 'pull_request' && '--all-answers' || '' }} ${{ runner.os == 'Linux' && '--cov --cov-report=' || '' }}
+      - if: runner.os == 'Linux' && !cancelled()
+        run: coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
