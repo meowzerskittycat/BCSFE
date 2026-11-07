@@ -3,8 +3,9 @@ keep the placeholders the English text has.
 
 A missing key shows its raw name (e.g. `theme_cancelled`) to the user. A
 translation that drops `{name}` hides that value; one that adds a `{name}` the
-code doesn't pass prints the braces. Untranslated keys are fine: they fall
-back to English.
+code doesn't pass prints the braces. The bundled translations are kept
+complete: an untranslated key would fall back to English, and an empty one
+shows nothing at all.
 """
 
 import ast
@@ -108,3 +109,14 @@ def test_translations_keep_the_placeholders(locale: str) -> None:
         and set(PLACEHOLDER.findall(v)) != set(PLACEHOLDER.findall(english[key]))
     }
     assert wrong == {}
+
+
+@pytest.mark.parametrize("locale", translations())
+def test_translations_have_every_english_message(locale: str) -> None:
+    english = load("en")
+    translated = load(locale)
+    missing = sorted(k for k in english if k not in translated)
+    empty = sorted(
+        k for k, v in translated.items() if not v.strip() and english.get(k, "").strip()
+    )
+    assert (missing, empty) == ([], [])

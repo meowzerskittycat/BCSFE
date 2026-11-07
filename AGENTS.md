@@ -62,8 +62,13 @@ prompt or the config. CI (`.github/workflows/ci.yml`) runs lint and pyright, the
   pass. They pin the current save format byte for byte; if a round-trip test fails, the code
   changed the format. Regenerate only on purpose (e.g. support for a new game version), and say so.
 - **Don't skip, xfail or loosen a test** to get green.
-- **Don't machine-translate** the Vietnamese or Traditional Chinese messages. Add English only;
-  other languages fall back to it.
+- **Keep the translations complete.** When you add or change an English message, add or update
+  the Vietnamese (`vi`) and Traditional Chinese (`tw`) one in the same commit; translate it
+  yourself. `tests/test_locales.py` fails if either is missing a message or has an empty one. Use
+  the terms each file already uses: `vi` keeps game names in English (Cat Food, Rare Tickets,
+  save, backup), `tw` uses the Taiwanese game's names (貓罐頭, 稀有券, 存檔, 備份). Keep every
+  `{placeholder}`, `{{reference}}` and colour tag. The `vi` files use CRLF line endings: edit them
+  with `open(..., newline="")` so they stay that way.
 - **Don't install the package from a local `git+file://` URL** to test updates. It once spawned
   thousands of git processes and exhausted memory. Test the updater with the mocks in
   `tests/test_cli.py`.
@@ -98,17 +103,19 @@ Main tests: `test_roundtrip.py` (every fixture reads and writes back identically
 ## How to do common things
 
 - **Add a menu feature**: write it in `cli/edits/`, add it to the tree in `cli/feature_handler.py`,
-  and add its name and messages to `src/bcsfe/files/locales/en/`. `test_features.py` runs it
-  automatically; make sure it doesn't crash on odd answers or without game data or network.
+  and add its name and messages to `src/bcsfe/files/locales/` (`en`, `vi` and `tw`).
+  `test_features.py` runs it automatically; make sure it doesn't crash on odd answers or without
+  game data or network.
 - **Show a message**: use a locale key, not a string (`color.color_print_key("key", name=...)`,
   `core.localize("key", ...)`, `core.messages.show(...)` from core). `tests/test_locales.py` fails if
-  the English text is missing. Format: see [LOCALIZATION.md](LOCALIZATION.md) (`{name}`
-  placeholders, `{{other_key}}` references, `<@s>...</>` colours, `$(...)` conditions).
+  the English, Vietnamese or Traditional Chinese text is missing. Format: see
+  [LOCALIZATION.md](LOCALIZATION.md) (`{name}` placeholders, `{{other_key}}` references,
+  `<@s>...</>` colours, `$(...)` conditions).
 - **Change the save format**: edit `save_layout.py` and the section's schema, then run the round-trip
   tests on every fixture. Version-dependent fields use `when=ge(<version>)`, where the version is
   the game version as an integer (`15.7.0` is `150700`).
 - **Add a setting**: add a `ConfigKey` and its default in `core/io/config.py`, its editor in
-  `cli/edits/settings.py`, and English text.
+  `cli/edits/settings.py`, and its text in all three languages.
 - **Record the change**: add a line to `CHANGELOG.md` under `[Unreleased]` for anything a user would
   notice. Update `README.md` if it describes what you changed.
 
