@@ -104,6 +104,15 @@ real 15.7 save) and CI on Windows, macOS and Linux
   all colours off.
 - A `config.yaml` that isn't valid YAML is still replaced with defaults, but the old file is kept
   as `config.yaml.broken` so hand-edited settings can be recovered.
+- Picking a USB device over adb crashed when waydroid was running, because USB device IDs have
+  no `:port`.
+- Pulling a save over adb or waydroid no longer reports failure when only deleting the temporary
+  copy on `/sdcard` failed.
+- The adb device list no longer drops the last device when adb's output has no trailing blank
+  line, and leaves out unauthorized or offline devices, which can't be used until they're
+  allowed on the device.
+- Game packages found on a device are read correctly when `find` prints a double slash or
+  Windows line endings.
 - `all` when entering ids (cats, enemies, stages, banners) left out the last one
 
 - Creating a locale accepted any text as its code (e.g. `1 2`), made a folder with that name and
