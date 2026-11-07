@@ -1,5 +1,13 @@
 from bcsfe import core
-from bcsfe.cli import color, dialog_creator
+from bcsfe.cli import color, dialog_creator, prompt
+
+
+def ask_path(dialog: str, default: str = "") -> str | None:
+    """A typed path, without the quotes a dragged-in file brings. None if cancelled."""
+    answer = prompt.text(dialog, default=default)
+    if answer is None:
+        return None
+    return answer.strip().strip("'").strip('"').strip()
 
 
 class FileDialog:
@@ -7,6 +15,7 @@ class FileDialog:
         if not core.core_data.config.get_bool(core.ConfigKey.USE_FILE_DIALOG):
             self.tk = None
             self.filedialog = None
+            return
         try:
             import tkinter as tk
             from tkinter import filedialog
@@ -61,12 +70,13 @@ class FileDialog:
             "select_files_dir",
         )
 
-    def select_another_path(self):
-        path_input = color.color_input_key("enter_path")
-        return path_input or None
+    def select_another_path(self) -> str | None:
+        return ask_path("enter_path") or None
 
     def select_other_dir(self, path: core.Path, ignore_json: bool) -> str | None:
-        path_input = color.color_input_key("enter_path_dir")
+        path_input = ask_path("enter_path_dir")
+        if path_input is None:
+            return None
         path_obj = core.Path(path_input)
         if path_obj.is_relative():
             path_obj = path.add(path_obj)
@@ -93,7 +103,7 @@ class FileDialog:
         if filetypes is None:
             filetypes = []
         title = core.core_data.local_manager.get_key(title)
-        color.color_print_key(title)
+        color.color_print(title)
         if not self.use_tk():
             curr_path = core.Path(initialdir).add(initialfile)
             file = self.select_files_in_dir(curr_path.parent(), ignore_json)
@@ -136,11 +146,13 @@ class FileDialog:
         if filetypes is None:
             filetypes = []
         title = core.core_data.local_manager.get_key(title)
-        color.color_print_key(title)
+        color.color_print(title)
         if not self.use_tk():
             def_path = core.Path(initialdir).add(initialfile).to_str()
-            path = color.color_input_key("enter_path_default", default=def_path)
-            return path.strip().strip("'").strip('"') if path else def_path
+            path = ask_path("enter_path_default", default=def_path)
+            if path is None:
+                return None
+            return path or def_path
         return (
             self.filedialog.asksaveasfilename(  # type: ignore
                 title=title,

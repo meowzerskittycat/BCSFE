@@ -172,9 +172,7 @@ def select_maps_stars(
             continue
 
         for star in range(get_total_stars(map_option, base_index, chapters, id, type)):
-            names[id * 10 + star] = core.localize(
-                "map_name_star", name=name, star=star + 1
-            )
+            names[id * 10 + star] = star_name(name, id, star)
 
     ids = select_map_names(names)
     if ids is None:
@@ -189,6 +187,12 @@ def select_maps_stars(
         new_ids.append((map_id, star_index))
 
     return new_ids
+
+
+def star_name(name: str | None, map_id: int, star: int) -> str:
+    if name is None:
+        name = core.localize("unknown_map_name", id=map_id)
+    return core.localize("map_name_star", name=name, star=star + 1, escape=False)
 
 
 def clear_whole_chapter(
@@ -297,7 +301,7 @@ def edit_chapters2_clear_count(
     if clear_all is None:
         return None
 
-    if clear_all == 0:
+    if clear_all:
         clear_count = ask_clear_amount()
         if clear_count is None:
             return None
@@ -310,11 +314,7 @@ def edit_chapters2_clear_count(
         for local_map_id, star in map_choices:
             print()
             print_current_chapter(
-                core.localize(
-                    "map_name_star",
-                    star=star,
-                    name=map_names.map_names.get(local_map_id),
-                ),
+                star_name(map_names.map_names.get(local_map_id), local_map_id, star),
                 local_map_id,
             )
             dialog_creator.single_select_key(
@@ -406,15 +406,19 @@ def clear_specific_stage_unclear(
     type: int | None,
     allow_unclear: bool,
 ):
-    stage_names = map_names.stage_names.get(local_map_id)
-    stage_names = [
-        stage_name
-        for stage_name in stage_names or []
+    # Keep each stage's real index: a blank or placeholder name can sit between
+    # real stages, and the menu only lists the real ones.
+    stages = [
+        (index, stage_name)
+        for index, stage_name in enumerate(
+            map_names.stage_names.get(local_map_id) or []
+        )
         if stage_name and stage_name != "＠"
     ]
-    stage_id = ask_stages_stage_names_one(stage_names)
-    if stage_id is None:
+    choice = ask_stages_stage_names_one([stage_name for _, stage_name in stages])
+    if choice is None:
         return None
+    stage_id = stages[choice][0]
 
     max_stars = get_total_stars(map_option, base_index, chapters, local_map_id, type)
 
@@ -425,7 +429,14 @@ def clear_specific_stage_unclear(
     if stars is None:
         return None
 
-    unclear_rest(chapters, list(range(stage_id)), max(stars - 1, 0), local_map_id, type)
+    if stars == 0:
+        unclear_rest(chapters, [0], 0, local_map_id, type)
+        return None
+
+    # Everything after the chosen stage is uncleared: later stages in this crown,
+    # and every stage of the higher crowns.
+    unclear_rest(chapters, [stage_id + 1], stars - 1, local_map_id, type)
+    unclear_rest(chapters, [0], stars, local_map_id, type)
 
     for star in range(stars - 1):
         total_stages = get_total_stages(chapters, local_map_id, star, type)
@@ -683,7 +694,7 @@ def select_map_names(names_dict: dict[int, str | None]) -> list[int] | None:
             .lower()
             .strip()
         )
-        if usr_input == core.localize("quit_key"):
+        if not usr_input or usr_input == core.localize("quit_key"):
             return None
         if usr_input.lower() == core.localize("all").lower():
             usr_ids = list(range(1, len(names_list) + 1))
@@ -697,14 +708,12 @@ def select_map_names(names_dict: dict[int, str | None]) -> list[int] | None:
                 if usr_input.replace(" ", "_") in name.lower().strip().replace(
                     " ", "_"
                 ):
-                    true_id = ids[i]
-                    found_names.append((true_id, name))
+                    found_names.append((ids[i], name))
 
             if len(found_names) == 0:
                 color.color_print_key("no_map_found", name=usr_input)
             elif len(found_names) == 1:
-                id = found_names[0][0]
-                true_id = ids[id]
+                true_id = found_names[0][0]
                 if true_id not in map_ids:
                     map_ids.append(true_id)
             else:
@@ -715,8 +724,7 @@ def select_map_names(names_dict: dict[int, str | None]) -> list[int] | None:
                 if selected_ids is None:
                     continue
                 for i in selected_ids:
-                    id = found_names[i][0]
-                    true_id = ids[id]
+                    true_id = found_names[i][0]
                     if true_id not in map_ids:
                         map_ids.append(true_id)
         else:
