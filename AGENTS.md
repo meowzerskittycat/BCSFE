@@ -45,9 +45,11 @@ prompt or the config. CI (`.github/workflows/ci.yml`) runs lint and pyright, the
 - Dependabot (`.github/dependabot.yml`) opens one weekly PR bumping the workflows' actions. It
   doesn't watch Python packages: they have no upper bounds, so CI always tests the latest.
 
-To release, rename `[Unreleased]` in `CHANGELOG.md` to `[x.y.z] - date` in a PR, merge it, then
-push a `vx.y.z` tag on main. `.github/workflows/release.yml` checks the tag matches `__version__`
-and publishes a GitHub release with that CHANGELOG section as its notes.
+To release, rename `[Unreleased]` in `CHANGELOG.md` to `[x.y.z] - date` in a PR and merge it.
+Then run the **Release** workflow (`.github/workflows/release.yml`) on main from the Actions tab,
+or push a `vx.y.z` tag on main. It tags main with `__version__` (or checks the pushed tag matches
+it) and publishes a GitHub release with that CHANGELOG section as its notes. Cloud agent sessions
+can't push tags, so they start the workflow instead.
 
 ## Hard rules
 
