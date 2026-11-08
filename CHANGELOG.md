@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [4.0.0] - 2026-11-08
+
 ### Links and updates
 
 - The fork is now version 4.0.0, so it no longer shares a version number with upstream's
