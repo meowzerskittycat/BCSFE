@@ -1,10 +1,12 @@
 name: Release
 
-# Pushing a version tag (v4.0.0) publishes a GitHub release whose notes are
-# that version's section of CHANGELOG.md.
+# Publishes a GitHub release whose notes are that version's section of
+# CHANGELOG.md. Either push a version tag (v4.0.0), or run this workflow by
+# hand on main, which tags the commit with the version in src/bcsfe/__init__.py.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -14,26 +16,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Check the tag matches the package version
+      - name: Work out the version
         run: |
-          version="${GITHUB_REF_NAME#v}"
-          grep -q "__version__ = \"$version\"" src/bcsfe/__init__.py || {
-            echo "::error::$GITHUB_REF_NAME doesn't match __version__ in src/bcsfe/__init__.py"
+          version="$(sed -n 's/^__version__ = "\(.*\)"$/\1/p' src/bcsfe/__init__.py)"
+          if [ -z "$version" ]; then
+            echo "::error::No __version__ in src/bcsfe/__init__.py"
             exit 1
-          }
+          fi
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::$GITHUB_REF_NAME doesn't match __version__ ($version)"
+            exit 1
+          fi
+          if [ "$GITHUB_REF_TYPE" != tag ] && [ "$GITHUB_REF_NAME" != main ]; then
+            echo "::error::Run this by hand on main only"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
       - name: Take the notes from CHANGELOG.md
         run: |
-          version="${GITHUB_REF_NAME#v}"
-          awk -v head="## [$version]" '
+          awk -v head="## [$VERSION]" '
             index($0, head) == 1 { found = 1; next }
             found && /^## \[/ { exit }
             found { print }
           ' CHANGELOG.md > notes.md
           if ! grep -q '[^[:space:]]' notes.md; then
-            echo "::error::CHANGELOG.md has no section for $version"
+            echo "::error::CHANGELOG.md has no section for $VERSION"
             exit 1
           fi
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md --verify-tag
+        run: |
+          # Run by hand, this creates the tag on the checked-out commit.
+          gh release create "v$VERSION" --title "v$VERSION" --notes-file notes.md --target "$GITHUB_SHA"
