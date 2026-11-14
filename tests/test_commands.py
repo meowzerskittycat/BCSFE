@@ -65,3 +65,64 @@ def test_import_rejects_bad_json(tmp_path: Path) -> None:
     bad.write_text("{nope")
     with pytest.raises(SystemExit, match="isn't valid JSON"):
         run("import", str(bad), str(tmp_path / "out"))
+
+
+def edited_copy(tmp_path: Path) -> Path:
+    from bcsfe import core
+
+    save = core.SaveFile(core.Data(real_fixtures()[0].read_bytes()))
+    save.xp += 1000
+    save.cats.cats[5].unlocked = 1 - save.cats.cats[5].unlocked
+    save.inquiry_code = "abcdef123"
+    out = tmp_path / "edited"
+    out.write_bytes(save.to_data().to_bytes())
+    return out
+
+
+def test_diff_of_identical_saves(capsys: pytest.CaptureFixture[str]) -> None:
+    path = str(real_fixtures()[0])
+    assert run("diff", path, path) == 0
+    assert "no differences" in capsys.readouterr().out
+
+
+def test_diff_lists_each_change(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert run("diff", str(real_fixtures()[0]), str(edited_copy(tmp_path))) == 1
+    out = capsys.readouterr().out
+    assert "xp: " in out
+    assert "cats.cats[5].unlocked: " in out
+    assert "3 changes in 3 sections" in out
+    assert "editor_version" not in out
+
+
+def test_diff_hides_account_credentials(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    run("diff", str(real_fixtures()[0]), str(edited_copy(tmp_path)))
+    out = capsys.readouterr().out
+    assert "inquiry_code: changed (hidden)" in out
+    assert "abcdef123" not in out
+
+
+def test_diff_limit_still_counts_everything(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    saves = synthetic_saves()
+    assert run("diff", str(saves[0]), str(saves[-1]), "--limit", "3") == 1
+    out = capsys.readouterr().out
+    listed = [line for line in out.splitlines() if ": " in line and "->" in line]
+    assert len(listed) == 3
+    assert "more (use --limit 0 for all)" in out
+    assert "more sections" in out
+
+
+def test_compare_reports_length_and_added_keys() -> None:
+    changes: list[tuple[str, str]] = []
+    commands.compare({"a": [1, 2], "b": 1}, {"a": [1, 3, 4], "c": 2}, "", changes)
+    assert changes == [
+        ("a[1]", "2 -> 3"),
+        ("a", "length 2 -> 3"),
+        ("b", "removed"),
+        ("c", "added"),
+    ]

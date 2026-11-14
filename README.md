@@ -38,7 +38,7 @@ A fork of [BCSFE-Python](https://codeberg.org/fieryhenry/BCSFE-Python) by fieryh
 | **Undo** | Step back through your last 10 edits from the main menu. |
 | **Safer editing** | If a feature fails, or you press <kbd>Ctrl</kbd>+<kbd>C</kbd>, your save is left exactly as it was. |
 | **Easier menus** | Stays in the same category after an edit, `0` goes back, and you can type a feature's name to run it. Blank or `q` cancels a question, and wrong input is asked again instead of crashing. |
-| **Command line tools** | `bcsfe info`, `check`, `export` and `import`, for scripts and bug reports. |
+| **Command line tools** | `bcsfe info`, `check`, `export`, `import` and `diff`, for scripts and bug reports. |
 | **Bug fixes** | No more save corruption after a JSON import, crowns and maps unlock properly, and [more](CHANGELOG.md). |
 | **Tested** | Over 600 tests, run on Windows, macOS and Linux, using saves from all four regions (`en`, `jp`, `kr`, `tw`) and game versions 9.0 to 15.7. |
 
@@ -209,6 +209,7 @@ bcsfe info SAVE_DATA                 # region, game version, cat food, tickets..
 bcsfe check SAVE_DATA                # can the editor read and write this save safely?
 bcsfe export SAVE_DATA save.json     # save -> JSON (use - to print it instead)
 bcsfe import save.json SAVE_DATA     # JSON -> save
+bcsfe diff OLD_SAVE NEW_SAVE         # what changed between two saves (e.g. a backup)
 ```
 
 If a game update breaks the editor, include the output of `bcsfe check` in your bug report.
