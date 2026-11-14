@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- `bcsfe diff OLD NEW` lists every field that differs between two saves (`xp: 2000 -> 3000`),
+  then how many changes each section has. Compare a backup with the current save to see what
+  an edit really changed. Account codes and tokens are reported as changed, never printed.
+
 ## [4.0.0] - 2026-11-08
 
 ### Links and updates
